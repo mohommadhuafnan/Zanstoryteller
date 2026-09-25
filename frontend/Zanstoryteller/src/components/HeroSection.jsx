@@ -6,6 +6,78 @@ import { TOTAL_FRAMES, getFrameIndexFromProgress } from '../utils/frameLoader'
 import { Camera } from 'lucide-react'
 
 /**
+ * Dynamic Typewriter Technical HUD component.
+ * Types out the camera architecture telemetry with a terminal typing effect,
+ * pulsing cursor, and live sync with scroll state.
+ */
+function TypewriterHUD({ currentFrame, totalFrames, mode }) {
+  const currentText = `EOS R ARCHITECTURE  /  FRAME ${String(currentFrame).padStart(2, '0')} / ${String(totalFrames).padStart(2, '0')}  /  ${mode.toUpperCase()}`
+  
+  const [displayText, setDisplayText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const currentTextRef = useRef(currentText)
+  currentTextRef.current = currentText
+
+  // While in paused reading state, keep text live if user scrolls
+  useEffect(() => {
+    if (isPaused) {
+      setDisplayText(currentText)
+    }
+  }, [currentText, isPaused])
+
+  useEffect(() => {
+    let timer
+
+    if (isPaused) {
+      // Pause for 4 seconds so the full line is easily readable
+      timer = setTimeout(() => {
+        setIsPaused(false)
+        setIsDeleting(true)
+      }, 4000)
+      return () => clearTimeout(timer)
+    }
+
+    if (!isDeleting) {
+      // Typing animation forward
+      const target = currentTextRef.current
+      if (displayText.length < target.length) {
+        timer = setTimeout(() => {
+          setDisplayText(target.slice(0, displayText.length + 1))
+        }, 38)
+      } else {
+        // Reached end of text
+        setIsPaused(true)
+      }
+    } else {
+      // Deleting animation backward
+      if (displayText.length > 0) {
+        timer = setTimeout(() => {
+          setDisplayText((prev) => prev.slice(0, -1))
+        }, 18)
+      } else {
+        // Fully deleted -> brief rest before retyping
+        timer = setTimeout(() => {
+          setIsDeleting(false)
+        }, 500)
+      }
+    }
+
+    return () => clearTimeout(timer)
+  }, [displayText, isDeleting, isPaused])
+
+  return (
+    <div className="absolute bottom-6 left-6 sm:left-10 z-30 pointer-events-none hidden sm:flex items-center gap-2.5 text-[11px] font-mono tracking-widest text-white/50 uppercase">
+      <Camera className="w-3.5 h-3.5 text-white/60 shrink-0" />
+      <span className="text-white/70">
+        {displayText}
+        <span className="inline-block w-1.5 h-3.5 bg-white/80 animate-pulse ml-1 align-middle" />
+      </span>
+    </div>
+  )
+}
+
+/**
  * Main Hero Section wrapping the scrollytelling experience.
  * Manages scroll timeline, canvas sequence synchronization, and metadata HUD.
  */
@@ -64,23 +136,12 @@ export default function HeroSection({ images, isLoaded }) {
         {/* Cinematic Text Narrative Overlays (absolute inside sticky viewport) */}
         <HeroTextOverlay scrollYProgress={scrollYProgress} />
 
-        {/* Bottom Technical HUD (absolute inside sticky viewport) */}
-        <div className="absolute bottom-6 left-6 sm:left-10 z-30 pointer-events-none hidden sm:flex items-center gap-4 text-[11px] font-mono tracking-widest text-white/40 uppercase">
-          <div className="flex items-center gap-2">
-            <Camera className="w-3.5 h-3.5 text-white/50" />
-            <span>EOS R ARCHITECTURE</span>
-          </div>
-          <span>/</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-white/70">
-              FRAME {String(currentFrameDisplay).padStart(2, '0')}
-            </span>
-            <span>/</span>
-            <span>{String(TOTAL_FRAMES).padStart(2, '0')}</span>
-          </div>
-          <span>/</span>
-          <span className="text-white/60">{modeLabel}</span>
-        </div>
+        {/* Bottom Technical HUD with Typing Animation */}
+        <TypewriterHUD
+          currentFrame={currentFrameDisplay}
+          totalFrames={TOTAL_FRAMES}
+          mode={modeLabel}
+        />
       </div>
     </section>
   )
