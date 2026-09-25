@@ -12,14 +12,32 @@ import TestimonialsSection from './components/TestimonialsSection'
 import SocialGallery from './components/SocialGallery'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
+import BookingPage from './components/booking/BookingPage'
 import { preloadFrames } from './utils/frameLoader'
 
 export default function App() {
   const [loadProgress, setLoadProgress] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const [cachedImages, setCachedImages] = useState([])
+  const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
-  // Preload all 40 high-resolution photography frames before activating animation
+  // Listen to browser forward/backward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  // Programmatic navigation helper
+  const navigate = (path) => {
+    window.history.pushState({}, '', path)
+    setCurrentPath(path)
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }
+
+  // Preload high-resolution photography frames
   useEffect(() => {
     let isMounted = true
 
@@ -30,7 +48,6 @@ export default function App() {
     }).then((loadedImages) => {
       if (isMounted) {
         setCachedImages(loadedImages)
-        // Brief graceful buffer at 100% so user perceives completion
         setTimeout(() => {
           if (isMounted) {
             setIsLoaded(true)
@@ -44,6 +61,25 @@ export default function App() {
     }
   }, [])
 
+  // -----------------------------------------------------------------
+  // ROUTE: Dedicated Booking Page (/book-session)
+  // -----------------------------------------------------------------
+  if (currentPath === '/book-session') {
+    return (
+      <div className="relative min-h-screen bg-[#020202] text-white selection:bg-[#111111] selection:text-white">
+        <div className="film-grain" aria-hidden="true" />
+        <Navbar onNavigate={navigate} currentPath={currentPath} />
+        <main className="w-full">
+          <BookingPage onNavigateHome={() => navigate('/')} />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  // -----------------------------------------------------------------
+  // ROUTE: Main Home Scrollytelling Experience (/)
+  // -----------------------------------------------------------------
   return (
     <div className="relative min-h-screen bg-[#020202] text-white selection:bg-[#111111] selection:text-white">
       {/* Subtle cinematic film grain texture */}
@@ -53,7 +89,7 @@ export default function App() {
       <LoadingScreen progress={loadProgress} isLoaded={isLoaded} />
 
       {/* Header Navigation */}
-      <Navbar />
+      <Navbar onNavigate={navigate} currentPath={currentPath} />
 
       {/* Main Flow */}
       <main className="w-full">

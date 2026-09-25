@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 
-export default function Navbar() {
+export default function Navbar({ onNavigate, currentPath }) {
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -47,19 +47,53 @@ export default function Navbar() {
     }
   }, [mobileMenuOpen])
 
+  // Navigation handlers
+  const handleBrandClick = (e) => {
+    if (currentPath === '/book-session') {
+      e.preventDefault()
+      if (onNavigate) onNavigate('/')
+    }
+  }
+
+  const handleBookClick = (e) => {
+    e.preventDefault()
+    if (onNavigate) {
+      onNavigate('/book-session')
+    } else {
+      window.history.pushState({}, '', '/book-session')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }
+    setMobileMenuOpen(false)
+  }
+
+  const handleLinkClick = (e, href) => {
+    if (currentPath === '/book-session') {
+      e.preventDefault()
+      if (onNavigate) {
+        onNavigate('/')
+        setTimeout(() => {
+          const target = document.querySelector(href)
+          if (target) target.scrollIntoView({ behavior: 'smooth' })
+        }, 150)
+      }
+    }
+    setMobileMenuOpen(false)
+  }
+
   return (
     <>
       <header
         className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 ${
-          isScrolled
-            ? 'bg-[#020202]/85 backdrop-blur-md border-b border-white/[0.08] py-3.5'
+          isScrolled || currentPath === '/book-session'
+            ? 'bg-[#020202]/90 backdrop-blur-md border-b border-white/[0.08] py-3.5'
             : 'bg-transparent py-5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between">
           {/* Brand */}
           <a
-            href="#hero"
+            href="/"
+            onClick={handleBrandClick}
             className="group flex items-center gap-2 text-white/90 hover:text-white transition-colors duration-300"
             aria-label="Zanstoryteller Home"
           >
@@ -75,6 +109,7 @@ export default function Navbar() {
               <a
                 key={link.label}
                 href={link.href}
+                onClick={(e) => handleLinkClick(e, link.href)}
                 className="hover:text-white transition-colors duration-200"
               >
                 {link.label}
@@ -84,17 +119,18 @@ export default function Navbar() {
 
           {/* Right Action & Mobile Toggle */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <a
-              href="#contact"
-              className="text-[9px] sm:text-[11px] uppercase font-mono tracking-wider sm:tracking-[0.18em] px-2.5 sm:px-4 py-1 sm:py-2 whitespace-nowrap border border-white/20 hover:border-white/60 text-white/90 hover:text-white transition-all duration-300 rounded-sm hover:bg-white/[0.04]"
+            <button
+              type="button"
+              onClick={handleBookClick}
+              className="text-[9px] sm:text-[11px] uppercase font-mono tracking-wider sm:tracking-[0.18em] px-2.5 sm:px-4 py-1 sm:py-2 whitespace-nowrap border border-white/20 hover:border-white/60 text-white/90 hover:text-white transition-all duration-300 rounded-sm hover:bg-white/[0.04] cursor-pointer"
             >
               Book Session
-            </a>
+            </button>
 
             {/* Mobile menu trigger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors cursor-pointer"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -157,7 +193,7 @@ export default function Navbar() {
                     <a
                       key={link.label}
                       href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={(e) => handleLinkClick(e, link.href)}
                       className="group flex items-center justify-between py-3 text-sm font-mono uppercase tracking-[0.2em] text-white/75 hover:text-white transition-all border-b border-white/[0.05]"
                     >
                       <span>{link.label}</span>
@@ -171,13 +207,13 @@ export default function Navbar() {
 
               {/* Drawer Bottom Action & Brand Tag */}
               <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
-                <a
-                  href="#contact"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center text-[11px] uppercase font-mono tracking-[0.2em] py-3 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-300 rounded-sm"
+                <button
+                  type="button"
+                  onClick={handleBookClick}
+                  className="w-full text-center text-[11px] uppercase font-mono tracking-[0.2em] py-3 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-300 rounded-sm cursor-pointer"
                 >
                   Book Session
-                </a>
+                </button>
                 <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest text-center">
                   Colombo • Available Worldwide
                 </div>
@@ -189,3 +225,4 @@ export default function Navbar() {
     </>
   )
 }
+
