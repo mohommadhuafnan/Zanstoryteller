@@ -113,7 +113,7 @@ export default function HeroTextOverlay({ scrollYProgress }) {
           </span>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-white uppercase leading-[1.08] mb-6 max-w-4xl">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-white uppercase leading-[1.06] mb-6 max-w-4xl">
           We Capture <br />
           The Moments <br />
           That Become <br />
@@ -122,13 +122,13 @@ export default function HeroTextOverlay({ scrollYProgress }) {
           </span>
         </h1>
 
-        <p className="text-sm sm:text-base md:text-lg text-white/60 font-light max-w-lg tracking-wide leading-relaxed">
+        <p className="text-base sm:text-lg md:text-xl text-white/70 font-light max-w-lg tracking-wide leading-relaxed">
           Cinematic photography turning authentic moments into enduring art.
         </p>
 
         {/* Scroll Prompt */}
         <div className="mt-10 flex flex-col items-center gap-2 text-white/40">
-          <span className="text-[10px] font-mono tracking-[0.25em] uppercase">
+          <span className="text-[11px] sm:text-xs font-mono tracking-[0.25em] uppercase">
             Scroll to Explore
           </span>
           <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
@@ -145,22 +145,22 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         className="absolute top-1/2 -translate-y-1/2 left-6 sm:left-14 md:left-24 max-w-lg text-left"
       >
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[11px] font-mono tracking-[0.25em] text-white/50 uppercase">
+          <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-white/60 uppercase">
             01 / Narrative Origin
           </span>
           <span className="w-8 h-[1px] bg-white/20" />
         </div>
 
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight text-white uppercase leading-[1.12] mb-4">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white uppercase leading-[1.1] mb-4">
           Every Moment <br />
           <span className="text-white/80">Has A Story.</span>
         </h2>
 
-        <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed max-w-md">
+        <p className="text-base sm:text-lg text-white/75 font-light leading-relaxed max-w-md">
           From quiet details to unforgettable celebrations, we capture the moments that matter with unyielding clarity and emotional resonance.
         </p>
 
-        <div className="mt-6 flex items-center gap-4 text-[11px] font-mono text-white/40 tracking-wider">
+        <div className="mt-6 flex items-center gap-3 sm:gap-4 text-xs sm:text-[11px] font-mono text-white/50 tracking-wider">
           <span>35mm Full-Frame Sensor</span>
           <span>•</span>
           <span>Optical Separation</span>
@@ -176,23 +176,23 @@ export default function HeroTextOverlay({ scrollYProgress }) {
       >
         <div className="flex items-center md:justify-end gap-2 mb-3">
           <span className="w-8 h-[1px] bg-white/20 hidden md:block" />
-          <span className="text-[11px] font-mono tracking-[0.25em] text-white/50 uppercase">
+          <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-white/60 uppercase">
             02 / Precision Optics
           </span>
           <span className="w-8 h-[1px] bg-white/20 md:hidden" />
         </div>
 
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-light tracking-tight text-white uppercase leading-[1.12] mb-4">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white uppercase leading-[1.1] mb-4">
           Behind <br />
           Every Frame <br />
           <span className="text-white/80">Is A Story.</span>
         </h2>
 
-        <p className="text-sm sm:text-base text-white/60 font-light leading-relaxed max-w-md ml-auto">
+        <p className="text-base sm:text-lg text-white/75 font-light leading-relaxed max-w-md ml-auto">
           We combine creativity, composition, and precision attention to detail to create photographs that feel authentic, timeless, and profound.
         </p>
 
-        <div className="mt-6 flex items-center md:justify-end gap-4 text-[11px] font-mono text-white/40 tracking-wider">
+        <div className="mt-6 flex items-center md:justify-end gap-3 sm:gap-4 text-xs sm:text-[11px] font-mono text-white/50 tracking-wider">
           <span>Multi-Coated Glass</span>
           <span>•</span>
           <span>Mechanical Precision</span>
@@ -206,25 +206,25 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         style={{ opacity: s4Opacity, y: s4Y, display: s4Display }}
         className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
       >
-        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02]">
+        <div className="inline-flex items-center gap-2 mb-3 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.02]">
           <Sparkles className="w-3.5 h-3.5 text-white/60" />
-          <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/60">
+          <span className="text-[11px] sm:text-[10px] font-mono tracking-[0.3em] uppercase text-white/70">
             The Art Of Seeing
           </span>
         </div>
 
-        <h2 className="text-3xl sm:text-4xl md:text-6xl font-light tracking-tight text-white uppercase leading-[1.08] mb-4">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-light tracking-tight text-white uppercase leading-[1.06] mb-4">
           More Than <br />
           A Photograph.
         </h2>
 
-        <div className="space-y-1 text-sm sm:text-base md:text-lg text-white/65 font-light tracking-wide">
+        <div className="space-y-1.5 text-base sm:text-lg md:text-xl text-white/75 font-light tracking-wide">
           <p>A moment.</p>
           <p>A feeling.</p>
-          <p className="text-white/90">A memory worth keeping.</p>
+          <p className="text-white/95 font-normal">A memory worth keeping.</p>
         </div>
 
-        <div className="mt-6 flex items-center gap-4 text-[10px] sm:text-xs font-mono text-white/35 tracking-widest uppercase">
+        <div className="mt-6 flex items-center gap-4 text-xs sm:text-xs font-mono text-white/45 tracking-widest uppercase">
           <span>Exploded Component View</span>
           <span>//</span>
           <span>Optical Architecture Exposed</span>
@@ -240,7 +240,7 @@ export default function HeroTextOverlay({ scrollYProgress }) {
       >
         <div className="inline-flex items-center gap-2 mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-white" />
-          <span className="text-[11px] font-mono tracking-[0.35em] uppercase text-white/70">
+          <span className="text-xs sm:text-[11px] font-mono tracking-[0.35em] uppercase text-white/75">
             Zanstoryteller
           </span>
         </div>
@@ -252,7 +252,7 @@ export default function HeroTextOverlay({ scrollYProgress }) {
           </span>
         </h2>
 
-        <p className="text-base sm:text-lg md:text-xl text-white/70 font-light max-w-lg mb-8 leading-relaxed">
+        <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-light max-w-lg mb-8 leading-relaxed">
           Let us turn your moments into memories that last.
         </p>
 

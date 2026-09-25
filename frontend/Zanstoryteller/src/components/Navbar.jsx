@@ -60,11 +60,11 @@ export default function Navbar() {
           {/* Brand */}
           <a
             href="#hero"
-            className="group flex items-center gap-2.5 text-white/90 hover:text-white transition-colors duration-300"
+            className="group flex items-center gap-2 text-white/90 hover:text-white transition-colors duration-300"
             aria-label="Zanstoryteller Home"
           >
-            <span className="w-2 h-2 rounded-full bg-white/80 group-hover:scale-125 transition-transform duration-300" />
-            <span className="font-light tracking-[0.28em] text-sm sm:text-base uppercase text-white font-sans">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-white/80 group-hover:scale-125 transition-transform duration-300" />
+            <span className="font-light tracking-[0.24em] sm:tracking-[0.28em] text-[13px] sm:text-base uppercase text-white font-sans">
               Zanstoryteller
             </span>
           </a>
@@ -83,10 +83,10 @@ export default function Navbar() {
           </nav>
 
           {/* Right Action & Mobile Toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <a
               href="#contact"
-              className="text-[11px] uppercase font-mono tracking-[0.18em] px-4 py-2 border border-white/20 hover:border-white/60 text-white/90 hover:text-white transition-all duration-300 rounded-sm hover:bg-white/[0.04]"
+              className="text-[9px] sm:text-[11px] uppercase font-mono tracking-wider sm:tracking-[0.18em] px-2.5 sm:px-4 py-1 sm:py-2 whitespace-nowrap border border-white/20 hover:border-white/60 text-white/90 hover:text-white transition-all duration-300 rounded-sm hover:bg-white/[0.04]"
             >
               Book Session
             </a>
@@ -94,7 +94,7 @@ export default function Navbar() {
             {/* Mobile menu trigger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-white/70 hover:text-white transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
