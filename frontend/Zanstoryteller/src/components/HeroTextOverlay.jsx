@@ -1,6 +1,63 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, useTransform } from 'framer-motion'
 import { ArrowUpRight, Sparkles } from 'lucide-react'
+
+/**
+ * Smooth typewriter effect for the hero headline.
+ * Specifically animates "timeless stories." smoothly on the same line,
+ * preventing any line breaks or layout jumping.
+ */
+function TypewriterHeroText() {
+  const targetText = "timeless stories."
+  const [displayText, setDisplayText] = useState(targetText)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isPaused, setIsPaused] = useState(true)
+
+  useEffect(() => {
+    let timer
+
+    if (isPaused) {
+      // Pause so the reader can comfortably read the completed phrase
+      timer = setTimeout(() => {
+        setIsPaused(false)
+        setIsDeleting(true)
+      }, 3600)
+      return () => clearTimeout(timer)
+    }
+
+    if (!isDeleting) {
+      // Smooth forward typing
+      if (displayText.length < targetText.length) {
+        timer = setTimeout(() => {
+          setDisplayText(targetText.slice(0, displayText.length + 1))
+        }, 75)
+      } else {
+        setIsPaused(true)
+      }
+    } else {
+      // Smooth backward deleting
+      if (displayText.length > 0) {
+        timer = setTimeout(() => {
+          setDisplayText(targetText.slice(0, displayText.length - 1))
+        }, 35)
+      } else {
+        // Brief pause before retyping
+        timer = setTimeout(() => {
+          setIsDeleting(false)
+        }, 350)
+      }
+    }
+
+    return () => clearTimeout(timer)
+  }, [displayText, isDeleting, isPaused])
+
+  return (
+    <span className="inline-flex items-baseline">
+      <span>{displayText || "\u00A0"}</span>
+      <span className="inline-block w-[2px] sm:w-[2.5px] h-[0.82em] bg-white/90 animate-pulse ml-1 align-baseline" />
+    </span>
+  )
+}
 
 /**
  * Text overlays strictly synchronized to scroll progress.
@@ -106,19 +163,21 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         style={{ opacity: s1Opacity, y: s1Y, display: s1Display }}
         className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-12 text-center"
       >
-        <div className="inline-flex items-center gap-2 mb-4 px-3.5 py-1 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm">
+        <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />
           <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-white/70">
             Zanstoryteller
           </span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-white uppercase leading-[1.06] mb-6 max-w-4xl">
-          We Capture <br />
-          The Moments <br />
-          That Become <br />
-          <span className="font-serif italic font-normal text-white/90 lowercase tracking-normal">
-            timeless stories.
+        {/* Headline utilizing more space with balanced lines + Typewriter effect */}
+        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[68px] font-light tracking-tight text-white uppercase leading-[1.12] mb-6 max-w-5xl">
+          <span className="block">WE CAPTURE THE MOMENTS</span>
+          <span className="block sm:whitespace-nowrap">
+            THAT BECOME{' '}
+            <span className="font-serif italic font-normal text-white/95 lowercase tracking-normal inline-block">
+              <TypewriterHeroText />
+            </span>
           </span>
         </h1>
 

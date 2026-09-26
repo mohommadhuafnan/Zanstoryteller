@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import LoadingScreen from './components/LoadingScreen'
 import HeroSection from './components/HeroSection'
 import AboutSection from './components/AboutSection'
+import EditorialCarousel from './components/EditorialCarousel'
 import ServicesSection from './components/ServicesSection'
 import FeaturedStories from './components/FeaturedStories'
 import StoryScrollSection from './components/StoryScrollSection'
@@ -13,6 +14,9 @@ import SocialGallery from './components/SocialGallery'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
 import BookingPage from './components/booking/BookingPage'
+import CategoryGalleryPage from './components/gallery/CategoryGalleryPage'
+import ClientAlbumPage from './components/gallery/ClientAlbumPage'
+import FloatingMessageWidget from './components/FloatingMessageWidget'
 import { preloadFrames } from './utils/frameLoader'
 
 export default function App() {
@@ -73,6 +77,38 @@ export default function App() {
           <BookingPage onNavigateHome={() => navigate('/')} />
         </main>
         <Footer />
+        <FloatingMessageWidget />
+      </div>
+    )
+  }
+
+  // -----------------------------------------------------------------
+  // ROUTE: Gallery Categories & Client Albums (/gallery/...)
+  // -----------------------------------------------------------------
+  if (currentPath.startsWith('/gallery')) {
+    const parts = currentPath.split('/').filter(Boolean)
+    const categorySlug = parts[1] || 'wedding'
+    const clientSlug = parts[2] || null
+
+    return (
+      <div className="relative min-h-screen bg-white text-[#111111] selection:bg-[#111111] selection:text-white">
+        <Navbar onNavigate={navigate} currentPath={currentPath} />
+        <main className="w-full">
+          {clientSlug ? (
+            <ClientAlbumPage
+              categorySlug={categorySlug}
+              clientSlug={clientSlug}
+              onNavigate={navigate}
+            />
+          ) : (
+            <CategoryGalleryPage
+              categorySlug={categorySlug}
+              onNavigate={navigate}
+            />
+          )}
+        </main>
+        <Footer />
+        <FloatingMessageWidget />
       </div>
     )
   }
@@ -101,6 +137,9 @@ export default function App() {
 
         {/* 02. About Zanstoryteller (White Editorial Background) */}
         <AboutSection />
+
+        {/* 02.5. Editorial Moments Carousel (Smooth auto-loop & manual scrolling gallery) */}
+        <EditorialCarousel />
 
         {/* 03. What We Capture / Photography Services */}
         <ServicesSection />
@@ -132,6 +171,9 @@ export default function App() {
 
       {/* 11. Footer */}
       <Footer />
+
+      {/* Floating Messaging Widget (WhatsApp & Messenger) */}
+      <FloatingMessageWidget />
     </div>
   )
 }

@@ -285,3 +285,63 @@ export const footerData = {
   copyright: "© 2026 Zanstoryteller. All rights reserved.",
   developer: "Designed & developed by WebCoder"
 }
+
+export const editorialCarouselImages = [
+  {
+    id: "ec-1",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
+    alt: "Bride and groom with bridal bouquet in warm sun flare",
+    title: "Golden Hour Vows",
+    subtitle: "Ceremony & Devotion"
+  },
+  {
+    id: "ec-2",
+    image: "https://images.unsplash.com/photo-1594552072238-b8a33785b261?auto=format&fit=crop&w=1200&q=85",
+    alt: "Wedding gown hanging from tree branch in open meadow",
+    title: "Heirloom Gown",
+    subtitle: "Fine Art Details"
+  },
+  {
+    id: "ec-3",
+    image: "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1200&q=85",
+    alt: "Friends and loved ones celebrating at golden sunset",
+    title: "Playful Souls",
+    subtitle: "Candid Expressions"
+  },
+  {
+    id: "ec-4",
+    image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=85",
+    alt: "Ceremony portrait and intimate moments",
+    title: "Serenade in Kandy",
+    subtitle: "Heritage Vows"
+  },
+  {
+    id: "ec-5",
+    // Wide landscape photo - naturally adapts width without cropping
+    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=85",
+    alt: "Woman in white walking along golden ocean beach waves",
+    title: "Coastline Serenity",
+    subtitle: "Landscape Narrative"
+  },
+  {
+    id: "ec-6",
+    image: "https://images.unsplash.com/photo-1546804784-896d0dca3805?auto=format&fit=crop&w=1200&q=85",
+    alt: "Bride and groom dancing amidst lush tropical greenery",
+    title: "Garden Symphony",
+    subtitle: "Ceylon Nature"
+  },
+  {
+    id: "ec-7",
+    image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85",
+    alt: "Intimate morning moments of couple embracing",
+    title: "Morning Light",
+    subtitle: "Intimate Portrait"
+  },
+  {
+    id: "ec-8",
+    image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1200&q=85",
+    alt: "Sparkling bridal high heels and heirloom details",
+    title: "Heirloom Accents",
+    subtitle: "Archival Details"
+  }
+]

@@ -21,11 +21,31 @@ export default function Navbar({ onNavigate, currentPath }) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const [galleryDropdownOpen, setGalleryDropdownOpen] = useState(false)
+  const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
+
+  const galleryCategories = [
+    { title: "MATERNITY PHOTOGRAPHY", slug: "maternity-photography" },
+    { title: "MATERNITY PHOTOSHOOT", slug: "maternity-photoshoot" },
+    { title: "MODEL SHOOT", slug: "model-shoot" },
+    { title: "MUSIC VIDEO", slug: "music-video" },
+    { title: "DHL", slug: "dhl" },
+    { title: "GYM", slug: "gym" },
+    { title: "NIGHT LIFE", slug: "night-life" },
+    { title: "SALOON SHOOT", slug: "saloon-shoot" },
+    { title: "ABAYA SHOP", slug: "abaya-shop" },
+    { title: "WORKSHOP PHOTOGRAPHY", slug: "workshop-photography" },
+    { title: "WEDDING", slug: "wedding" },
+    { title: "KATARA", slug: "katara" },
+    { title: "FITNESS", slug: "fitness" },
+    { title: "ARCHITECTURE", slug: "architecture" }
+  ]
+
   const navLinks = [
     { label: "About", href: "#about" },
     { label: "Services", href: "#services" },
     { label: "Portfolio", href: "#portfolio" },
-    { label: "Philosophy", href: "#philosophy" },
+    { label: "Gallery", href: "/gallery/wedding", isDropdown: true },
     { label: "Process", href: "#process" },
     { label: "Contact", href: "#contact" }
   ]
@@ -33,7 +53,10 @@ export default function Navbar({ onNavigate, currentPath }) {
   // Lock body scroll and allow Escape key to close menu
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setMobileMenuOpen(false)
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false)
+        setGalleryDropdownOpen(false)
+      }
     }
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden'
@@ -49,7 +72,7 @@ export default function Navbar({ onNavigate, currentPath }) {
 
   // Navigation handlers
   const handleBrandClick = (e) => {
-    if (currentPath === '/book-session') {
+    if (currentPath !== '/') {
       e.preventDefault()
       if (onNavigate) onNavigate('/')
     }
@@ -67,7 +90,7 @@ export default function Navbar({ onNavigate, currentPath }) {
   }
 
   const handleLinkClick = (e, href) => {
-    if (currentPath === '/book-session') {
+    if (currentPath !== '/') {
       e.preventDefault()
       if (onNavigate) {
         onNavigate('/')
@@ -80,11 +103,22 @@ export default function Navbar({ onNavigate, currentPath }) {
     setMobileMenuOpen(false)
   }
 
+  const handleCategoryClick = (e, slug) => {
+    e.preventDefault()
+    setGalleryDropdownOpen(false)
+    setMobileMenuOpen(false)
+    if (onNavigate) {
+      onNavigate(`/gallery/${slug}`)
+    }
+  }
+
+  const isDarkNav = isScrolled || currentPath.startsWith('/book-session') || currentPath.startsWith('/gallery')
+
   return (
     <>
       <header
         className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 ${
-          isScrolled || currentPath === '/book-session'
+          isDarkNav
             ? 'bg-[#020202]/90 backdrop-blur-md border-b border-white/[0.08] py-3.5'
             : 'bg-transparent py-5'
         }`}
@@ -105,16 +139,81 @@ export default function Navbar({ onNavigate, currentPath }) {
 
           {/* Desktop Navigation Items */}
           <nav className="hidden lg:flex items-center gap-8 text-[12px] tracking-[0.18em] uppercase text-white/60 font-mono">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={(e) => handleLinkClick(e, link.href)}
-                className="hover:text-white transition-colors duration-200"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              if (link.isDropdown) {
+                return (
+                  <div
+                    key={link.label}
+                    className="relative group py-2"
+                    onMouseEnter={() => setGalleryDropdownOpen(true)}
+                    onMouseLeave={() => setGalleryDropdownOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => handleCategoryClick(e, 'wedding')}
+                      className={`hover:text-white transition-colors duration-200 uppercase flex items-center gap-1 cursor-pointer ${
+                        currentPath.startsWith('/gallery') ? 'text-white' : ''
+                      }`}
+                    >
+                      <span>{link.label}</span>
+                      <span className="text-[9px] opacity-60 group-hover:translate-y-0.5 transition-transform">▼</span>
+                    </button>
+
+                    {/* Dropdown Menu (All 14 Categories in Capital Letters) */}
+                    <AnimatePresence>
+                      {galleryDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 w-[580px]"
+                        >
+                          <div className="bg-[#0A0A0A]/95 backdrop-blur-xl border border-white/12 rounded-lg p-5 shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
+                            <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+                              <span className="text-[10px] tracking-[0.28em] text-white/40 uppercase font-mono">
+                                Curated Categories // Archive
+                              </span>
+                              <span className="text-[10px] tracking-widest text-white/40 font-mono">
+                                14 Collections
+                              </span>
+                            </div>
+
+                            {/* 2-Column Grid of 14 Categories */}
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {galleryCategories.map((cat, idx) => (
+                                <a
+                                  key={cat.slug}
+                                  href={`/gallery/${cat.slug}`}
+                                  onClick={(e) => handleCategoryClick(e, cat.slug)}
+                                  className="group/item flex items-center justify-between px-3 py-2 rounded text-[11px] font-mono tracking-wider uppercase text-white/70 hover:text-white hover:bg-white/[0.08] transition-all"
+                                >
+                                  <span className="truncate">{cat.title}</span>
+                                  <span className="text-[10px] text-white/30 group-hover/item:text-white group-hover/item:translate-x-0.5 transition-all">
+                                    →
+                                  </span>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )
+              }
+
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={(e) => handleLinkClick(e, link.href)}
+                  className="hover:text-white transition-colors duration-200"
+                >
+                  {link.label}
+                </a>
+              )
+            })}
           </nav>
 
           {/* Right Action & Mobile Toggle */}
@@ -188,20 +287,54 @@ export default function Navbar({ onNavigate, currentPath }) {
                 </div>
 
                 {/* Nav Links */}
-                <nav className="flex flex-col gap-1">
-                  {navLinks.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      onClick={(e) => handleLinkClick(e, link.href)}
-                      className="group flex items-center justify-between py-3 text-sm font-mono uppercase tracking-[0.2em] text-white/75 hover:text-white transition-all border-b border-white/[0.05]"
-                    >
-                      <span>{link.label}</span>
-                      <span className="text-xs text-white/30 group-hover:text-white group-hover:translate-x-1 transition-all">
-                        →
-                      </span>
-                    </a>
-                  ))}
+                <nav className="flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-220px)] pr-1">
+                  {navLinks.map((link) => {
+                    if (link.isDropdown) {
+                      return (
+                        <div key={link.label} className="border-b border-white/[0.05]">
+                          <button
+                            type="button"
+                            onClick={() => setMobileGalleryOpen(!mobileGalleryOpen)}
+                            className="w-full flex items-center justify-between py-3 text-sm font-mono uppercase tracking-[0.2em] text-white/90 hover:text-white transition-all text-left cursor-pointer"
+                          >
+                            <span>{link.label}</span>
+                            <span className="text-xs text-white/50">
+                              {mobileGalleryOpen ? '▲' : '▼'}
+                            </span>
+                          </button>
+
+                          {mobileGalleryOpen && (
+                            <div className="pl-3 pb-3 flex flex-col gap-1.5 border-l border-white/10 ml-2">
+                              {galleryCategories.map((cat) => (
+                                <a
+                                  key={cat.slug}
+                                  href={`/gallery/${cat.slug}`}
+                                  onClick={(e) => handleCategoryClick(e, cat.slug)}
+                                  className="text-[11px] font-mono tracking-wider uppercase text-white/60 hover:text-white py-1 transition-colors"
+                                >
+                                  {cat.title}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        onClick={(e) => handleLinkClick(e, link.href)}
+                        className="group flex items-center justify-between py-3 text-sm font-mono uppercase tracking-[0.2em] text-white/75 hover:text-white transition-all border-b border-white/[0.05]"
+                      >
+                        <span>{link.label}</span>
+                        <span className="text-xs text-white/30 group-hover:text-white group-hover:translate-x-1 transition-all">
+                          →
+                        </span>
+                      </a>
+                    )
+                  })}
                 </nav>
               </div>
 
