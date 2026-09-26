@@ -69,7 +69,7 @@ export const portfolioItems = [
     location: "Kandy, Sri Lanka",
     year: "2025",
     image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1200&q=85",
-    aspect: "aspect-[4/5]",
+    targetUrl: "/gallery/wedding",
     colSpan: "col-span-12 sm:col-span-6 md:col-span-7",
     alt: "Traditional wedding couple portrait in historic setting"
   },
@@ -80,7 +80,7 @@ export const portfolioItems = [
     location: "Colombo Studio",
     year: "2025",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1000&q=85",
-    aspect: "aspect-[3/4]",
+    targetUrl: "/gallery/workshop-photography",
     colSpan: "col-span-12 sm:col-span-6 md:col-span-5",
     alt: "Artistic black and white portrait of craftsman"
   },
@@ -91,7 +91,7 @@ export const portfolioItems = [
     location: "Galle Fort",
     year: "2024",
     image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=85",
-    aspect: "aspect-[16/10]",
+    targetUrl: "/gallery/night-life",
     colSpan: "col-span-12 md:col-span-8",
     alt: "Candid twilight celebration overlooking the ocean"
   },
@@ -102,7 +102,7 @@ export const portfolioItems = [
     location: "Tangalle Villa",
     year: "2025",
     image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85",
-    aspect: "aspect-[4/5]",
+    targetUrl: "/gallery/architecture",
     colSpan: "col-span-12 md:col-span-4",
     alt: "Architectural and spatial interior photography"
   },
@@ -113,7 +113,7 @@ export const portfolioItems = [
     location: "Nuwara Eliya Hills",
     year: "2024",
     image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=85",
-    aspect: "aspect-[4/3]",
+    targetUrl: "/gallery/wedding",
     colSpan: "col-span-12 sm:col-span-6 md:col-span-5",
     alt: "Bride and groom embracing in morning mist"
   },
@@ -124,7 +124,7 @@ export const portfolioItems = [
     location: "Negombo Coastline",
     year: "2025",
     image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=1200&q=85",
-    aspect: "aspect-[16/11]",
+    targetUrl: "/gallery/model-shoot",
     colSpan: "col-span-12 sm:col-span-6 md:col-span-7",
     alt: "Striking natural light portrait by the sea"
   }

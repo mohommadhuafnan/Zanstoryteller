@@ -11,6 +11,7 @@ import ProcessSection from './components/ProcessSection'
 import VisualStatement from './components/VisualStatement'
 import TestimonialsSection from './components/TestimonialsSection'
 import SocialGallery from './components/SocialGallery'
+import QASection from './components/QASection'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
 import BookingPage from './components/booking/BookingPage'
@@ -145,7 +146,7 @@ export default function App() {
         <ServicesSection />
 
         {/* 04. Featured Stories / Asymmetric Portfolio Grid */}
-        <FeaturedStories />
+        <FeaturedStories onNavigate={navigate} />
 
         {/* 05. The Story Behind The Frame / Second Scroll Story (Dark Sticky Section) */}
         <StoryScrollSection />
@@ -164,6 +165,9 @@ export default function App() {
 
         {/* 09. Instagram / Social Proof Gallery */}
         <SocialGallery />
+
+        {/* 09.5. Questions & Answers (FAQ) */}
+        <QASection />
 
         {/* 10. Final Call to Action */}
         <FinalCTA />
