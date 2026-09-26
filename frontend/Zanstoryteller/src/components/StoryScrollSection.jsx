@@ -142,6 +142,7 @@ export default function StoryScrollSection() {
               alt={storyScrollSteps[0].alt}
               className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.05]"
               loading="lazy"
+              decoding="async"
             />
           </motion.div>
 
@@ -155,6 +156,7 @@ export default function StoryScrollSection() {
               alt={storyScrollSteps[1].alt}
               className="w-full h-full object-cover filter brightness-[0.68] contrast-[1.05]"
               loading="lazy"
+              decoding="async"
             />
           </motion.div>
 
@@ -168,6 +170,7 @@ export default function StoryScrollSection() {
               alt={storyScrollSteps[2].alt}
               className="w-full h-full object-cover filter brightness-[0.65] contrast-[1.05]"
               loading="lazy"
+              decoding="async"
             />
           </motion.div>
 

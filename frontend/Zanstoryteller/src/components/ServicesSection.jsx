@@ -80,6 +80,7 @@ export default function ServicesSection() {
                       alt={service.alt}
                       className="w-full h-full object-cover"
                       loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 </div>
@@ -95,6 +96,8 @@ export default function ServicesSection() {
                   key={activeService}
                   src={servicesData[activeService].image}
                   alt={servicesData[activeService].alt}
+                  loading="lazy"
+                  decoding="async"
                   initial={{ opacity: 0, scale: 1.05 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}

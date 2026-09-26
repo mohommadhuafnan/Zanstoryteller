@@ -72,9 +72,15 @@ export default function Navbar({ onNavigate, currentPath }) {
 
   // Navigation handlers
   const handleBrandClick = (e) => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth'
     if (currentPath !== '/') {
       e.preventDefault()
       if (onNavigate) onNavigate('/')
+    } else {
+      e.preventDefault()
+      window.scrollTo({ top: 0, behavior: scrollBehavior })
+      window.history.pushState(null, '', '/')
     }
   }
 
@@ -90,14 +96,25 @@ export default function Navbar({ onNavigate, currentPath }) {
   }
 
   const handleLinkClick = (e, href) => {
-    if (currentPath !== '/') {
-      e.preventDefault()
-      if (onNavigate) {
-        onNavigate('/')
-        setTimeout(() => {
-          const target = document.querySelector(href)
-          if (target) target.scrollIntoView({ behavior: 'smooth' })
-        }, 150)
+    if (href.startsWith('#')) {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth'
+      if (currentPath !== '/') {
+        e.preventDefault()
+        if (onNavigate) {
+          onNavigate('/')
+          setTimeout(() => {
+            const target = document.querySelector(href)
+            if (target) target.scrollIntoView({ behavior: scrollBehavior })
+          }, 150)
+        }
+      } else {
+        e.preventDefault()
+        const target = document.querySelector(href)
+        if (target) {
+          target.scrollIntoView({ behavior: scrollBehavior })
+          window.history.pushState(null, '', href)
+        }
       }
     }
     setMobileMenuOpen(false)

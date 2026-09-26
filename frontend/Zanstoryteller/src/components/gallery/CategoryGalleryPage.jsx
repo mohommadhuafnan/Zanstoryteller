@@ -89,7 +89,8 @@ export default function CategoryGalleryPage({ categorySlug, onNavigate }) {
                 <img
                   src={client.coverImage}
                   alt={client.name}
-                  loading="lazy"
+                  loading={idx < 3 ? "eager" : "lazy"}
+                  decoding="async"
                   className="w-full h-auto block object-cover transition-transform duration-700 ease-out group-hover:scale-103 filter saturate-[0.98]"
                 />
 

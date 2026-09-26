@@ -283,6 +283,7 @@ export default function EditorialCarousel() {
                   alt={item.alt}
                   draggable={false}
                   loading="lazy"
+                  decoding="async"
                   className="h-full w-auto max-w-none block select-none pointer-events-none transition-transform duration-700 ease-out group-hover:scale-[1.02] filter saturate-[0.98] contrast-[1.02]"
                 />
 
@@ -369,6 +370,8 @@ export default function EditorialCarousel() {
               <img
                 src={editorialCarouselImages[activeLightboxIndex].image}
                 alt={editorialCarouselImages[activeLightboxIndex].alt}
+                loading="eager"
+                decoding="async"
                 className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
               />
               <div className="mt-4 text-center">

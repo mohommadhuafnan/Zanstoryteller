@@ -27,3 +27,6 @@ Thumbs.db
 
 # Temporary test artifacts
 test_*.webp
+__pycache__/
+*.pyc
+~$*

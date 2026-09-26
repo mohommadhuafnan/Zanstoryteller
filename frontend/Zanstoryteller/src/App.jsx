@@ -39,8 +39,25 @@ export default function App() {
   const navigate = (path) => {
     window.history.pushState({}, '', path)
     setCurrentPath(path)
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    if (!path.includes('#')) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
   }
+
+  // Handle smooth scroll when navigating to hash anchors
+  useEffect(() => {
+    if (window.location.hash) {
+      const hash = window.location.hash
+      const timer = setTimeout(() => {
+        const target = document.querySelector(hash)
+        if (target) {
+          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [currentPath])
 
   // Preload high-resolution photography frames
   useEffect(() => {

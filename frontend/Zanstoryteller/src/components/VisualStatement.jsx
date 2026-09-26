@@ -13,6 +13,7 @@ export default function VisualStatement() {
           alt={visualStatementData.alt}
           className="w-full h-full object-cover object-center filter brightness-[0.55] contrast-[1.08]"
           loading="lazy"
+          decoding="async"
         />
         
         {/* Soft Dark Overlay */}

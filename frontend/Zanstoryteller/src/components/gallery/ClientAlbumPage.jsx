@@ -115,7 +115,8 @@ export default function ClientAlbumPage({ categorySlug, clientSlug, onNavigate }
               <img
                 src={imgUrl}
                 alt={`${client.name} photo ${idx + 1}`}
-                loading="lazy"
+                loading={idx < 2 ? "eager" : "lazy"}
+                decoding="async"
                 className="w-full h-auto block object-contain transition-transform duration-700 ease-out group-hover:scale-103 filter saturate-[0.98]"
               />
 
@@ -206,6 +207,8 @@ export default function ClientAlbumPage({ categorySlug, clientSlug, onNavigate }
               <img
                 src={client.images[activePhotoIndex]}
                 alt={`${client.name} photo ${activePhotoIndex + 1}`}
+                loading="eager"
+                decoding="async"
                 className="max-w-full max-h-[80vh] object-contain rounded-md shadow-2xl"
               />
               <div className="mt-3 text-center text-white/70 text-xs font-mono tracking-widest uppercase">

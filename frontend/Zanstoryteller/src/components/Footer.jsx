@@ -5,7 +5,26 @@ import { InstagramIcon, FacebookIcon, WhatsAppIcon } from './Icons'
 
 export default function Footer() {
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+  }
+
+  const handleNavLinkClick = (e, href) => {
+    if (href.startsWith('#')) {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth'
+      if (window.location.pathname !== '/') {
+        e.preventDefault()
+        window.location.href = `/${href}`
+      } else {
+        e.preventDefault()
+        const target = document.querySelector(href)
+        if (target) {
+          target.scrollIntoView({ behavior: scrollBehavior })
+          window.history.pushState(null, '', href)
+        }
+      }
+    }
   }
 
   return (
@@ -46,6 +65,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <a
                     href={link.href}
+                    onClick={(e) => handleNavLinkClick(e, link.href)}
                     className="hover:text-white transition-colors block py-1 font-mono text-xs uppercase tracking-wider"
                   >
                     {link.label}

@@ -69,6 +69,7 @@ export default function AboutSection() {
                 alt={aboutData.imageAlt}
                 className="w-full h-full object-cover object-center filter saturate-[0.95] contrast-[1.02] transition-transform duration-700 hover:scale-105"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-6 left-6 text-white text-[10px] font-mono tracking-widest uppercase">
