@@ -30,3 +30,6 @@ test_*.webp
 __pycache__/
 *.pyc
 ~$*
+
+.vercel
+.env*

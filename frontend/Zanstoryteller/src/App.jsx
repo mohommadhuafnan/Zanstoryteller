@@ -17,6 +17,7 @@ import BookingPage from './components/booking/BookingPage'
 import CategoryGalleryPage from './components/gallery/CategoryGalleryPage'
 import ClientAlbumPage from './components/gallery/ClientAlbumPage'
 import FloatingMessageWidget from './components/FloatingMessageWidget'
+import ExitIntentPopup from './components/ExitIntentPopup'
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
@@ -67,6 +68,7 @@ export default function App() {
         </main>
         <Footer />
         <FloatingMessageWidget />
+        <ExitIntentPopup onNavigate={navigate} />
       </div>
     )
   }
@@ -98,6 +100,7 @@ export default function App() {
         </main>
         <Footer />
         <FloatingMessageWidget />
+        <ExitIntentPopup onNavigate={navigate} />
       </div>
     )
   }
@@ -160,6 +163,9 @@ export default function App() {
 
       {/* Floating Messaging Widget (WhatsApp & Messenger) */}
       <FloatingMessageWidget />
+
+      {/* Premium Animated Exit-Intent Advertisement Popup */}
+      <ExitIntentPopup onNavigate={navigate} />
     </div>
   )
 }

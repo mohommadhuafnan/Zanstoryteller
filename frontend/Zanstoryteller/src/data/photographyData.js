@@ -11,8 +11,8 @@ export const aboutData = {
     "At Zanstoryteller, we focus on capturing genuine moments with creativity, patience and an eye for detail. From intimate celebrations to unforgettable milestones, our goal is to create photographs that feel as meaningful years from now as they did in the moment."
   ],
   ctaText: "DISCOVER OUR STORY",
-  image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=85",
-  imageAlt: "Zanstoryteller Editorial Portrait Photography",
+  image: "/about/zan_photographer_transparent.png",
+  imageAlt: "Mohammad Zan - Founder & Cinematographer of Zanstoryteller",
   badge: "EST. 2020 • CEYLON & WORLDWIDE"
 }
 
@@ -288,6 +288,48 @@ export const footerData = {
 
 export const editorialCarouselImages = [
   {
+    id: "ec-abaya-1",
+    image: "/editorial/abaya_midnight_blue.jpg",
+    alt: "Midnight blue pleated abaya hanging on brass rack against art canvas backdrop",
+    title: "Midnight Noir Abaya",
+    subtitle: "Archival Modest Couture"
+  },
+  {
+    id: "ec-abaya-2",
+    image: "/editorial/abaya_emerald_terracotta.jpg",
+    alt: "Emerald green and terracotta orange pleated abayas on studio mannequins",
+    title: "Emerald & Ochre Studio",
+    subtitle: "Draping & Silhouette"
+  },
+  {
+    id: "ec-abaya-3",
+    image: "/editorial/abaya_royal_pine.jpg",
+    alt: "Emerald royal pine green pleated abaya hanging on brass rack against canvas",
+    title: "Royal Pine Abaya",
+    subtitle: "Handcrafted Pleats"
+  },
+  {
+    id: "ec-abaya-4",
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=85",
+    alt: "The Silk Mirage Collection by Noor Abaya Couture",
+    title: "Silk Mirage",
+    subtitle: "Noor Abaya Couture"
+  },
+  {
+    id: "ec-abaya-5",
+    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=85",
+    alt: "Heirloom Beaded Abayas by Emirates Royale",
+    title: "Emirates Royale",
+    subtitle: "Heirloom Details"
+  },
+  {
+    id: "ec-abaya-6",
+    image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1200&q=85",
+    alt: "Al-Jawhara Modesty draped editorial photography",
+    title: "Al-Jawhara Modesty",
+    subtitle: "Form & Motion"
+  },
+  {
     id: "ec-1",
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
     alt: "Bride and groom with bridal bouquet in warm sun flare",
@@ -314,34 +356,6 @@ export const editorialCarouselImages = [
     alt: "Ceremony portrait and intimate moments",
     title: "Serenade in Kandy",
     subtitle: "Heritage Vows"
-  },
-  {
-    id: "ec-5",
-    // Wide landscape photo - naturally adapts width without cropping
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=85",
-    alt: "Woman in white walking along golden ocean beach waves",
-    title: "Coastline Serenity",
-    subtitle: "Landscape Narrative"
-  },
-  {
-    id: "ec-6",
-    image: "https://images.unsplash.com/photo-1546804784-896d0dca3805?auto=format&fit=crop&w=1200&q=85",
-    alt: "Bride and groom dancing amidst lush tropical greenery",
-    title: "Garden Symphony",
-    subtitle: "Ceylon Nature"
-  },
-  {
-    id: "ec-7",
-    image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85",
-    alt: "Intimate morning moments of couple embracing",
-    title: "Morning Light",
-    subtitle: "Intimate Portrait"
-  },
-  {
-    id: "ec-8",
-    image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1200&q=85",
-    alt: "Sparkling bridal high heels and heirloom details",
-    title: "Heirloom Accents",
-    subtitle: "Archival Details"
   }
 ]
+

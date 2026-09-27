@@ -341,7 +341,7 @@ export default function HeroSection() {
         />
 
         {/* Interactive Scroll-Accelerated Small Dots Particle Field (like unifixz.com) */}
-        <ScrollParticleField />
+        <ScrollParticleField scrollYProgress={scrollYProgress} />
 
         {/* Cinematic Text Overlays with smooth bottom-to-top letter entrance */}
         <HeroTextOverlay

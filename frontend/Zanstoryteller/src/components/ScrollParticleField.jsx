@@ -3,21 +3,36 @@ import React, { useRef, useEffect } from 'react'
 /**
  * ScrollParticleField Component
  * 
- * Implements a true 3D perspective warp-tunnel particle field:
- * - Idle state: 100% invisible (opacity 0). Particles do NOT show when stationary.
- * - Scroll state: Particles dynamically appear and rush outward from the center
- *   vanishing point toward the camera in 3D ("moving inside" perspective).
- * - Scroll speed: The faster the user scrolls, the more particles streak and zoom forward.
- * - Directional: Scrolling down zooms forward (inside); scrolling up reverses.
- * - Inertial decay: When scrolling stops, particles smoothly decelerate and fade to 0 opacity.
+ * Cinematic 3D Depth Particle System:
+ * - Frame-synchronized 3D perspective: As frames change during scroll,
+ *   dots travel smoothly through 3D Z-depth toward the viewer ("moving in").
+ * - Dynamic 3D expansion: Dots expand outward radially and grow naturally in scale
+ *   as they approach the camera, giving an unmistakable sense of 3D depth.
+ * - Minimal, uncluttered count:
+ *   * Idle (not scrolling): Exactly 4 to 5 gentle, slow floating dots.
+ *   * Scrolling: Only a few subtle accent dots (total 8-10 max, never a swarm).
+ * - Calibrated slow pace: Movement is graceful, slow, and cinematic with soft bokeh fading.
  */
-export default function ScrollParticleField() {
+export default function ScrollParticleField({ scrollYProgress }) {
   const canvasRef = useRef(null)
   const rafRef = useRef(null)
-  const velocityRef = useRef(0)
-  const opacityRef = useRef(0)
+  const targetProgressRef = useRef(0)
+  const smoothProgressRef = useRef(0)
+  const scrollVelocityRef = useRef(0)
+  const scrollActivityRef = useRef(0)
   const lastScrollYRef = useRef(0)
   const lastTimeRef = useRef(0)
+
+  // Listen to Framer Motion scrollYProgress if provided
+  useEffect(() => {
+    if (!scrollYProgress) return
+
+    const unsubscribe = scrollYProgress.on('change', (latest) => {
+      targetProgressRef.current = Math.max(0, Math.min(1, latest))
+    })
+
+    return () => unsubscribe()
+  }, [scrollYProgress])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -30,12 +45,16 @@ export default function ScrollParticleField() {
       typeof window !== 'undefined' &&
       (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
 
-    const count = isMobile ? 85 : 180
-    const maxZ = 1200
+    // Exactly 5 dots visible when idle; max 9 total when actively scrolling
+    const IDLE_DOT_COUNT = 5
+    const TOTAL_DOT_COUNT = isMobile ? 7 : 9
+    const maxZ = 900
+    const minZ = 60
+
     let width = (canvas.width = window.innerWidth)
     let height = (canvas.height = window.innerHeight)
     let dpr = Math.min(window.devicePixelRatio || 1, 2)
-    let fov = width * 0.65
+    let fov = width * 0.7
 
     const resize = () => {
       if (!canvas) return
@@ -44,43 +63,43 @@ export default function ScrollParticleField() {
       height = window.innerHeight
       canvas.width = Math.floor(width * dpr)
       canvas.height = Math.floor(height * dpr)
-      fov = width * 0.65
+      fov = width * 0.7
     }
 
     resize()
     window.addEventListener('resize', resize, { passive: true })
 
-    // Create 3D particles distributed in cylindrical/conical space around camera
+    // Staggered 3D spatial distribution around the camera center
     const particles = []
-    const resetParticle = (p, zInit = null) => {
-      // Angular spread for 3D tunnel distribution
+    const resetParticle = (p, zInit = null, spawnNear = false) => {
       const angle = Math.random() * Math.PI * 2
-      // Exponential distribution so more particles appear across depth
-      const radius = 80 + Math.random() * (Math.max(width, height) * 0.75)
+      // Conical distribution radiating outward from the focal center
+      const radius = 50 + Math.random() * (Math.max(width, height) * 0.5)
 
       p.x = Math.cos(angle) * radius
       p.y = Math.sin(angle) * radius
-      p.z = zInit !== null ? zInit : maxZ
-      p.prevZ = p.z
-      p.baseSize = 0.8 + Math.random() * 1.8
-      // Mix of pure white and subtle cyan/teal lens glow
-      p.isTeal = Math.random() < 0.28
-      p.alphaMultiplier = 0.4 + Math.random() * 0.6
+      p.z = zInit !== null ? zInit : (spawnNear ? minZ + 30 : maxZ - Math.random() * 80)
+      p.baseRadius = 1.6 + Math.random() * 1.8
+      // Warm champagne gold & soft teal accent colors
+      p.isTeal = Math.random() < 0.22
+      p.alphaMultiplier = 0.55 + Math.random() * 0.35
+      p.floatSpeedX = (Math.random() - 0.5) * 0.18
+      p.floatSpeedY = (Math.random() - 0.5) * 0.18
     }
 
-    for (let i = 0; i < count; i++) {
+    // Initialize particles evenly spaced across 3D depth
+    for (let i = 0; i < TOTAL_DOT_COUNT; i++) {
       const p = {}
-      // Initial staggered Z depth
-      resetParticle(p, Math.random() * maxZ)
+      const initialZ = minZ + ((maxZ - minZ) / TOTAL_DOT_COUNT) * i + Math.random() * 40
+      resetParticle(p, initialZ)
       particles.push(p)
     }
 
-    // Direct Wheel & Scroll Velocity Tracking
+    // Fallback Wheel / Scroll Velocity Tracking if standalone
     const onWheel = (e) => {
-      // Instant velocity impulse from mousewheel/trackpad
       const delta = e.deltaY
-      const impulse = Math.max(-50, Math.min(50, delta * 0.12))
-      velocityRef.current += impulse
+      const impulse = Math.max(-10, Math.min(10, delta * 0.035))
+      scrollVelocityRef.current += impulse
     }
 
     lastScrollYRef.current = window.scrollY
@@ -89,19 +108,18 @@ export default function ScrollParticleField() {
     const onScroll = () => {
       const now = performance.now()
       const currentY = window.scrollY
-      const dt = Math.max(8, now - lastTimeRef.current)
+      const dt = Math.max(10, now - lastTimeRef.current)
       const dy = currentY - lastScrollYRef.current
 
-      // Convert scroll delta to frame-rate normalized velocity
       const instant = (dy / dt) * 16.67
-      const clamped = Math.max(-45, Math.min(45, instant))
-      velocityRef.current += (clamped - velocityRef.current) * 0.55
+      const clamped = Math.max(-12, Math.min(12, instant * 0.22))
+      scrollVelocityRef.current += (clamped - scrollVelocityRef.current) * 0.3
 
       lastScrollYRef.current = currentY
       lastTimeRef.current = now
     }
 
-    // Touch event handling for mobile scrolling
+    // Touch support for mobile scrolling
     let touchStartY = 0
     let lastTouchTime = 0
 
@@ -119,8 +137,8 @@ export default function ScrollParticleField() {
         const dt = Math.max(10, now - lastTouchTime)
         const dy = touchStartY - currentY
         const instant = (dy / dt) * 16.67
-        const clamped = Math.max(-45, Math.min(45, instant))
-        velocityRef.current += (clamped - velocityRef.current) * 0.55
+        const clamped = Math.max(-12, Math.min(12, instant * 0.22))
+        scrollVelocityRef.current += (clamped - scrollVelocityRef.current) * 0.3
 
         touchStartY = currentY
         lastTouchTime = now
@@ -136,102 +154,116 @@ export default function ScrollParticleField() {
     let time = 0
 
     const animate = () => {
-      time += 0.016
+      time += 0.012
 
-      // Smooth decay of velocity
-      velocityRef.current *= 0.92
-      if (Math.abs(velocityRef.current) < 0.05) {
-        velocityRef.current = 0
+      // Synchronize with scrollYProgress frame progression
+      if (scrollYProgress) {
+        const deltaProgress = targetProgressRef.current - smoothProgressRef.current
+        smoothProgressRef.current += deltaProgress * 0.08
+        // Convert frame progression delta to 3D speed
+        const frameSpeed = deltaProgress * 110
+        scrollVelocityRef.current += (frameSpeed - scrollVelocityRef.current) * 0.35
       }
 
-      const velocity = velocityRef.current
-      const absVelocity = Math.abs(velocity)
+      // Smooth deceleration
+      scrollVelocityRef.current *= 0.92
+      if (Math.abs(scrollVelocityRef.current) < 0.02) {
+        scrollVelocityRef.current = 0
+      }
 
-      // Always maintain an elegant base ambient visibility (0.75), boosting up to 1.0 when scrolling
-      const targetOpacity = Math.min(1.0, 0.75 + absVelocity * 0.08)
-      opacityRef.current += (targetOpacity - opacityRef.current) * 0.1
+      const absVelocity = Math.abs(scrollVelocityRef.current)
+
+      // Activity factor: 0 when stationary, up to 1.0 when scrolling
+      const targetActivity = Math.min(1.0, absVelocity * 0.45)
+      scrollActivityRef.current += (targetActivity - scrollActivityRef.current) * 0.07
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       const centerX = width / 2
       const centerY = height / 2
-      const globalAlpha = opacityRef.current
 
-      // Continuous ambient drift forward + scroll velocity boost
-      const ambientZ = 0.35
-      const zStep = ambientZ + velocity * 3.8
+      // 3D Z-step: Gentle ambient float (0.07) + smooth scroll velocity
+      // Scrolling down advances dots toward the viewer (feel the 3D moving in)
+      const ambientZ = 0.07
+      const zStep = ambientZ + scrollVelocityRef.current * 0.85
 
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < TOTAL_DOT_COUNT; i++) {
         const p = particles[i]
+        const isIdleDot = i < IDLE_DOT_COUNT
 
-        p.prevZ = p.z
         p.z -= zStep
 
-        // Subtle organic float in X and Y
-        p.x += Math.sin(time + i) * 0.15
-        p.y += Math.cos(time + i * 0.7) * 0.15
+        // Calm, subtle 2D drift
+        p.x += Math.sin(time + i * 1.5) * p.floatSpeedX
+        p.y += Math.cos(time + i * 1.2) * p.floatSpeedY
 
-        // Recycle particle if it passes camera or goes too far
-        if (p.z <= 20) {
-          resetParticle(p, maxZ)
+        // Handle 3D boundaries (smooth recycling)
+        if (p.z <= minZ) {
+          // Passed camera: reset to deep background
+          resetParticle(p, maxZ - 10)
           continue
         } else if (p.z >= maxZ) {
-          resetParticle(p, 30)
+          // Moved too far into background: reset near camera if reversing
+          resetParticle(p, minZ + 30, true)
           continue
         }
 
-        // 3D Perspective Projection
+        // 3D Perspective Projection: Scale increases as Z approaches camera
         const scale = fov / p.z
         const sx = (centerX + p.x * scale) * dpr
         const sy = (centerY + p.y * scale) * dpr
-        const radius = Math.max(0.7, p.baseSize * scale * 0.75) * dpr
 
-        // Check if within canvas bounds
+        // Dynamic 3D radius: Starts small at distance, expands into glowing bubble close to camera
+        const depthRatio = 1 - (p.z - minZ) / (maxZ - minZ) // 0 (far) to 1 (near camera)
+        const radius = Math.max(1.0, p.baseRadius * (0.8 + depthRatio * 2.2)) * dpr
+
+        // Canvas viewport clipping
         if (sx < -40 || sx > canvas.width + 40 || sy < -40 || sy > canvas.height + 40) {
-          resetParticle(p, maxZ)
+          if (zStep > 0) {
+            resetParticle(p, maxZ - 20)
+          } else {
+            resetParticle(p, minZ + 30, true)
+          }
           continue
         }
 
-        // Depth-based alpha fade (brighter when closer, softer when far)
-        const depthFade = Math.min(1, Math.max(0.15, 1 - p.z / maxZ))
-        const twinkle = 0.85 + Math.sin(time * 2 + i) * 0.15
-        const finalAlpha = Math.min(1, globalAlpha * depthFade * p.alphaMultiplier * twinkle)
+        // 3D Depth Opacity & Soft Bokeh
+        // - Far fade: gently fades in as it enters from deep space
+        // - Near fade: soft bokeh fadeout when very close to camera lens
+        const farFade = Math.min(1, Math.max(0, (maxZ - p.z) / 120))
+        const nearFade = Math.min(1, Math.max(0, (p.z - minZ) / 80))
+        const depthFade = farFade * nearFade
+        const subtlePulse = 0.85 + Math.sin(time * 1.6 + i) * 0.15
+
+        let dotAlpha = 0
+        if (isIdleDot) {
+          // The 4-5 core idle dots: always gently visible
+          dotAlpha = (0.35 + depthRatio * 0.25) * depthFade * p.alphaMultiplier * subtlePulse
+        } else {
+          // Additional accent dots: fade in during scroll, fade out when stationary
+          dotAlpha = scrollActivityRef.current * (0.4 + depthRatio * 0.25) * depthFade * p.alphaMultiplier * subtlePulse
+        }
+
+        if (dotAlpha <= 0.015) continue
 
         ctx.save()
 
-        // Draw 3D speed streak only when scrolling rapidly
-        if (absVelocity > 3.0) {
-          const prevScale = fov / Math.max(20, p.prevZ)
-          const prevSx = (centerX + p.x * prevScale) * dpr
-          const prevSy = (centerY + p.y * prevScale) * dpr
+        // Soft, glowing 3D circular dot / bubble
+        ctx.beginPath()
+        ctx.arc(sx, sy, radius, 0, Math.PI * 2)
 
-          ctx.beginPath()
-          ctx.strokeStyle = p.isTeal
-            ? `rgba(28, 170, 179, ${finalAlpha * 0.95})`
-            : `rgba(216, 187, 123, ${finalAlpha * 0.9})`
-          ctx.lineWidth = Math.max(1, radius * 0.85)
-          ctx.lineCap = 'round'
-          ctx.moveTo(prevSx, prevSy)
-          ctx.lineTo(sx, sy)
-          ctx.stroke()
+        if (p.isTeal) {
+          ctx.fillStyle = `rgba(28, 170, 179, ${dotAlpha})`
+          ctx.shadowColor = 'rgba(28, 170, 179, 0.55)'
+          ctx.shadowBlur = (3 + depthRatio * 5) * dpr
         } else {
-          // Elegant glowing ambient 3D star / dot
-          ctx.beginPath()
-          ctx.arc(sx, sy, radius, 0, Math.PI * 2)
-
-          if (p.isTeal) {
-            ctx.fillStyle = `rgba(28, 170, 179, ${finalAlpha})`
-            ctx.shadowColor = 'rgba(28, 170, 179, 0.7)'
-            ctx.shadowBlur = 5 * dpr
-          } else {
-            // Gold & diamond warm white particles matching logo theme
-            ctx.fillStyle = `rgba(235, 215, 170, ${finalAlpha})`
-            ctx.shadowColor = 'rgba(216, 187, 123, 0.6)'
-            ctx.shadowBlur = 4 * dpr
-          }
-          ctx.fill()
+          // Warm gold and diamond white matching brand identity
+          ctx.fillStyle = `rgba(235, 218, 178, ${dotAlpha})`
+          ctx.shadowColor = 'rgba(216, 187, 123, 0.5)'
+          ctx.shadowBlur = (3 + depthRatio * 5) * dpr
         }
 
+        ctx.fill()
         ctx.restore()
       }
 
@@ -248,7 +280,7 @@ export default function ScrollParticleField() {
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
     }
-  }, [])
+  }, [scrollYProgress])
 
   return (
     <canvas

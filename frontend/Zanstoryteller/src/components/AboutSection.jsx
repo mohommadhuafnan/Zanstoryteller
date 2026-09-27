@@ -5,13 +5,13 @@ import { aboutData } from '../data/photographyData'
 
 export default function AboutSection() {
   return (
-    <section id="about" className="relative w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 overflow-hidden">
+    <section id="about" className="relative w-full bg-[#FFFFFF] text-[#111111] py-20 sm:py-28 md:py-36 px-6 sm:px-12 md:px-20 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
           {/* Left Column: Editorial Philosophy & Copy */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 35 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -42,7 +42,7 @@ export default function AboutSection() {
             {/* Discover Button */}
             <a
               href="#portfolio"
-              className="group inline-flex items-center gap-3 px-7 py-3.5 bg-[#111111] text-white font-mono text-xs uppercase tracking-[0.2em] rounded-sm transition-all duration-300 hover:bg-[#222222] hover:shadow-lg"
+              className="group inline-flex items-center gap-3 px-7 py-3.5 bg-[#111111] text-white font-mono text-xs uppercase tracking-[0.2em] rounded-sm transition-all duration-300 hover:bg-[#222222] hover:shadow-lg cursor-pointer"
             >
               <span>{aboutData.ctaText}</span>
               <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -55,25 +55,36 @@ export default function AboutSection() {
             </div>
           </motion.div>
 
-          {/* Right Column: Large Editorial Image */}
+          {/* Right Column: Seamless Editorial Subject (No Box, No Border, Zero Crop) */}
           <motion.div
-            initial={{ opacity: 0, scale: 1.04, y: 30 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, y: 35 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-6 relative"
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-6 flex flex-col items-center lg:items-end justify-center relative select-none"
           >
-            <div className="relative aspect-[4/5] w-full max-w-lg mx-auto overflow-hidden rounded-sm bg-[#F5F5F5] shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+            {/* Uncropped subject sitting naturally on the white canvas */}
+            <div className="relative w-full max-w-[340px] sm:max-w-[420px] md:max-w-[470px] lg:max-w-[500px] xl:max-w-[520px]">
+              
+              {/* Soft organic ground contact shadow under chair & shoes */}
+              <div 
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[85%] h-8 bg-black/[0.08] blur-xl rounded-[100%] pointer-events-none" 
+                aria-hidden="true"
+              />
+
+              {/* Natural uncropped image standing directly on the canvas without any borders */}
               <img
                 src={aboutData.image}
                 alt={aboutData.imageAlt}
-                className="w-full h-full object-cover object-center filter saturate-[0.95] contrast-[1.02] transition-transform duration-700 hover:scale-105"
+                className="w-full h-auto object-contain block filter contrast-[1.03] select-none pointer-events-none"
                 loading="lazy"
                 decoding="async"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-6 left-6 text-white text-[10px] font-mono tracking-widest uppercase">
-                Zanstoryteller Editorial Archive // 01
+
+              {/* Minimal Editorial Monogram Stamp */}
+              <div className="absolute -bottom-5 right-2 sm:right-4 flex items-center gap-2 text-[10px] font-mono tracking-[0.25em] text-[#888888] uppercase select-none pointer-events-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#111111]" />
+                <span>MOHAMMAD ZAN // FOUNDER</span>
               </div>
             </div>
           </motion.div>
