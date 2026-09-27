@@ -3,9 +3,24 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight, Mail } from 'lucide-react'
 import { finalCTAData } from '../data/photographyData'
 
+const marqueeCategories = [
+  "Weddings",
+  "Editorial Portraits",
+  "Moments & Emotions",
+  "Destination Galas",
+  "Commercial Visuals",
+  "Architecture",
+  "Fine Art Archive",
+  "Cinematography",
+  "Fashion & Mood",
+  "Ceylon & Worldwide",
+  "Documentary Stories",
+  "Private Milestones"
+]
+
 export default function FinalCTA() {
   return (
-    <section id="contact" className="relative z-10 w-full bg-[#050505] text-white py-32 sm:py-44 px-6 sm:px-12 md:px-20 overflow-hidden">
+    <section id="contact" className="relative z-10 w-full bg-[#050505] text-white pb-32 sm:pb-44 overflow-hidden">
       {/* Subtle Ambient Background Glow & Photo Texture */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <img
@@ -18,7 +33,55 @@ export default function FinalCTA() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-transparent to-[#050505]" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
+      {/* Embedded CSS for 60/120fps GPU smooth Left-to-Right Marquee */}
+      <style>{`
+        @keyframes marquee-left-to-right {
+          0% { transform: translate3d(-50%, 0, 0); }
+          100% { transform: translate3d(0%, 0, 0); }
+        }
+        .animate-marquee-ltr {
+          display: flex;
+          width: max-content;
+          animation: marquee-left-to-right 32s linear infinite;
+          will-change: transform;
+        }
+        .animate-marquee-ltr:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      {/* Seamless White Category Marquee Ribbon (Left to Right, Merged with White Section Above) */}
+      <div className="relative z-20 w-full bg-white text-[#111111] border-y border-[#EAEAEA] shadow-[0_12px_32px_rgba(0,0,0,0.35)] overflow-hidden">
+        <div className="w-full py-4 sm:py-5 overflow-hidden">
+          <div className="animate-marquee-ltr">
+            {/* First Set */}
+            <div className="flex items-center gap-8 sm:gap-12 px-4 whitespace-nowrap">
+              {marqueeCategories.map((cat, idx) => (
+                <React.Fragment key={`set1-${idx}`}>
+                  <span className="font-mono text-xs sm:text-sm font-bold tracking-[0.25em] text-[#111111] uppercase hover:text-[#967832] transition-colors cursor-default">
+                    {cat}
+                  </span>
+                  <span className="text-[#D8BB7B] text-xs sm:text-sm select-none">✦</span>
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Second Set (identical for seamless infinite loop) */}
+            <div className="flex items-center gap-8 sm:gap-12 px-4 whitespace-nowrap">
+              {marqueeCategories.map((cat, idx) => (
+                <React.Fragment key={`set2-${idx}`}>
+                  <span className="font-mono text-xs sm:text-sm font-bold tracking-[0.25em] text-[#111111] uppercase hover:text-[#967832] transition-colors cursor-default">
+                    {cat}
+                  </span>
+                  <span className="text-[#D8BB7B] text-xs sm:text-sm select-none">✦</span>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-12 md:px-20 pt-24 sm:pt-32 text-center flex flex-col items-center">
         {/* Top Tag */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
