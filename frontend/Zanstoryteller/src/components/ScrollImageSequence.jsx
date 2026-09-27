@@ -153,12 +153,15 @@ export default function ScrollImageSequence({
       const progress = targetProgressRef.current
       const targetFrame = progress * (TOTAL_FRAMES - 1)
 
-      // Smooth lerp toward target frame
+      // Smooth adaptive lerp toward target frame
       if (prefersReducedMotion) {
         currentFrameRef.current = targetFrame
       } else {
         const delta = targetFrame - currentFrameRef.current
-        currentFrameRef.current += delta * smoothingFactor
+        const absDelta = Math.abs(delta)
+        // Adaptive factor: snappy response during active scroll, silky micro-smoothing when settling
+        const adaptiveFactor = absDelta > 3 ? 0.14 : (absDelta > 0.8 ? 0.105 : 0.082)
+        currentFrameRef.current += delta * adaptiveFactor
       }
 
       const floatFrame = Math.max(

@@ -148,7 +148,11 @@ export default function Navbar({ onNavigate, currentPath }) {
             className="group flex items-center gap-2 text-white/90 hover:text-white transition-colors duration-300"
             aria-label="Zanstoryteller Home"
           >
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-white/80 group-hover:scale-125 transition-transform duration-300" />
+            <img
+              src="/logo.png"
+              alt="Zanstoryteller Logo"
+              className="h-6 sm:h-7 md:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_2px_8px_rgba(216,187,123,0.35)]"
+            />
             <span className="font-light tracking-[0.24em] sm:tracking-[0.28em] text-[13px] sm:text-base uppercase text-white font-sans">
               Zanstoryteller
             </span>
@@ -288,10 +292,14 @@ export default function Navbar({ onNavigate, currentPath }) {
               {/* Drawer Top / Header */}
               <div>
                 <div className="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-white/70">
-                      Menu
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src="/logo.png"
+                      alt="Zanstoryteller Logo"
+                      className="h-6 w-auto object-contain drop-shadow-[0_2px_8px_rgba(216,187,123,0.35)]"
+                    />
+                    <span className="text-[12px] font-sans font-light tracking-[0.25em] uppercase text-white/90">
+                      Zanstoryteller
                     </span>
                   </div>
                   <button

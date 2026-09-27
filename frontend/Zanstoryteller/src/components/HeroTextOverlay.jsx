@@ -60,11 +60,66 @@ function TypewriterHeroText() {
 }
 
 /**
+ * AnimatedLetters Component
+ * Staggers every letter smoothly upwards from bottom to top (y: distance -> 0, opacity: 0 -> 1)
+ * Groups characters into words with whitespace-nowrap spans to preserve typography, kerning, and line wraps.
+ */
+function AnimatedLetters({
+  text,
+  isReady,
+  baseDelay = 0.35,
+  stagger = 0.024,
+  yDistance = 38,
+  duration = 0.85,
+  letterClassName = '',
+  wordClassName = '',
+}) {
+  const words = text.split(' ')
+  let runningCharCount = 0
+
+  return (
+    <>
+      {words.map((word, wordIdx) => {
+        const wordChars = word.split('')
+        const wordStartIdx = runningCharCount
+        runningCharCount += wordChars.length
+
+        return (
+          <span
+            key={wordIdx}
+            className={`inline-block whitespace-nowrap ${wordClassName}`}
+          >
+            {wordChars.map((char, charIdx) => {
+              const globalIdx = wordStartIdx + charIdx
+              return (
+                <motion.span
+                  key={charIdx}
+                  initial={{ opacity: 0, y: yDistance }}
+                  animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: yDistance }}
+                  transition={{
+                    duration: duration,
+                    delay: baseDelay + globalIdx * stagger,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className={`inline-block ${letterClassName}`}
+                >
+                  {char}
+                </motion.span>
+              )
+            })}
+          </span>
+        )
+      })}
+    </>
+  )
+}
+
+/**
  * Text overlays strictly synchronized to scroll progress.
  * Each section is mathematically clamped and has dynamic display toggling
  * to ensure ZERO text ghosting, bleeding, or overlapping between scroll stages.
  */
-export default function HeroTextOverlay({ scrollYProgress }) {
+export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
   // -------------------------------------------------------------
   // STAGE 1: 0% - 11% (Opening)
   // Cleanly fades out as soon as the user begins scrolling.
@@ -169,46 +224,70 @@ export default function HeroTextOverlay({ scrollYProgress }) {
           aria-hidden="true"
         />
 
-        {/* Minimal pill badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-[11px] sm:text-xs font-mono uppercase tracking-[0.22em] text-white/85 backdrop-blur-md mb-6">
+        {/* Minimal pill badge - smooth slide from bottom */}
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
+          transition={{ duration: 0.8, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-[11px] sm:text-xs font-mono uppercase tracking-[0.22em] text-white/85 backdrop-blur-md mb-6"
+        >
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1caab3] opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1caab3]" />
           </span>
           <span>Cinematic Photography · 2026</span>
-        </div>
+        </motion.div>
 
-        {/* Headline with exact styling from Screenshot 1 & 2 */}
+        {/* Headline with exact styling and smooth bottom-to-top letter reveals */}
         <h1 className="flex flex-col items-center text-center max-w-5xl">
           {/* Screenshot 1 style: Clean, light, tracked geometric uppercase sans */}
           <span className="block font-['Outfit',sans-serif] text-xl sm:text-3xl md:text-4xl lg:text-5xl font-light tracking-[0.16em] sm:tracking-[0.18em] text-white/95 uppercase leading-snug">
-            WE CAPTURE THE MOMENTS
+            <AnimatedLetters
+              text="WE CAPTURE THE MOMENTS"
+              isReady={isReady}
+              baseDelay={0.34}
+              stagger={0.022}
+              yDistance={36}
+              duration={0.85}
+              wordClassName="mr-[0.28em] last:mr-0"
+            />
           </span>
 
-          {/* Screenshot 2 style: Ultra-bold, punchy gradient text with tight tracking */}
-          <span className="block font-['Outfit',sans-serif] text-4xl sm:text-6xl md:text-8xl lg:text-9xl xl:text-[104px] font-extrabold tracking-[-0.04em] leading-[0.92] mt-3 uppercase bg-gradient-to-b from-white via-white/95 to-white/50 bg-clip-text text-transparent select-none">
-            THAT BECOME
+          {/* Screenshot 2 & Logo style: Ultra-bold gold gradient with shadow & bottom-to-top letter cascade */}
+          <span className="block font-['Outfit',sans-serif] text-4xl sm:text-6xl md:text-8xl lg:text-9xl xl:text-[104px] font-extrabold tracking-[-0.04em] leading-[0.92] mt-3 uppercase select-none filter drop-shadow-[0_4px_24px_rgba(216,187,123,0.45)] drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+            <AnimatedLetters
+              text="THAT BECOME"
+              isReady={isReady}
+              baseDelay={0.68}
+              stagger={0.035}
+              yDistance={48}
+              duration={0.95}
+              wordClassName="mr-[0.22em] last:mr-0"
+              letterClassName="bg-gradient-to-b from-[#FFF2C8] via-[#D8BB7B] to-[#8C6520] bg-clip-text text-transparent"
+            />
           </span>
 
-          {/* Elegant italic typewriter phrase */}
-          <span className="block font-serif italic font-normal text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white/95 lowercase tracking-normal mt-3 sm:mt-4">
+          {/* Elegant italic typewriter phrase - smooth entrance from bottom */}
+          <motion.span
+            initial={{ opacity: 0, y: 32 }}
+            animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }}
+            transition={{ duration: 0.9, delay: 1.05, ease: [0.16, 1, 0.3, 1] }}
+            className="block font-serif italic font-normal text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white/95 lowercase tracking-normal mt-3 sm:mt-4"
+          >
             <TypewriterHeroText />
-          </span>
+          </motion.span>
         </h1>
 
-        <p className="mt-6 text-sm sm:text-base md:text-lg text-white/70 font-light max-w-xl tracking-wide leading-relaxed">
+        {/* Subtitle - smooth slide from bottom */}
+        <motion.p
+          initial={{ opacity: 0, y: 24 }}
+          animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+          transition={{ duration: 0.9, delay: 1.20, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-6 text-sm sm:text-base md:text-lg text-white/70 font-light max-w-xl tracking-wide leading-relaxed"
+        >
           Cinematic photography turning authentic moments into enduring art.
-        </p>
+        </motion.p>
 
-        {/* Scroll Prompt */}
-        <div className="mt-10 flex flex-col items-center gap-2 text-white/40">
-          <span className="text-[11px] sm:text-xs font-mono tracking-[0.25em] uppercase text-white/60">
-            Scroll to Explore
-          </span>
-          <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
-            <div className="w-1 h-1.5 bg-white/70 rounded-full animate-bounce" />
-          </div>
-        </div>
       </motion.div>
 
       {/* ------------------------------------------------------- */}

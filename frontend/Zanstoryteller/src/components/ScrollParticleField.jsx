@@ -133,9 +133,13 @@ export default function ScrollParticleField() {
     window.addEventListener('touchmove', onTouchMove, { passive: true })
 
     // Animation Loop
+    let time = 0
+
     const animate = () => {
+      time += 0.016
+
       // Smooth decay of velocity
-      velocityRef.current *= 0.915
+      velocityRef.current *= 0.92
       if (Math.abs(velocityRef.current) < 0.05) {
         velocityRef.current = 0
       }
@@ -143,91 +147,92 @@ export default function ScrollParticleField() {
       const velocity = velocityRef.current
       const absVelocity = Math.abs(velocity)
 
-      // Target opacity is 0 when stationary; ramps up quickly with scroll velocity
-      const targetOpacity = absVelocity > 0.1 ? Math.min(1.0, absVelocity * 0.14) : 0
-      opacityRef.current += (targetOpacity - opacityRef.current) * 0.16
+      // Always maintain an elegant base ambient visibility (0.75), boosting up to 1.0 when scrolling
+      const targetOpacity = Math.min(1.0, 0.75 + absVelocity * 0.08)
+      opacityRef.current += (targetOpacity - opacityRef.current) * 0.1
 
-      // Only draw when opacity is visible
-      if (opacityRef.current > 0.005) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        const centerX = width / 2
-        const centerY = height / 2
-        const globalAlpha = opacityRef.current
+      const centerX = width / 2
+      const centerY = height / 2
+      const globalAlpha = opacityRef.current
 
-        // Speed multiplier along Z axis (user scrolling down pushes Z forward/inside)
-        const zStep = velocity * 4.2
+      // Continuous ambient drift forward + scroll velocity boost
+      const ambientZ = 0.35
+      const zStep = ambientZ + velocity * 3.8
 
-        for (let i = 0; i < count; i++) {
-          const p = particles[i]
+      for (let i = 0; i < count; i++) {
+        const p = particles[i]
 
-          p.prevZ = p.z
-          p.z -= zStep
+        p.prevZ = p.z
+        p.z -= zStep
 
-          // Recycle particle if it passes camera or goes too far
-          if (p.z <= 15) {
-            resetParticle(p, maxZ)
-            continue
-          } else if (p.z >= maxZ) {
-            resetParticle(p, 25)
-            continue
-          }
+        // Subtle organic float in X and Y
+        p.x += Math.sin(time + i) * 0.15
+        p.y += Math.cos(time + i * 0.7) * 0.15
 
-          // 3D Perspective Projection
-          const scale = fov / p.z
-          const sx = (centerX + p.x * scale) * dpr
-          const sy = (centerY + p.y * scale) * dpr
-          const radius = Math.max(0.6, p.baseSize * scale * 0.8) * dpr
-
-          // Check if within canvas bounds
-          if (sx < -40 || sx > canvas.width + 40 || sy < -40 || sy > canvas.height + 40) {
-            resetParticle(p, maxZ)
-            continue
-          }
-
-          // Depth-based alpha fade (brighter when closer, softer when far)
-          const depthFade = Math.min(1, Math.max(0, 1 - p.z / maxZ))
-          const finalAlpha = Math.min(1, globalAlpha * depthFade * p.alphaMultiplier)
-
-          ctx.save()
-
-          // Draw 3D speed streak if scrolling fast
-          if (absVelocity > 2.5) {
-            const prevScale = fov / Math.max(15, p.prevZ)
-            const prevSx = (centerX + p.x * prevScale) * dpr
-            const prevSy = (centerY + p.y * prevScale) * dpr
-
-            ctx.beginPath()
-            ctx.strokeStyle = p.isTeal
-              ? `rgba(28, 170, 179, ${finalAlpha * 0.95})`
-              : `rgba(255, 255, 255, ${finalAlpha * 0.9})`
-            ctx.lineWidth = Math.max(1, radius * 0.9)
-            ctx.lineCap = 'round'
-            ctx.moveTo(prevSx, prevSy)
-            ctx.lineTo(sx, sy)
-            ctx.stroke()
-          } else {
-            // Crisp round glowing 3D star / dot
-            ctx.beginPath()
-            ctx.arc(sx, sy, radius, 0, Math.PI * 2)
-
-            if (p.isTeal) {
-              ctx.fillStyle = `rgba(28, 170, 179, ${finalAlpha})`
-              ctx.shadowColor = 'rgba(28, 170, 179, 0.8)'
-              ctx.shadowBlur = 6 * dpr
-            } else {
-              ctx.fillStyle = `rgba(255, 255, 255, ${finalAlpha})`
-              ctx.shadowColor = 'rgba(255, 255, 255, 0.6)'
-              ctx.shadowBlur = 4 * dpr
-            }
-            ctx.fill()
-          }
-
-          ctx.restore()
+        // Recycle particle if it passes camera or goes too far
+        if (p.z <= 20) {
+          resetParticle(p, maxZ)
+          continue
+        } else if (p.z >= maxZ) {
+          resetParticle(p, 30)
+          continue
         }
-      } else {
-        // Clear canvas when completely idle/faded out
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // 3D Perspective Projection
+        const scale = fov / p.z
+        const sx = (centerX + p.x * scale) * dpr
+        const sy = (centerY + p.y * scale) * dpr
+        const radius = Math.max(0.7, p.baseSize * scale * 0.75) * dpr
+
+        // Check if within canvas bounds
+        if (sx < -40 || sx > canvas.width + 40 || sy < -40 || sy > canvas.height + 40) {
+          resetParticle(p, maxZ)
+          continue
+        }
+
+        // Depth-based alpha fade (brighter when closer, softer when far)
+        const depthFade = Math.min(1, Math.max(0.15, 1 - p.z / maxZ))
+        const twinkle = 0.85 + Math.sin(time * 2 + i) * 0.15
+        const finalAlpha = Math.min(1, globalAlpha * depthFade * p.alphaMultiplier * twinkle)
+
+        ctx.save()
+
+        // Draw 3D speed streak only when scrolling rapidly
+        if (absVelocity > 3.0) {
+          const prevScale = fov / Math.max(20, p.prevZ)
+          const prevSx = (centerX + p.x * prevScale) * dpr
+          const prevSy = (centerY + p.y * prevScale) * dpr
+
+          ctx.beginPath()
+          ctx.strokeStyle = p.isTeal
+            ? `rgba(28, 170, 179, ${finalAlpha * 0.95})`
+            : `rgba(216, 187, 123, ${finalAlpha * 0.9})`
+          ctx.lineWidth = Math.max(1, radius * 0.85)
+          ctx.lineCap = 'round'
+          ctx.moveTo(prevSx, prevSy)
+          ctx.lineTo(sx, sy)
+          ctx.stroke()
+        } else {
+          // Elegant glowing ambient 3D star / dot
+          ctx.beginPath()
+          ctx.arc(sx, sy, radius, 0, Math.PI * 2)
+
+          if (p.isTeal) {
+            ctx.fillStyle = `rgba(28, 170, 179, ${finalAlpha})`
+            ctx.shadowColor = 'rgba(28, 170, 179, 0.7)'
+            ctx.shadowBlur = 5 * dpr
+          } else {
+            // Gold & diamond warm white particles matching logo theme
+            ctx.fillStyle = `rgba(235, 215, 170, ${finalAlpha})`
+            ctx.shadowColor = 'rgba(216, 187, 123, 0.6)'
+            ctx.shadowBlur = 4 * dpr
+          }
+          ctx.fill()
+        }
+
+        ctx.restore()
       }
 
       rafRef.current = requestAnimationFrame(animate)

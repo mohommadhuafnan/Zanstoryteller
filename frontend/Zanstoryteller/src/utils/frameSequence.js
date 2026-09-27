@@ -86,7 +86,7 @@ class FrameCacheManager {
   }
 
   /**
-   * Loads a specific frame index with high priority.
+   * Loads a specific frame index with high priority and GPU pre-decoding.
    */
   loadFrame(index) {
     if (index < 0 || index >= TOTAL_FRAMES) return Promise.resolve(null)
@@ -101,10 +101,23 @@ class FrameCacheManager {
       img.src = FRAME_URLS[index]
 
       const handleDone = () => {
-        this.cache.set(index, img)
-        this.inFlight.delete(index)
-        this._notify(index, img)
-        resolve(img)
+        // Pre-decode bitmap on background thread to prevent canvas draw jank
+        if ('decode' in img) {
+          img
+            .decode()
+            .catch(() => {})
+            .finally(() => {
+              this.cache.set(index, img)
+              this.inFlight.delete(index)
+              this._notify(index, img)
+              resolve(img)
+            })
+        } else {
+          this.cache.set(index, img)
+          this.inFlight.delete(index)
+          this._notify(index, img)
+          resolve(img)
+        }
       }
 
       if (img.complete && img.naturalWidth > 0) {
@@ -112,7 +125,6 @@ class FrameCacheManager {
       } else {
         img.onload = handleDone
         img.onerror = () => {
-          console.warn(`[FrameCache] Failed to load frame ${index + 1}`)
           this.inFlight.delete(index)
           resolve(null)
         }
@@ -122,15 +134,15 @@ class FrameCacheManager {
 
   /**
    * Prioritize frames around a center index (e.g. current scroll position).
-   * Desktop: ±15 frames; Mobile: ±8 frames.
+   * Concurrently preloads forward and backward window.
    */
-  prioritizeAround(centerIndex, radius = 15) {
+  prioritizeAround(centerIndex, radius = 18) {
     const clampedCenter = Math.max(0, Math.min(TOTAL_FRAMES - 1, Math.round(centerIndex)))
 
-    // Priority 1: Current frame
+    // Load center immediately
     this.loadFrame(clampedCenter)
 
-    // Priority 2: Nearby frames outward
+    // Load nearby frames in priority order
     for (let r = 1; r <= radius; r++) {
       const nextIdx = clampedCenter + r
       const prevIdx = clampedCenter - r
@@ -138,12 +150,13 @@ class FrameCacheManager {
       if (prevIdx >= 0) this.loadFrame(prevIdx)
     }
 
-    // Schedule remaining frames for background idle loading
+    // Schedule any remaining uncached frames via concurrent pool
     this.scheduleBackgroundLoad(clampedCenter)
   }
 
   /**
-   * Background loader for remaining uncached frames.
+   * Concurrent background loader for remaining uncached frames.
+   * Uses a pool of 6 parallel workers to saturate bandwidth without blocking the UI.
    */
   scheduleBackgroundLoad(centerIndex = 0) {
     if (this.isProcessingQueue) return
@@ -162,36 +175,41 @@ class FrameCacheManager {
     this.backgroundQueue = pending
     this.isProcessingQueue = true
 
-    const loadNext = () => {
+    const CONCURRENCY = 6
+    let activeWorkers = 0
+
+    const next = () => {
       if (this.backgroundQueue.length === 0) {
-        this.isProcessingQueue = false
+        if (activeWorkers === 0) {
+          this.isProcessingQueue = false
+        }
         return
       }
 
       const nextIdx = this.backgroundQueue.shift()
       if (this.cache.has(nextIdx) || this.inFlight.has(nextIdx)) {
-        loadNext()
+        next()
         return
       }
 
-      this.loadFrame(nextIdx).then(() => {
-        // Small delay between background loads to prevent network choking
-        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-          window.requestIdleCallback(() => loadNext(), { timeout: 100 })
-        } else {
-          setTimeout(loadNext, 30)
-        }
+      activeWorkers++
+      this.loadFrame(nextIdx).finally(() => {
+        activeWorkers--
+        next()
       })
     }
 
-    loadNext()
+    // Spawn concurrent workers
+    for (let c = 0; c < CONCURRENCY; c++) {
+      next()
+    }
   }
 
   /**
-   * Preload initial vital frames (e.g. first frame + opening burst)
-   * Calls onProgress(percent)
+   * Preload vital frames with high concurrency and live progress reporting.
+   * Preloads at least 25 frames (or all 50) so scrolling never hits missing frames.
    */
-  preloadInitial(count = 10, onProgress) {
+  preloadInitial(count = 28, onProgress) {
     const targetCount = Math.min(count, TOTAL_FRAMES)
     let loaded = 0
 
@@ -202,6 +220,7 @@ class FrameCacheManager {
         return
       }
 
+      // Concurrently kick off all initial frames
       for (let i = 0; i < targetCount; i++) {
         this.loadFrame(i).then(() => {
           loaded++
@@ -209,7 +228,7 @@ class FrameCacheManager {
             onProgress(Math.round((loaded / targetCount) * 100))
           }
           if (loaded >= targetCount) {
-            // Also start background queue for remaining frames
+            // Immediately start background loading for all remaining frames
             this.scheduleBackgroundLoad(0)
             resolve()
           }
