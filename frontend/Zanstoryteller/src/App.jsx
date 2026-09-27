@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
-import LoadingScreen from './components/LoadingScreen'
 import HeroSection from './components/HeroSection'
 import AboutSection from './components/AboutSection'
 import EditorialCarousel from './components/EditorialCarousel'
@@ -18,12 +17,8 @@ import BookingPage from './components/booking/BookingPage'
 import CategoryGalleryPage from './components/gallery/CategoryGalleryPage'
 import ClientAlbumPage from './components/gallery/ClientAlbumPage'
 import FloatingMessageWidget from './components/FloatingMessageWidget'
-import { preloadFrames } from './utils/frameLoader'
 
 export default function App() {
-  const [loadProgress, setLoadProgress] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [cachedImages, setCachedImages] = useState([])
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
   // Listen to browser forward/backward navigation
@@ -58,30 +53,6 @@ export default function App() {
       return () => clearTimeout(timer)
     }
   }, [currentPath])
-
-  // Preload high-resolution photography frames
-  useEffect(() => {
-    let isMounted = true
-
-    preloadFrames((progress) => {
-      if (isMounted) {
-        setLoadProgress(progress)
-      }
-    }).then((loadedImages) => {
-      if (isMounted) {
-        setCachedImages(loadedImages)
-        setTimeout(() => {
-          if (isMounted) {
-            setIsLoaded(true)
-          }
-        }, 400)
-      }
-    })
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   // -----------------------------------------------------------------
   // ROUTE: Dedicated Booking Page (/book-session)
@@ -139,19 +110,13 @@ export default function App() {
       {/* Subtle cinematic film grain texture */}
       <div className="film-grain" aria-hidden="true" />
 
-      {/* Elegant minimalist loader */}
-      <LoadingScreen progress={loadProgress} isLoaded={isLoaded} />
-
       {/* Header Navigation */}
       <Navbar onNavigate={navigate} currentPath={currentPath} />
 
       {/* Main Flow */}
       <main className="w-full">
-        {/* 01. Hero Scrollytelling Section */}
-        <HeroSection
-          images={cachedImages}
-          isLoaded={isLoaded}
-        />
+        {/* 01. Cinematic Hero Scrollytelling Section */}
+        <HeroSection />
 
         {/* 02. About Zanstoryteller (White Editorial Background) */}
         <AboutSection />

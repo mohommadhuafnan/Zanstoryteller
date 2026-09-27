@@ -1,25 +1,27 @@
-import React, { useRef, useState, useEffect } from 'react'
-import { useScroll } from 'framer-motion'
-import ScrollSequence from './ScrollSequence'
-import HeroTextOverlay from './HeroTextOverlay'
-import { TOTAL_FRAMES, getFrameIndexFromProgress } from '../utils/frameLoader'
+import React, { useRef, useState, useEffect, useCallback } from 'react'
+import { useScroll, motion, AnimatePresence } from 'framer-motion'
 import { Camera } from 'lucide-react'
+import ScrollImageSequence from './ScrollImageSequence'
+import ScrollParticleField from './ScrollParticleField'
+import HeroTextOverlay from './HeroTextOverlay'
+import {
+  TOTAL_FRAMES,
+  frameCacheManager,
+} from '../utils/frameSequence'
 
 /**
- * Dynamic Typewriter Technical HUD component.
- * Types out the camera architecture telemetry with a terminal typing effect,
- * pulsing cursor, and live sync with scroll state.
+ * Typewriter technical HUD telemetry display.
+ * Types camera specifications, live frame index, and optical mode.
  */
 function TypewriterHUD({ currentFrame, totalFrames, mode }) {
   const currentText = `EOS R ARCHITECTURE  /  FRAME ${String(currentFrame).padStart(2, '0')} / ${String(totalFrames).padStart(2, '0')}  /  ${mode.toUpperCase()}`
-  
+
   const [displayText, setDisplayText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const currentTextRef = useRef(currentText)
   currentTextRef.current = currentText
 
-  // While in paused reading state, keep text live if user scrolls
   useEffect(() => {
     if (isPaused) {
       setDisplayText(currentText)
@@ -30,7 +32,6 @@ function TypewriterHUD({ currentFrame, totalFrames, mode }) {
     let timer
 
     if (isPaused) {
-      // Pause for 4 seconds so the full line is easily readable
       timer = setTimeout(() => {
         setIsPaused(false)
         setIsDeleting(true)
@@ -39,24 +40,20 @@ function TypewriterHUD({ currentFrame, totalFrames, mode }) {
     }
 
     if (!isDeleting) {
-      // Typing animation forward
       const target = currentTextRef.current
       if (displayText.length < target.length) {
         timer = setTimeout(() => {
           setDisplayText(target.slice(0, displayText.length + 1))
-        }, 38)
+        }, 36)
       } else {
-        // Reached end of text
         setIsPaused(true)
       }
     } else {
-      // Deleting animation backward
       if (displayText.length > 0) {
         timer = setTimeout(() => {
           setDisplayText((prev) => prev.slice(0, -1))
         }, 18)
       } else {
-        // Fully deleted -> brief rest before retyping
         timer = setTimeout(() => {
           setIsDeleting(false)
         }, 500)
@@ -78,42 +75,100 @@ function TypewriterHUD({ currentFrame, totalFrames, mode }) {
 }
 
 /**
- * Main Hero Section wrapping the scrollytelling experience.
- * Manages scroll timeline, canvas sequence synchronization, and metadata HUD.
+ * Minimalist cinematic loading indicator
+ * Only displays while the initial vital burst of frames loads (first 8-10 frames)
+ * Fades out smoothly so user experience is never blocked.
  */
-export default function HeroSection({ images, isLoaded }) {
+function MinimalExperienceLoader({ progress, isReady }) {
+  return (
+    <AnimatePresence>
+      {!isReady && (
+        <motion.div
+          key="minimal-loader"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }}
+          className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#020202] text-white px-6 pointer-events-auto"
+        >
+          <div className="flex flex-col items-center max-w-xs w-full text-center">
+            <span className="text-[10px] font-mono tracking-[0.35em] uppercase text-white/40 mb-3">
+              Cinematic Experience
+            </span>
+            <h3 className="text-lg font-light tracking-[0.25em] uppercase text-white/90 mb-5">
+              Loading Sequence
+            </h3>
+
+            {/* Minimal thin progress track */}
+            <div className="w-full bg-white/10 h-[1.5px] rounded-full overflow-hidden relative">
+              <motion.div
+                className="h-full bg-white transition-all duration-150 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            <div className="flex items-center justify-between w-full text-[10px] font-mono tracking-widest text-white/40 uppercase pt-2.5">
+              <span>Initializing Optics</span>
+              <span>{String(progress).padStart(2, '0')}%</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+/**
+ * HeroSection Component
+ * Master scroll container with 420vh track, sticky 100vh viewport,
+ * cinematic HTML5 canvas sequence, narrative text overlays, and telemetry HUD.
+ */
+export default function HeroSection() {
   const containerRef = useRef(null)
   const [currentFrameDisplay, setCurrentFrameDisplay] = useState(1)
   const [modeLabel, setModeLabel] = useState('Optical Assembly')
+  const [initialProgress, setInitialProgress] = useState(0)
+  const [isInitialReady, setIsInitialReady] = useState(false)
 
-  // Setup scroll progress tracking over container height
+  // Track scroll progress strictly within this 420vh container
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   })
 
-  // Track frame and phase for HUD display
+  // Preload initial burst immediately on mount
   useEffect(() => {
-    const unsubscribe = scrollYProgress.on('change', (progress) => {
-      const frameFloat = getFrameIndexFromProgress(progress)
-      const frameIdx = Math.round(frameFloat)
-      setCurrentFrameDisplay(frameIdx + 1)
+    let isMounted = true
 
-      if (progress < 0.15) {
-        setModeLabel('Optical Assembly')
-      } else if (progress >= 0.15 && progress < 0.65) {
-        setModeLabel('Deconstruction Stage')
-      } else if (progress >= 0.65 && progress < 0.80) {
-        setModeLabel('Full Mechanical Explosion')
-      } else if (progress >= 0.80 && progress < 0.92) {
-        setModeLabel('Precision Reassembly')
-      } else {
-        setModeLabel('Optics Sealed')
+    frameCacheManager.preloadInitial(10, (pct) => {
+      if (isMounted) setInitialProgress(pct)
+    }).then(() => {
+      if (isMounted) {
+        setTimeout(() => {
+          if (isMounted) setIsInitialReady(true)
+        }, 300)
       }
     })
 
-    return () => unsubscribe()
-  }, [scrollYProgress])
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Callback from canvas RAF loop for frame & stage telemetry
+  const handleFrameUpdate = useCallback((frameIdx, progress) => {
+    setCurrentFrameDisplay(frameIdx + 1)
+
+    if (progress < 0.16) {
+      setModeLabel('Optical Assembly')
+    } else if (progress >= 0.16 && progress < 0.65) {
+      setModeLabel('Deconstruction Stage')
+    } else if (progress >= 0.65 && progress < 0.82) {
+      setModeLabel('Full Mechanical Explosion')
+    } else if (progress >= 0.82 && progress < 0.94) {
+      setModeLabel('Precision Reassembly')
+    } else {
+      setModeLabel('Optics Sealed')
+    }
+  }, [])
 
   return (
     <section
@@ -124,19 +179,27 @@ export default function HeroSection({ images, isLoaded }) {
         height: '420vh',
       }}
     >
-      {/* Sticky Hero Viewport: confines Canvas, Overlays, and HUD strictly to the Hero section */}
+      {/* Sticky Viewport: Confines Canvas, Overlays, and HUD strictly to the Hero */}
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
-        {/* Canvas Scrollytelling Sequence */}
-        <ScrollSequence
-          images={images}
-          scrollYProgress={scrollYProgress}
-          isLoaded={isLoaded}
+        {/* Minimal Initial Loader */}
+        <MinimalExperienceLoader
+          progress={initialProgress}
+          isReady={isInitialReady}
         />
 
-        {/* Cinematic Text Narrative Overlays (absolute inside sticky viewport) */}
+        {/* HTML5 Canvas Scrollytelling Sequence */}
+        <ScrollImageSequence
+          scrollYProgress={scrollYProgress}
+          onFrameUpdate={handleFrameUpdate}
+        />
+
+        {/* Interactive Scroll-Accelerated Small Dots Particle Field (like unifixz.com) */}
+        <ScrollParticleField />
+
+        {/* Cinematic Text Overlays */}
         <HeroTextOverlay scrollYProgress={scrollYProgress} />
 
-        {/* Bottom Technical HUD with Typing Animation */}
+        {/* Technical HUD with live frame counter */}
         <TypewriterHUD
           currentFrame={currentFrameDisplay}
           totalFrames={TOTAL_FRAMES}

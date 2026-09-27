@@ -161,33 +161,48 @@ export default function HeroTextOverlay({ scrollYProgress }) {
       {/* ------------------------------------------------------- */}
       <motion.div
         style={{ opacity: s1Opacity, y: s1Y, display: s1Display }}
-        className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-12 text-center"
+        className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
       >
-        <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-white/70 animate-pulse" />
-          <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-white/70">
-            Zanstoryteller
+        {/* Subtle ambient backlight glow matching unifixz */}
+        <div
+          className="absolute inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_75%_55%_at_50%_48%,rgba(28,170,179,0.18)_0%,rgba(12,138,146,0.06)_45%,transparent_70%)]"
+          aria-hidden="true"
+        />
+
+        {/* Minimal pill badge */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-[11px] sm:text-xs font-mono uppercase tracking-[0.22em] text-white/85 backdrop-blur-md mb-6">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1caab3] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1caab3]" />
           </span>
+          <span>Cinematic Photography · 2026</span>
         </div>
 
-        {/* Headline utilizing more space with balanced lines + Typewriter effect */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[68px] font-light tracking-tight text-white uppercase leading-[1.12] mb-6 max-w-5xl">
-          <span className="block">WE CAPTURE THE MOMENTS</span>
-          <span className="block sm:whitespace-nowrap">
-            THAT BECOME{' '}
-            <span className="font-serif italic font-normal text-white/95 lowercase tracking-normal inline-block">
-              <TypewriterHeroText />
-            </span>
+        {/* Headline with exact styling from Screenshot 1 & 2 */}
+        <h1 className="flex flex-col items-center text-center max-w-5xl">
+          {/* Screenshot 1 style: Clean, light, tracked geometric uppercase sans */}
+          <span className="block font-['Outfit',sans-serif] text-xl sm:text-3xl md:text-4xl lg:text-5xl font-light tracking-[0.16em] sm:tracking-[0.18em] text-white/95 uppercase leading-snug">
+            WE CAPTURE THE MOMENTS
+          </span>
+
+          {/* Screenshot 2 style: Ultra-bold, punchy gradient text with tight tracking */}
+          <span className="block font-['Outfit',sans-serif] text-4xl sm:text-6xl md:text-8xl lg:text-9xl xl:text-[104px] font-extrabold tracking-[-0.04em] leading-[0.92] mt-3 uppercase bg-gradient-to-b from-white via-white/95 to-white/50 bg-clip-text text-transparent select-none">
+            THAT BECOME
+          </span>
+
+          {/* Elegant italic typewriter phrase */}
+          <span className="block font-serif italic font-normal text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white/95 lowercase tracking-normal mt-3 sm:mt-4">
+            <TypewriterHeroText />
           </span>
         </h1>
 
-        <p className="text-base sm:text-lg md:text-xl text-white/70 font-light max-w-lg tracking-wide leading-relaxed">
+        <p className="mt-6 text-sm sm:text-base md:text-lg text-white/70 font-light max-w-xl tracking-wide leading-relaxed">
           Cinematic photography turning authentic moments into enduring art.
         </p>
 
         {/* Scroll Prompt */}
         <div className="mt-10 flex flex-col items-center gap-2 text-white/40">
-          <span className="text-[11px] sm:text-xs font-mono tracking-[0.25em] uppercase">
+          <span className="text-[11px] sm:text-xs font-mono tracking-[0.25em] uppercase text-white/60">
             Scroll to Explore
           </span>
           <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
@@ -204,15 +219,15 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         className="absolute top-1/2 -translate-y-1/2 left-6 sm:left-14 md:left-24 max-w-lg text-left"
       >
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-white/60 uppercase">
+          <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-[#1caab3] uppercase">
             01 / Narrative Origin
           </span>
-          <span className="w-8 h-[1px] bg-white/20" />
+          <span className="w-8 h-[1px] bg-[#1caab3]/40" />
         </div>
 
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white uppercase leading-[1.1] mb-4">
-          Every Moment <br />
-          <span className="text-white/80">Has A Story.</span>
+        <h2 className="font-['Outfit',sans-serif] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-white uppercase leading-[1.04] mb-4">
+          <span className="bg-gradient-to-b from-white via-white/95 to-white/60 bg-clip-text text-transparent">EVERY MOMENT</span> <br />
+          <span className="font-light tracking-[0.06em] text-white/80">Has A Story.</span>
         </h2>
 
         <p className="text-base sm:text-lg text-white/75 font-light leading-relaxed max-w-md">
@@ -234,17 +249,16 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         className="absolute top-1/2 -translate-y-1/2 right-6 sm:right-14 md:right-24 max-w-lg text-left md:text-right"
       >
         <div className="flex items-center md:justify-end gap-2 mb-3">
-          <span className="w-8 h-[1px] bg-white/20 hidden md:block" />
-          <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-white/60 uppercase">
+          <span className="w-8 h-[1px] bg-[#1caab3]/40 hidden md:block" />
+          <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-[#1caab3] uppercase">
             02 / Precision Optics
           </span>
-          <span className="w-8 h-[1px] bg-white/20 md:hidden" />
+          <span className="w-8 h-[1px] bg-[#1caab3]/40 md:hidden" />
         </div>
 
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white uppercase leading-[1.1] mb-4">
-          Behind <br />
-          Every Frame <br />
-          <span className="text-white/80">Is A Story.</span>
+        <h2 className="font-['Outfit',sans-serif] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-white uppercase leading-[1.04] mb-4">
+          <span className="bg-gradient-to-b from-white via-white/95 to-white/60 bg-clip-text text-transparent">BEHIND EVERY FRAME</span> <br />
+          <span className="font-light tracking-[0.06em] text-white/80">Is A Story.</span>
         </h2>
 
         <p className="text-base sm:text-lg text-white/75 font-light leading-relaxed max-w-md ml-auto">
@@ -265,16 +279,16 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         style={{ opacity: s4Opacity, y: s4Y, display: s4Display }}
         className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
       >
-        <div className="inline-flex items-center gap-2 mb-3 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.02]">
-          <Sparkles className="w-3.5 h-3.5 text-white/60" />
-          <span className="text-[11px] sm:text-[10px] font-mono tracking-[0.3em] uppercase text-white/70">
+        <div className="inline-flex items-center gap-2 mb-4 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm">
+          <Sparkles className="w-3.5 h-3.5 text-[#1caab3]" />
+          <span className="text-[11px] sm:text-[10px] font-mono tracking-[0.3em] uppercase text-white/80">
             The Art Of Seeing
           </span>
         </div>
 
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-light tracking-tight text-white uppercase leading-[1.06] mb-4">
-          More Than <br />
-          A Photograph.
+        <h2 className="font-['Outfit',sans-serif] text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-[-0.04em] uppercase leading-[0.95] mb-5 bg-gradient-to-b from-white via-white/95 to-white/55 bg-clip-text text-transparent">
+          MORE THAN <br />
+          A PHOTOGRAPH.
         </h2>
 
         <div className="space-y-1.5 text-base sm:text-lg md:text-xl text-white/75 font-light tracking-wide">
@@ -298,15 +312,15 @@ export default function HeroTextOverlay({ scrollYProgress }) {
         className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-auto"
       >
         <div className="inline-flex items-center gap-2 mb-4">
-          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#1caab3]" />
           <span className="text-xs sm:text-[11px] font-mono tracking-[0.35em] uppercase text-white/75">
             Zanstoryteller
           </span>
         </div>
 
-        <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light tracking-tight text-white uppercase leading-[1.04] mb-5">
-          Your Story. <br />
-          <span className="font-serif italic font-normal text-white/95 lowercase tracking-normal">
+        <h2 className="font-['Outfit',sans-serif] text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-extrabold tracking-[-0.04em] uppercase leading-[0.92] mb-5">
+          <span className="bg-gradient-to-b from-white via-white/95 to-white/55 bg-clip-text text-transparent">YOUR STORY.</span> <br />
+          <span className="font-serif italic font-normal text-white/95 lowercase tracking-normal text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
             our lens.
           </span>
         </h2>
