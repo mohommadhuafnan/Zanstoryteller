@@ -57,7 +57,6 @@ export default function ScrollImageSequence({
       typeof window !== 'undefined' &&
       (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
     const preloadRadius = isMobile ? 8 : 16
-    const smoothingFactor = isMobile ? 0.08 : 0.062
 
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
@@ -198,8 +197,26 @@ export default function ScrollImageSequence({
         }
       }
 
+      if (!isVisible) {
+        rafIdRef.current = null
+        return
+      }
+
       rafIdRef.current = requestAnimationFrame(renderLoop)
     }
+
+    let isVisible = true
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+        if (isVisible && !rafIdRef.current) {
+          rafIdRef.current = requestAnimationFrame(renderLoop)
+        }
+      },
+      { threshold: 0 }
+    )
+    observer.observe(canvas)
 
     // Subscribe to frame loading notifications
     const unsubscribeCache = frameCacheManager.onFrameLoaded((loadedIndex) => {
@@ -220,6 +237,7 @@ export default function ScrollImageSequence({
     rafIdRef.current = requestAnimationFrame(renderLoop)
 
     return () => {
+      observer.disconnect()
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
       window.removeEventListener('resize', handleResize)
       clearTimeout(resizeTimer)

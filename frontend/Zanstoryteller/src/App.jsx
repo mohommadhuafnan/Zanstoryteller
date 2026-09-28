@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import Navbar from './components/Navbar'
 import HeroSection from './components/HeroSection'
 import AboutSection from './components/AboutSection'
@@ -13,11 +13,13 @@ import SocialGallery from './components/SocialGallery'
 import QASection from './components/QASection'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
-import BookingPage from './components/booking/BookingPage'
-import CategoryGalleryPage from './components/gallery/CategoryGalleryPage'
-import ClientAlbumPage from './components/gallery/ClientAlbumPage'
 import FloatingMessageWidget from './components/FloatingMessageWidget'
-import ExitIntentPopup from './components/ExitIntentPopup'
+
+// Lazily load separate routes and non-critical overlays to drastically reduce initial JS payload
+const BookingPage = lazy(() => import('./components/booking/BookingPage'))
+const CategoryGalleryPage = lazy(() => import('./components/gallery/CategoryGalleryPage'))
+const ClientAlbumPage = lazy(() => import('./components/gallery/ClientAlbumPage'))
+const ExitIntentPopup = lazy(() => import('./components/ExitIntentPopup'))
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
@@ -64,11 +66,15 @@ export default function App() {
         <div className="film-grain" aria-hidden="true" />
         <Navbar onNavigate={navigate} currentPath={currentPath} />
         <main className="w-full">
-          <BookingPage onNavigateHome={() => navigate('/')} />
+          <Suspense fallback={<div className="min-h-screen bg-[#020202]" />}>
+            <BookingPage onNavigateHome={() => navigate('/')} />
+          </Suspense>
         </main>
         <Footer />
         <FloatingMessageWidget />
-        <ExitIntentPopup onNavigate={navigate} />
+        <Suspense fallback={null}>
+          <ExitIntentPopup onNavigate={navigate} />
+        </Suspense>
       </div>
     )
   }
@@ -85,22 +91,26 @@ export default function App() {
       <div className="relative min-h-screen bg-white text-[#111111] selection:bg-[#111111] selection:text-white">
         <Navbar onNavigate={navigate} currentPath={currentPath} />
         <main className="w-full">
-          {clientSlug ? (
-            <ClientAlbumPage
-              categorySlug={categorySlug}
-              clientSlug={clientSlug}
-              onNavigate={navigate}
-            />
-          ) : (
-            <CategoryGalleryPage
-              categorySlug={categorySlug}
-              onNavigate={navigate}
-            />
-          )}
+          <Suspense fallback={<div className="min-h-screen bg-white" />}>
+            {clientSlug ? (
+              <ClientAlbumPage
+                categorySlug={categorySlug}
+                clientSlug={clientSlug}
+                onNavigate={navigate}
+              />
+            ) : (
+              <CategoryGalleryPage
+                categorySlug={categorySlug}
+                onNavigate={navigate}
+              />
+            )}
+          </Suspense>
         </main>
         <Footer />
         <FloatingMessageWidget />
-        <ExitIntentPopup onNavigate={navigate} />
+        <Suspense fallback={null}>
+          <ExitIntentPopup onNavigate={navigate} />
+        </Suspense>
       </div>
     )
   }
@@ -165,7 +175,9 @@ export default function App() {
       <FloatingMessageWidget />
 
       {/* Premium Animated Exit-Intent Advertisement Popup */}
-      <ExitIntentPopup onNavigate={navigate} />
+      <Suspense fallback={null}>
+        <ExitIntentPopup onNavigate={navigate} />
+      </Suspense>
     </div>
   )
 }

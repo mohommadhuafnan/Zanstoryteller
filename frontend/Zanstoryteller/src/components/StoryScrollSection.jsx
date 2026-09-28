@@ -2,6 +2,7 @@ import React, { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { storyScrollSteps } from '../data/photographyData'
 import { Sparkles } from 'lucide-react'
+import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 
 /**
  * Section 4: "The Story Behind The Frame"
@@ -138,7 +139,7 @@ export default function StoryScrollSection() {
             className="absolute inset-0 w-full h-full"
           >
             <img
-              src={storyScrollSteps[0].image}
+              {...getResponsiveUnsplash(storyScrollSteps[0].image, 1200, '100vw')}
               alt={storyScrollSteps[0].alt}
               className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.05]"
               loading="lazy"
@@ -152,7 +153,7 @@ export default function StoryScrollSection() {
             className="absolute inset-0 w-full h-full"
           >
             <img
-              src={storyScrollSteps[1].image}
+              {...getResponsiveUnsplash(storyScrollSteps[1].image, 1200, '100vw')}
               alt={storyScrollSteps[1].alt}
               className="w-full h-full object-cover filter brightness-[0.68] contrast-[1.05]"
               loading="lazy"
@@ -166,7 +167,7 @@ export default function StoryScrollSection() {
             className="absolute inset-0 w-full h-full"
           >
             <img
-              src={storyScrollSteps[2].image}
+              {...getResponsiveUnsplash(storyScrollSteps[2].image, 1200, '100vw')}
               alt={storyScrollSteps[2].alt}
               className="w-full h-full object-cover filter brightness-[0.65] contrast-[1.05]"
               loading="lazy"

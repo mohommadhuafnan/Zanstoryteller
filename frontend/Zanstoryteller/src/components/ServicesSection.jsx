@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight, ArrowRight, ArrowLeft, Camera } from 'lucide-react'
 import { servicesData } from '../data/photographyData'
+import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 
 export default function ServicesSection() {
   const [activeService, setActiveService] = useState(0)
@@ -120,7 +121,7 @@ export default function ServicesSection() {
                 {/* Background Photography Image */}
                 <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#161616]">
                   <img
-                    src={service.image}
+                    {...getResponsiveUnsplash(service.image, 1000, '(max-width: 768px) 100vw, 50vw')}
                     alt={service.alt}
                     loading="lazy"
                     decoding="async"

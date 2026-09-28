@@ -175,7 +175,10 @@ class FrameCacheManager {
     this.backgroundQueue = pending
     this.isProcessingQueue = true
 
-    const CONCURRENCY = 6
+    const isMobile =
+      typeof window !== 'undefined' &&
+      (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
+    const CONCURRENCY = isMobile ? 3 : 6
     let activeWorkers = 0
 
     const next = () => {

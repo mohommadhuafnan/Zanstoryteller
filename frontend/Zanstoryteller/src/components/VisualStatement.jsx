@@ -1,5 +1,6 @@
 import React from 'react'
 import { visualStatementData } from '../data/photographyData'
+import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 
 export default function VisualStatement() {
   return (
@@ -9,7 +10,7 @@ export default function VisualStatement() {
       {/* Static Background Photo */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
-          src={visualStatementData.image}
+          {...getResponsiveUnsplash(visualStatementData.image, 1200, '100vw')}
           alt={visualStatementData.alt}
           className="w-full h-full object-cover object-center filter brightness-[0.55] contrast-[1.08]"
           loading="lazy"

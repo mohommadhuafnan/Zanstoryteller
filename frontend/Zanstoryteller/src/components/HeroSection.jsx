@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { useScroll, motion, AnimatePresence } from 'framer-motion'
-import { Camera } from 'lucide-react'
 import ScrollImageSequence from './ScrollImageSequence'
 import ScrollParticleField from './ScrollParticleField'
 import HeroTextOverlay from './HeroTextOverlay'
 import {
-  TOTAL_FRAMES,
   frameCacheManager,
 } from '../utils/frameSequence'
 
@@ -203,13 +201,13 @@ function MinimalExperienceLoader({ progress, isReady }) {
                     }}
                     transition={{
                       pathLength: {
-                        duration: 0.85,
+                        duration: 0.7,
                         ease: [0.22, 1, 0.36, 1],
-                        delay: 0.08 + index * 0.075,
+                        delay: 0.05 + index * 0.06,
                       },
                       opacity: {
                         duration: 0.15,
-                        delay: 0.08 + index * 0.075,
+                        delay: 0.05 + index * 0.06,
                       },
                     }}
                   />
@@ -265,8 +263,6 @@ function MinimalExperienceLoader({ progress, isReady }) {
  */
 export default function HeroSection() {
   const containerRef = useRef(null)
-  const [currentFrameDisplay, setCurrentFrameDisplay] = useState(1)
-  const [modeLabel, setModeLabel] = useState('Optical Assembly')
   const [initialProgress, setInitialProgress] = useState(0)
   const [isInitialReady, setIsInitialReady] = useState(false)
 
@@ -276,13 +272,17 @@ export default function HeroSection() {
     offset: ['start start', 'end end'],
   })
 
-  // Preload initial burst immediately on mount with 28 frames and smooth pacing
+  // Preload initial burst immediately on mount with responsive burst and smooth pacing
   useEffect(() => {
     let isMounted = true
     const startTime = Date.now()
-    const MIN_LOADER_TIME = 2800 // Ensures complete slow stroke-draw choreography of every letter
+    const isMobile =
+      typeof window !== 'undefined' &&
+      (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
+    const MIN_LOADER_TIME = isMobile ? 1500 : 1800
+    const preloadCount = isMobile ? 14 : 26
 
-    frameCacheManager.preloadInitial(28, (pct) => {
+    frameCacheManager.preloadInitial(preloadCount, (pct) => {
       if (isMounted) setInitialProgress(pct)
     }).then(() => {
       if (isMounted) {
@@ -291,7 +291,7 @@ export default function HeroSection() {
         setInitialProgress(100)
         setTimeout(() => {
           if (isMounted) setIsInitialReady(true)
-        }, remaining + 250)
+        }, remaining + 100)
       }
     })
 
@@ -300,21 +300,9 @@ export default function HeroSection() {
     }
   }, [])
 
-  // Callback from canvas RAF loop for frame & stage telemetry
-  const handleFrameUpdate = useCallback((frameIdx, progress) => {
-    setCurrentFrameDisplay(frameIdx + 1)
-
-    if (progress < 0.16) {
-      setModeLabel('Optical Assembly')
-    } else if (progress >= 0.16 && progress < 0.65) {
-      setModeLabel('Deconstruction Stage')
-    } else if (progress >= 0.65 && progress < 0.82) {
-      setModeLabel('Full Mechanical Explosion')
-    } else if (progress >= 0.82 && progress < 0.94) {
-      setModeLabel('Precision Reassembly')
-    } else {
-      setModeLabel('Optics Sealed')
-    }
+  // Optimized lightweight canvas frame update callback
+  const handleFrameUpdate = useCallback(() => {
+    // Handled directly inside canvas loop without triggering React component re-renders
   }, [])
 
   return (

@@ -11,7 +11,7 @@ export const aboutData = {
     "At Zanstoryteller, we focus on capturing genuine moments with creativity, patience and an eye for detail. From intimate celebrations to unforgettable milestones, our goal is to create photographs that feel as meaningful years from now as they did in the moment."
   ],
   ctaText: "DISCOVER OUR STORY",
-  image: "/about/zan_photographer_transparent.png",
+  image: "/about/zan_photographer_transparent.webp",
   imageAlt: "Mohammad Zan - Founder & Cinematographer of Zanstoryteller",
   badge: "EST. 2020 • CEYLON & WORLDWIDE"
 }
@@ -289,21 +289,21 @@ export const footerData = {
 export const editorialCarouselImages = [
   {
     id: "ec-abaya-1",
-    image: "/editorial/abaya_midnight_blue.jpg",
+    image: "/editorial/abaya_midnight_blue.webp",
     alt: "Midnight blue pleated abaya hanging on brass rack against art canvas backdrop",
     title: "Midnight Noir Abaya",
     subtitle: "Archival Modest Couture"
   },
   {
     id: "ec-abaya-2",
-    image: "/editorial/abaya_emerald_terracotta.jpg",
+    image: "/editorial/abaya_emerald_terracotta.webp",
     alt: "Emerald green and terracotta orange pleated abayas on studio mannequins",
     title: "Emerald & Ochre Studio",
     subtitle: "Draping & Silhouette"
   },
   {
     id: "ec-abaya-3",
-    image: "/editorial/abaya_royal_pine.jpg",
+    image: "/editorial/abaya_royal_pine.webp",
     alt: "Emerald royal pine green pleated abaya hanging on brass rack against canvas",
     title: "Royal Pine Abaya",
     subtitle: "Handcrafted Pleats"

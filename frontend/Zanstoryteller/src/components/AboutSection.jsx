@@ -76,6 +76,8 @@ export default function AboutSection() {
               <img
                 src={aboutData.image}
                 alt={aboutData.imageAlt}
+                width="682"
+                height="1024"
                 className="w-full h-auto object-contain block filter contrast-[1.03] select-none pointer-events-none"
                 loading="lazy"
                 decoding="async"

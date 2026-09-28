@@ -235,14 +235,9 @@ export default function ScrollParticleField({ scrollYProgress }) {
         const depthFade = farFade * nearFade
         const subtlePulse = 0.85 + Math.sin(time * 1.6 + i) * 0.15
 
-        let dotAlpha = 0
-        if (isIdleDot) {
-          // The 4-5 core idle dots: always gently visible
-          dotAlpha = (0.35 + depthRatio * 0.25) * depthFade * p.alphaMultiplier * subtlePulse
-        } else {
-          // Additional accent dots: fade in during scroll, fade out when stationary
-          dotAlpha = scrollActivityRef.current * (0.4 + depthRatio * 0.25) * depthFade * p.alphaMultiplier * subtlePulse
-        }
+        const dotAlpha = isIdleDot
+          ? (0.35 + depthRatio * 0.25) * depthFade * p.alphaMultiplier * subtlePulse
+          : scrollActivityRef.current * (0.4 + depthRatio * 0.25) * depthFade * p.alphaMultiplier * subtlePulse
 
         if (dotAlpha <= 0.015) continue
 
@@ -270,9 +265,23 @@ export default function ScrollParticleField({ scrollYProgress }) {
       rafRef.current = requestAnimationFrame(animate)
     }
 
+    let isVisible = true
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+        if (isVisible && !rafRef.current) {
+          rafRef.current = requestAnimationFrame(animate)
+        }
+      },
+      { threshold: 0 }
+    )
+    observer.observe(canvas)
+
     rafRef.current = requestAnimationFrame(animate)
 
     return () => {
+      observer.disconnect()
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       window.removeEventListener('resize', resize)
       window.removeEventListener('wheel', onWheel)

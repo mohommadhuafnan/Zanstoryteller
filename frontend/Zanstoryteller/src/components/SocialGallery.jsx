@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { InstagramIcon } from './Icons'
 import { socialPosts } from '../data/photographyData'
+import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 
 export default function SocialGallery() {
   return (
@@ -50,7 +51,7 @@ export default function SocialGallery() {
               className="group relative aspect-square overflow-hidden rounded-sm bg-[#EEEEEE]"
             >
               <img
-                src={post.image}
+                {...getResponsiveUnsplash(post.image, 400, '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 220px')}
                 alt={post.caption}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 filter saturate-[0.95]"
                 loading="lazy"

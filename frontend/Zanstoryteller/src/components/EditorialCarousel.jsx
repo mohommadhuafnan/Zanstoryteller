@@ -16,7 +16,7 @@ export default function EditorialCarousel() {
   const lastReportedImgRef = useRef(null)
 
   // Initial background defaults to the photoshoot composite backdrop matching reference screenshot
-  const [currentBgImage, setCurrentBgImage] = useState('/editorial/abaya_composite_backdrop.jpg')
+  const [currentBgImage, setCurrentBgImage] = useState('/editorial/abaya_composite_backdrop.webp')
   const [activeLightboxIndex, setActiveLightboxIndex] = useState(null)
   const [isGrabbing, setIsGrabbing] = useState(false)
 
@@ -74,10 +74,12 @@ export default function EditorialCarousel() {
     }, durationMs)
   }, [])
 
-  // Continuous smooth auto-scroll loop
+  // Continuous smooth auto-scroll loop with IntersectionObserver visibility gating
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
+
+    let isVisible = false
 
     // Position initially in the middle repetition to allow smooth left & right scrolling
     const initScrollPosition = () => {
@@ -96,6 +98,11 @@ export default function EditorialCarousel() {
     let lastCheckTime = 0
 
     const animateLoop = (time) => {
+      if (!isVisible) {
+        animFrameRef.current = null
+        return
+      }
+
       if (container && !isPausedRef.current) {
         scrollPosRef.current += scrollSpeed
 
@@ -119,9 +126,19 @@ export default function EditorialCarousel() {
       animFrameRef.current = requestAnimationFrame(animateLoop)
     }
 
-    animFrameRef.current = requestAnimationFrame(animateLoop)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting
+        if (isVisible && !animFrameRef.current) {
+          animFrameRef.current = requestAnimationFrame(animateLoop)
+        }
+      },
+      { threshold: 0.05, rootMargin: '120px' }
+    )
+    observer.observe(container)
 
     return () => {
+      observer.disconnect()
       clearTimeout(timer)
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current)

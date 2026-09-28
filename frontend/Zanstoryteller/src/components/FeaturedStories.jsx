@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { portfolioCategories, portfolioItems } from '../data/photographyData'
+import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 
 export default function FeaturedStories({ onNavigate }) {
   const [selectedCategory, setSelectedCategory] = useState("ALL")
@@ -84,7 +85,7 @@ export default function FeaturedStories({ onNavigate }) {
               >
                 {/* 100% Full cover image - adapts dynamically to card height and width without leaving any blank space */}
                 <img
-                  src={item.image}
+                  {...getResponsiveUnsplash(item.image, 1000, '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px')}
                   alt={item.alt}
                   className="absolute inset-0 w-full h-full object-cover object-center filter saturate-[0.96] transition-transform duration-700 ease-out group-hover:scale-105"
                   loading="lazy"
