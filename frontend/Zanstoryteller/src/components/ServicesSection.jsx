@@ -78,37 +78,6 @@ export default function ServicesSection() {
           </p>
         </motion.div>
 
-        {/* Quick Category Switcher Tabs with Scroll Reveal */}
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-wrap items-center gap-2 sm:gap-3 mb-8 sm:mb-10"
-        >
-          {servicesData.map((service, index) => {
-            const isActive = activeService === index
-            return (
-              <button
-                key={service.id}
-                onClick={() => setActiveService(index)}
-                className={`relative px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-mono tracking-[0.2em] uppercase transition-all duration-300 flex items-center gap-2.5 cursor-pointer ${
-                  isActive
-                    ? 'bg-[#111111] text-white font-medium shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
-                    : 'bg-[#F5F5F5] hover:bg-[#EAEAEA] text-[#555555] hover:text-[#111111] border border-[#E5E5E5]'
-                }`}
-              >
-                <span className={`text-[10px] ${isActive ? 'text-[#D8BB7B]' : 'text-[#999999]'}`}>
-                  {service.number}
-                </span>
-                <span>{service.title}</span>
-                {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D8BB7B]" />
-                )}
-              </button>
-            )
-          })}
-        </motion.div>
 
         {/* DESKTOP: Kinetic Expanding Accordion Deck (>= lg screens) with Scroll Reveal */}
         <motion.div
