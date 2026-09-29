@@ -10,8 +10,14 @@ export default function SocialGallery() {
     <section className="relative z-10 w-full bg-[#FAFAFA] text-[#111111] py-24 sm:py-32 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
       <div className="max-w-7xl mx-auto">
         
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 pb-6 border-b border-[#EAEAEA]">
+        {/* Section Header with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col md:flex-row md:items-end justify-between mb-16 pb-6 border-b border-[#EAEAEA]"
+        >
           <div>
             <div className="flex items-center gap-3 mb-3">
               <InstagramIcon className="w-4 h-4 text-[#111111]" />
@@ -29,7 +35,7 @@ export default function SocialGallery() {
               More moments, behind the scenes & recent work.
             </span>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/zan_storyteller?stkn=MWg4ejhjam56YjJhZg%3D%3D&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-mono tracking-widest uppercase px-4 py-2 border border-[#111111] text-[#111111] hover:bg-[#111111] hover:text-white transition-all rounded-full"
@@ -37,17 +43,17 @@ export default function SocialGallery() {
               @zanstoryteller
             </a>
           </div>
-        </div>
+        </motion.div>
 
         {/* 6-Photo Clean Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {socialPosts.map((post, idx) => (
             <motion.div
               key={post.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 30, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, delay: idx * 0.08 }}
+              transition={{ duration: 0.55, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
               className="group relative aspect-square overflow-hidden rounded-sm bg-[#EEEEEE]"
             >
               <img

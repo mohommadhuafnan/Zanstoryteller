@@ -54,8 +54,14 @@ export default function ServicesSection() {
 
       <div className="max-w-7xl mx-auto relative z-10">
         
-        {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 sm:mb-16 pb-8 border-b border-[#EAEAEA]">
+        {/* Section Header with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 sm:mb-16 pb-8 border-b border-[#EAEAEA]"
+        >
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="w-2 h-2 rounded-full bg-[#111111]" />
@@ -70,10 +76,16 @@ export default function ServicesSection() {
           <p className="mt-4 lg:mt-0 text-sm sm:text-base text-[#666666] font-light max-w-md lg:text-right leading-relaxed">
             Four specialized disciplines shaped by authentic emotion, poetic light, and unscripted storytelling.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Quick Category Switcher Tabs */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-8 sm:mb-10">
+        {/* Quick Category Switcher Tabs with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap items-center gap-2 sm:gap-3 mb-8 sm:mb-10"
+        >
           {servicesData.map((service, index) => {
             const isActive = activeService === index
             return (
@@ -96,10 +108,16 @@ export default function ServicesSection() {
               </button>
             )
           })}
-        </div>
+        </motion.div>
 
-        {/* DESKTOP: Kinetic Expanding Accordion Deck (>= lg screens) */}
-        <div className="hidden lg:flex gap-3 xl:gap-4 h-[600px] xl:h-[640px] w-full">
+        {/* DESKTOP: Kinetic Expanding Accordion Deck (>= lg screens) with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.85, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          className="hidden lg:flex gap-3 xl:gap-4 h-[600px] xl:h-[640px] w-full"
+        >
           {servicesData.map((service, index) => {
             const isActive = activeService === index
 
@@ -250,10 +268,16 @@ export default function ServicesSection() {
               </motion.div>
             )
           })}
-        </div>
+        </motion.div>
 
         {/* MOBILE & TABLET: Interactive Cinematic Showcase Deck (< lg screens) */}
-        <div className="block lg:hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="block lg:hidden"
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={activeItem.id}
@@ -353,7 +377,7 @@ export default function ServicesSection() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
       </div>
     </section>

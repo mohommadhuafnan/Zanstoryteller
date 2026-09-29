@@ -8,24 +8,28 @@ import {
 } from '../utils/frameSequence'
 
 /**
- * Bottom Cinematic Stage & Scroll Indicator (matching Screenshot 4):
- * SCROLL ————————— 01 / 03
- * Animates smoothly up into position at the bottom after loading completes.
+ * Bottom Cinematic Stage & Scroll Indicator:
+ * SCROLL ————————— 01 / 05
+ * 5 full stages synchronized to hero scroll progress, with responsive mobile layout.
  */
 function BottomScrollStageIndicator({ scrollYProgress, isReady }) {
-  const [stageIndex, setStageIndex] = useState('01 / 03')
+  const [stageIndex, setStageIndex] = useState('01 / 05')
   const [lineProgress, setLineProgress] = useState(0)
 
   useEffect(() => {
     if (!scrollYProgress) return
     return scrollYProgress.on('change', (v) => {
       setLineProgress(v)
-      if (v < 0.33) {
-        setStageIndex('01 / 03')
-      } else if (v < 0.68) {
-        setStageIndex('02 / 03')
+      if (v < 0.18) {
+        setStageIndex('01 / 05')
+      } else if (v < 0.40) {
+        setStageIndex('02 / 05')
+      } else if (v < 0.64) {
+        setStageIndex('03 / 05')
+      } else if (v < 0.84) {
+        setStageIndex('04 / 05')
       } else {
-        setStageIndex('03 / 03')
+        setStageIndex('05 / 05')
       }
     })
   }, [scrollYProgress])
@@ -38,19 +42,19 @@ function BottomScrollStageIndicator({ scrollYProgress, isReady }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 22 }}
           transition={{ duration: 0.85, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute bottom-7 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex items-center gap-3.5 sm:gap-5 text-xs font-mono uppercase tracking-[0.28em] text-white/80 select-none"
+          className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex items-center gap-2.5 sm:gap-5 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] sm:tracking-[0.28em] text-white/80 select-none max-w-[92vw] justify-center"
         >
-          <span className="text-white/70 tracking-[0.3em] text-[11px] sm:text-xs">SCROLL</span>
+          <span className="text-white/70 tracking-[0.25em] text-[10px] sm:text-xs">SCROLL</span>
 
           {/* Sleek Line Track */}
-          <div className="w-24 sm:w-36 md:w-44 h-[1.5px] bg-white/20 relative overflow-hidden rounded-full">
+          <div className="w-16 xs:w-24 sm:w-36 md:w-44 h-[1.5px] bg-white/20 relative overflow-hidden rounded-full">
             <motion.div
               className="h-full bg-gradient-to-r from-[#D8BB7B] via-[#FFF5D6] to-white"
               style={{ width: `${Math.max(8, lineProgress * 100)}%` }}
             />
           </div>
 
-          <span className="text-white/90 font-medium tracking-[0.24em] text-[11px] sm:text-xs min-w-[56px] text-right">
+          <span className="text-white/90 font-medium tracking-[0.2em] sm:tracking-[0.24em] text-[10px] sm:text-xs min-w-[48px] sm:min-w-[56px] text-right">
             {stageIndex}
           </span>
         </motion.div>
@@ -108,7 +112,7 @@ function MinimalExperienceLoader({ progress, isReady }) {
           key="minimal-loader"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }}
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#121E2C] text-white px-4 sm:px-8 pointer-events-auto select-none overflow-hidden"
+          className="fixed inset-0 z-[99999] w-screen h-screen flex flex-col items-center justify-center bg-[#121E2C] text-white px-4 sm:px-8 pointer-events-auto select-none overflow-hidden"
           style={{ background: 'radial-gradient(circle at center, #18293d 0%, #121E2C 100%)' }}
         >
           <div className="flex flex-col items-center w-full max-w-6xl text-center relative">
@@ -256,6 +260,10 @@ function MinimalExperienceLoader({ progress, isReady }) {
   )
 }
 
+// Module-level cache to ensure initial loader only runs on first site entrance/refresh,
+// never when navigating between internal routes (e.g. Back to Home from Gallery).
+let hasCompletedInitialLoad = false
+
 /**
  * HeroSection Component
  * Master scroll container with 420vh track, sticky 100vh viewport,
@@ -263,8 +271,33 @@ function MinimalExperienceLoader({ progress, isReady }) {
  */
 export default function HeroSection() {
   const containerRef = useRef(null)
-  const [initialProgress, setInitialProgress] = useState(0)
-  const [isInitialReady, setIsInitialReady] = useState(false)
+  const [initialProgress, setInitialProgress] = useState(hasCompletedInitialLoad ? 100 : 0)
+  const [isInitialReady, setIsInitialReady] = useState(hasCompletedInitialLoad)
+
+  // Strictly lock page scrolling while initial experience loader is active
+  useEffect(() => {
+    if (!isInitialReady) {
+      const originalBodyOverflow = document.body.style.overflow
+      const originalHtmlOverflow = document.documentElement.style.overflow
+
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+
+      const preventScroll = (e) => {
+        e.preventDefault()
+      }
+
+      window.addEventListener('wheel', preventScroll, { passive: false })
+      window.addEventListener('touchmove', preventScroll, { passive: false })
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow
+        document.documentElement.style.overflow = originalHtmlOverflow
+        window.removeEventListener('wheel', preventScroll)
+        window.removeEventListener('touchmove', preventScroll)
+      }
+    }
+  }, [isInitialReady])
 
   // Track scroll progress strictly within this 420vh container
   const { scrollYProgress } = useScroll({
@@ -274,13 +307,19 @@ export default function HeroSection() {
 
   // Preload initial burst immediately on mount with responsive burst and smooth pacing
   useEffect(() => {
+    if (hasCompletedInitialLoad) {
+      setIsInitialReady(true)
+      setInitialProgress(100)
+      return
+    }
+
     let isMounted = true
     const startTime = Date.now()
     const isMobile =
       typeof window !== 'undefined' &&
       (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
-    const MIN_LOADER_TIME = isMobile ? 1500 : 1800
-    const preloadCount = isMobile ? 14 : 26
+    const MIN_LOADER_TIME = isMobile ? 1200 : 1500
+    const preloadCount = isMobile ? 35 : 50
 
     frameCacheManager.preloadInitial(preloadCount, (pct) => {
       if (isMounted) setInitialProgress(pct)
@@ -290,6 +329,7 @@ export default function HeroSection() {
         const remaining = Math.max(0, MIN_LOADER_TIME - elapsed)
         setInitialProgress(100)
         setTimeout(() => {
+          hasCompletedInitialLoad = true
           if (isMounted) setIsInitialReady(true)
         }, remaining + 100)
       }

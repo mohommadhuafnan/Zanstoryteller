@@ -34,7 +34,7 @@ export default function FloatingMessageWidget() {
   const [hoveredButton, setHoveredButton] = useState(null) // 'whatsapp' | 'messenger' | 'hide' | null
 
   // Direct links for WhatsApp and Facebook
-  const whatsappNumber = "+94771234567" // Customizable via phone or business number
+  const whatsappNumber = "+974 6690 4220" // Customizable via phone or business number
   const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello Zanstoryteller, I would like to inquire about booking a photography session.")}`
   const messengerUrl = "https://m.me/zanstoryteller"
 

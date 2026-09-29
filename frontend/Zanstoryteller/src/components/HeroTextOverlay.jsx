@@ -7,9 +7,16 @@ import { ArrowUpRight, Sparkles } from 'lucide-react'
  * Specifically animates "timeless stories." smoothly on the same line,
  * preventing any line breaks or layout jumping.
  */
+const HERO_PHRASES = [
+  "timeless stories.",
+  "unforgettable memories.",
+  "authentic emotions.",
+]
+
 function TypewriterHeroText() {
-  const targetText = "timeless stories."
-  const [displayText, setDisplayText] = useState(targetText)
+  const [phraseIdx, setPhraseIdx] = useState(0)
+  const currentTarget = HERO_PHRASES[phraseIdx]
+  const [displayText, setDisplayText] = useState(currentTarget)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isPaused, setIsPaused] = useState(true)
 
@@ -21,16 +28,16 @@ function TypewriterHeroText() {
       timer = setTimeout(() => {
         setIsPaused(false)
         setIsDeleting(true)
-      }, 3600)
+      }, 3200)
       return () => clearTimeout(timer)
     }
 
     if (!isDeleting) {
       // Smooth forward typing
-      if (displayText.length < targetText.length) {
+      if (displayText.length < currentTarget.length) {
         timer = setTimeout(() => {
-          setDisplayText(targetText.slice(0, displayText.length + 1))
-        }, 75)
+          setDisplayText(currentTarget.slice(0, displayText.length + 1))
+        }, 70)
       } else {
         setIsPaused(true)
       }
@@ -38,18 +45,19 @@ function TypewriterHeroText() {
       // Smooth backward deleting
       if (displayText.length > 0) {
         timer = setTimeout(() => {
-          setDisplayText(targetText.slice(0, displayText.length - 1))
-        }, 35)
+          setDisplayText(currentTarget.slice(0, displayText.length - 1))
+        }, 30)
       } else {
-        // Brief pause before retyping
+        // Cycle to next phrase
         timer = setTimeout(() => {
+          setPhraseIdx((prev) => (prev + 1) % HERO_PHRASES.length)
           setIsDeleting(false)
-        }, 350)
+        }, 280)
       }
     }
 
     return () => clearTimeout(timer)
-  }, [displayText, isDeleting, isPaused])
+  }, [displayText, isDeleting, isPaused, phraseIdx, currentTarget])
 
   return (
     <span className="inline-flex items-baseline">
@@ -150,6 +158,11 @@ export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
     if (p > 0.33) return -(p - 0.33) * 300
     return 0
   })
+  const s2X = useTransform(scrollYProgress, (p) => {
+    if (p < 0.23) return (p - 0.23) * 80
+    if (p > 0.33) return -(p - 0.33) * 80
+    return 0
+  })
   const s2Display = useTransform(scrollYProgress, (p) =>
     p >= 0.17 && p <= 0.39 ? 'block' : 'none'
   )
@@ -169,8 +182,13 @@ export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
     if (p > 0.57) return -(p - 0.57) * 300
     return 0
   })
+  const s3X = useTransform(scrollYProgress, (p) => {
+    if (p < 0.49) return -(p - 0.49) * 80
+    if (p > 0.57) return (p - 0.57) * 80
+    return 0
+  })
   const s3Display = useTransform(scrollYProgress, (p) =>
-    p >= 0.43 && p <= 0.63 ? 'block' : 'none'
+    p >= 0.43 && p <= 0.63 ? 'flex' : 'none'
   )
 
   // -------------------------------------------------------------
@@ -223,20 +241,6 @@ export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
           className="absolute inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_75%_55%_at_50%_48%,rgba(28,170,179,0.18)_0%,rgba(12,138,146,0.06)_45%,transparent_70%)]"
           aria-hidden="true"
         />
-
-        {/* Minimal pill badge - smooth slide from bottom */}
-        <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 22 }}
-          transition={{ duration: 0.8, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-[11px] sm:text-xs font-mono uppercase tracking-[0.22em] text-white/85 backdrop-blur-md mb-6"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1caab3] opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#1caab3]" />
-          </span>
-          <span>Cinematic Photography · 2026</span>
-        </motion.div>
 
         {/* Headline with exact styling and smooth bottom-to-top letter reveals */}
         <h1 className="flex flex-col items-center text-center max-w-5xl">
@@ -291,11 +295,11 @@ export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
       </motion.div>
 
       {/* ------------------------------------------------------- */}
-      {/* STAGE 2: STORY BEGINS (Left Side) */}
+      {/* STAGE 2: STORY BEGINS (Left Side on both Mobile & Desktop) */}
       {/* ------------------------------------------------------- */}
       <motion.div
-        style={{ opacity: s2Opacity, y: s2Y, display: s2Display }}
-        className="absolute top-1/2 -translate-y-1/2 left-6 sm:left-14 md:left-24 max-w-lg text-left"
+        style={{ opacity: s2Opacity, y: s2Y, x: s2X, display: s2Display }}
+        className="absolute top-1/2 -translate-y-1/2 left-4 xs:left-6 sm:left-14 md:left-24 max-w-[280px] xs:max-w-xs sm:max-w-md md:max-w-lg text-left pointer-events-none"
       >
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-[#1caab3] uppercase">
@@ -304,16 +308,16 @@ export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
           <span className="w-8 h-[1px] bg-[#1caab3]/40" />
         </div>
 
-        <h2 className="font-['Outfit',sans-serif] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-white uppercase leading-[1.04] mb-4">
+        <h2 className="font-['Outfit',sans-serif] text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-white uppercase leading-[1.04] mb-3 sm:mb-4">
           <span className="bg-gradient-to-b from-white via-white/95 to-white/60 bg-clip-text text-transparent">EVERY MOMENT</span> <br />
           <span className="font-light tracking-[0.06em] text-white/80">Has A Story.</span>
         </h2>
 
-        <p className="text-base sm:text-lg text-white/75 font-light leading-relaxed max-w-md">
+        <p className="text-xs xs:text-sm sm:text-base md:text-lg text-white/75 font-light leading-relaxed max-w-md">
           From quiet details to unforgettable celebrations, we capture the moments that matter with unyielding clarity and emotional resonance.
         </p>
 
-        <div className="mt-6 flex items-center gap-3 sm:gap-4 text-xs sm:text-[11px] font-mono text-white/50 tracking-wider">
+        <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-[11px] font-mono text-white/50 tracking-wider">
           <span>35mm Full-Frame Sensor</span>
           <span>•</span>
           <span>Optical Separation</span>
@@ -321,30 +325,29 @@ export default function HeroTextOverlay({ scrollYProgress, isReady = true }) {
       </motion.div>
 
       {/* ------------------------------------------------------- */}
-      {/* STAGE 3: THE CRAFT (Right Side) */}
+      {/* STAGE 3: THE CRAFT (Right Side on both Mobile & Desktop) */}
       {/* ------------------------------------------------------- */}
       <motion.div
-        style={{ opacity: s3Opacity, y: s3Y, display: s3Display }}
-        className="absolute top-1/2 -translate-y-1/2 right-6 sm:right-14 md:right-24 max-w-lg text-left md:text-right"
+        style={{ opacity: s3Opacity, y: s3Y, x: s3X, display: s3Display }}
+        className="absolute top-1/2 -translate-y-1/2 right-4 xs:right-6 sm:right-14 md:right-24 max-w-[280px] xs:max-w-xs sm:max-w-md md:max-w-lg text-right flex flex-col items-end pointer-events-none"
       >
-        <div className="flex items-center md:justify-end gap-2 mb-3">
-          <span className="w-8 h-[1px] bg-[#1caab3]/40 hidden md:block" />
+        <div className="flex items-center justify-end gap-2 mb-3">
+          <span className="w-8 h-[1px] bg-[#1caab3]/40" />
           <span className="text-xs sm:text-[11px] font-mono tracking-[0.25em] text-[#1caab3] uppercase">
             02 / Precision Optics
           </span>
-          <span className="w-8 h-[1px] bg-[#1caab3]/40 md:hidden" />
         </div>
 
-        <h2 className="font-['Outfit',sans-serif] text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-white uppercase leading-[1.04] mb-4">
+        <h2 className="font-['Outfit',sans-serif] text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[-0.035em] text-white uppercase leading-[1.04] mb-3 sm:mb-4 text-right">
           <span className="bg-gradient-to-b from-white via-white/95 to-white/60 bg-clip-text text-transparent">BEHIND EVERY FRAME</span> <br />
           <span className="font-light tracking-[0.06em] text-white/80">Is A Story.</span>
         </h2>
 
-        <p className="text-base sm:text-lg text-white/75 font-light leading-relaxed max-w-md ml-auto">
+        <p className="text-xs xs:text-sm sm:text-base md:text-lg text-white/75 font-light leading-relaxed max-w-md text-right ml-auto">
           We combine creativity, composition, and precision attention to detail to create photographs that feel authentic, timeless, and profound.
         </p>
 
-        <div className="mt-6 flex items-center md:justify-end gap-3 sm:gap-4 text-xs sm:text-[11px] font-mono text-white/50 tracking-wider">
+        <div className="mt-4 sm:mt-6 flex flex-wrap items-center justify-end gap-2 sm:gap-4 text-[10px] sm:text-[11px] font-mono text-white/50 tracking-wider text-right">
           <span>Multi-Coated Glass</span>
           <span>•</span>
           <span>Mechanical Precision</span>

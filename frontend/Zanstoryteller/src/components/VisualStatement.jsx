@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { visualStatementData } from '../data/photographyData'
 import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 
@@ -22,8 +23,14 @@ export default function VisualStatement() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#000000_95%)] pointer-events-none" />
       </div>
 
-      {/* Static Cinematic Statement Copy */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-12 text-center">
+      {/* Cinematic Statement Copy with Scroll Reveal */}
+      <motion.div
+        initial={{ opacity: 0, y: 40, scale: 0.97 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 max-w-4xl mx-auto px-6 sm:px-12 text-center"
+      >
         <div className="inline-flex items-center gap-2 mb-6 px-3.5 py-1 rounded-full border border-white/20 bg-white/[0.04] backdrop-blur-md">
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
           <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-white/80">
@@ -40,7 +47,7 @@ export default function VisualStatement() {
         <p className="text-base sm:text-lg text-white/70 font-light max-w-md mx-auto tracking-wide">
           {visualStatementData.subtext}
         </p>
-      </div>
+      </motion.div>
     </section>
   )
 }

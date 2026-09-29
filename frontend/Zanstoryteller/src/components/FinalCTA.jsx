@@ -137,7 +137,7 @@ export default function FinalCTA() {
           </a>
 
           <a
-            href="mailto:hello@zanstoryteller.com"
+            href="mailto:fowzan80@gmail.com"
             className="inline-flex items-center justify-center gap-2.5 px-9 py-4 border border-white/25 hover:border-white text-white font-mono text-xs uppercase tracking-[0.2em] rounded-sm transition-all duration-300 hover:bg-white/[0.05] w-full sm:w-auto"
           >
             <Mail className="w-3.5 h-3.5 text-white/70" />
@@ -147,7 +147,7 @@ export default function FinalCTA() {
 
         {/* Inquiries Note */}
         <div className="mt-14 text-[10px] font-mono tracking-widest text-white/40 uppercase">
-          Inquiries answered within 24 hours // Colombo • Available Internationally
+          Inquiries answered within 24 hours // Doha, Qatar • Available Internationally
         </div>
       </div>
     </section>

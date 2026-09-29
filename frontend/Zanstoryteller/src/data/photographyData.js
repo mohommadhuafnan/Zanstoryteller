@@ -133,24 +133,35 @@ export const portfolioItems = [
 export const storyScrollSteps = [
   {
     stage: "01",
+    category: "01 / Atmospheric Element",
     keyword: "LIGHT",
-    quote: "We look for the light that makes an ordinary moment feel extraordinary.",
-    image: "https://images.unsplash.com/photo-1470240731273-7821a6eeb6bd?auto=format&fit=crop&w=1600&q=85",
-    alt: "Golden hour light cutting through mountain trees"
+    quote: "We seek the golden radiance that turns fleeting moments into cinematic memories.",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=85",
+    alt: "Cinematic golden hour sunlight framing emotional celebration"
   },
   {
     stage: "02",
+    category: "02 / The Core",
     keyword: "EMOTION",
-    quote: "The photographs we remember are the ones that make us feel something.",
-    image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=1600&q=85",
-    alt: "Heartfelt candid tears and joy between loved ones"
+    quote: "The photographs that outlive generations are the ones where authentic souls are unveiled.",
+    image: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1920&q=85",
+    alt: "Heartfelt candid tears and genuine emotional connection"
   },
   {
     stage: "03",
+    category: "03 / Nuance & Craft",
     keyword: "DETAIL",
-    quote: "From a quiet glance to the smallest detail, every part of the story matters.",
-    image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1600&q=85",
-    alt: "Intricate lace fabric and heirloom wedding rings close-up"
+    quote: "From delicate fabrics and heirloom rings to subtle glances, every micro-detail completes the story.",
+    image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1920&q=85",
+    alt: "Intricate fine textures, jewelry, and delicate artisanal details"
+  },
+  {
+    stage: "04",
+    category: "04 / Archival Heritage",
+    keyword: "TIMELESS",
+    quote: "Crafting visual heirlooms that never age, preserving the timeless poetry of who you are.",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1920&q=85",
+    alt: "Masterpiece fine-art portraiture with enduring cinematic elegance"
   }
 ]
 
@@ -273,17 +284,17 @@ export const footerData = {
     { label: "Contact", href: "#contact" }
   ],
   socials: [
-    { label: "Instagram", href: "https://instagram.com" },
+    { label: "Instagram", href: "https://www.instagram.com/zan_storyteller?stkn=MWg4ejhjam56YjJhZg%3D%3D&utm_source=qr" },
     { label: "Facebook", href: "https://facebook.com" },
-    { label: "WhatsApp", href: "https://whatsapp.com" }
+    { label: "WhatsApp", href: "https://wa.me/97466904220" }
   ],
   contact: {
-    email: "hello@zanstoryteller.com",
-    phone: "+94 77 123 4567",
-    location: "Colombo • Available Worldwide"
+    email: "fowzan80@gmail.com",
+    phone: "+974 6690 4220",
+    location: "Doha, Qatar • Available Worldwide"
   },
   copyright: "© 2026 Zanstoryteller. All rights reserved.",
-  developer: "Designed & developed by WebCoder"
+  developer: "Webcoder (Mohommadhu Afnan)"
 }
 
 export const editorialCarouselImages = [

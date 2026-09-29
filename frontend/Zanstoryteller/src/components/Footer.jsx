@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { footerData } from '../data/photographyData'
 import { ArrowUp } from 'lucide-react'
 import { InstagramIcon, FacebookIcon, WhatsAppIcon } from './Icons'
@@ -29,7 +30,13 @@ export default function Footer() {
 
   return (
     <footer className="relative z-10 w-full bg-[#020202] text-white pt-20 pb-12 px-6 sm:px-12 md:px-20 border-t border-white/[0.08]">
-      <div className="max-w-7xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-7xl mx-auto"
+      >
         
         {/* Main Footer Top Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-white/[0.08]">
@@ -37,9 +44,13 @@ export default function Footer() {
           {/* Brand Info (Left) */}
           <div className="md:col-span-5 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <span className="w-2 h-2 rounded-full bg-white" />
-                <span className="font-light tracking-[0.3em] text-lg uppercase font-sans text-white">
+              <div className="flex items-center gap-3 mb-4">
+                <img
+                  src="/logo.png"
+                  alt="Zanstoryteller Logo"
+                  className="w-8 h-8 object-contain drop-shadow-[0_2px_10px_rgba(216,187,123,0.4)]"
+                />
+                <span className="font-light tracking-[0.28em] text-lg uppercase font-sans text-white">
                   {footerData.brand}
                 </span>
               </div>
@@ -83,7 +94,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-4">
                 <a
-                  href="https://instagram.com"
+                  href={footerData.socials[0].href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"
@@ -101,7 +112,7 @@ export default function Footer() {
                   <FacebookIcon className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://whatsapp.com"
+                  href={footerData.socials[2].href}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"
@@ -130,7 +141,7 @@ export default function Footer() {
           <div className="tracking-wider">{footerData.developer}</div>
         </div>
 
-      </div>
+      </motion.div>
     </footer>
   )
 }

@@ -54,15 +54,21 @@ export default function QASection() {
     setOpenId((prev) => (prev === id ? null : id))
   }
 
-  const whatsappNumber = "+94771234567"
+  const whatsappNumber = "+974 6690 4220"
   const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello Zanstoryteller, I have a question about booking a session.")}`
 
   return (
     <section id="faq" className="relative z-10 w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
       <div className="max-w-5xl mx-auto">
         
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 sm:mb-20 pb-8 border-b border-[#EAEAEA]">
+        {/* Section Header with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col md:flex-row md:items-end justify-between mb-16 sm:mb-20 pb-8 border-b border-[#EAEAEA]"
+        >
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="w-2 h-2 rounded-full bg-[#111111]" />
@@ -91,7 +97,7 @@ export default function QASection() {
               <span>Ask Directly on WhatsApp →</span>
             </a>
           </div>
-        </div>
+        </motion.div>
 
         {/* Accordion List with Smooth Animation */}
         <div className="space-y-4">

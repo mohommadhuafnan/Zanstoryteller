@@ -330,7 +330,13 @@ export default function EditorialCarousel() {
         Directly matches the reference screenshot's proportions, frame padding & colors.
         ========================================================================
       */}
-      <div className="relative z-10 w-[95%] sm:w-[92%] xl:w-[88%] max-w-[1480px] 2xl:max-w-[1600px] mx-auto bg-[#F3F1EE] rounded-none sm:rounded-sm shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_10px_25px_-5px_rgba(0,0,0,0.3)] border border-white/40 p-3.5 sm:p-5 md:p-6 lg:p-7">
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-[95%] sm:w-[92%] xl:w-[88%] max-w-[1480px] 2xl:max-w-[1600px] mx-auto bg-[#F3F1EE] rounded-none sm:rounded-sm shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_10px_25px_-5px_rgba(0,0,0,0.3)] border border-white/40 p-3.5 sm:p-5 md:p-6 lg:p-7"
+      >
         
         {/* Relative wrapper for track + buttons */}
         <div className="relative w-full overflow-hidden">
@@ -420,7 +426,7 @@ export default function EditorialCarousel() {
           </div>
 
         </div>
-      </div>
+      </motion.div>
 
       {/* 
         ========================================================================

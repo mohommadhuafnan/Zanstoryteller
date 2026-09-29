@@ -15,8 +15,14 @@ export default function FeaturedStories({ onNavigate }) {
     <section id="portfolio" className="relative w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
       <div className="max-w-7xl mx-auto">
         
-        {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-16 sm:mb-20">
+        {/* Section Header with Scroll Reveal */}
+        <motion.div
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col lg:flex-row lg:items-end justify-between mb-16 sm:mb-20"
+        >
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="w-2 h-2 rounded-full bg-[#111111]" />
@@ -56,22 +62,23 @@ export default function FeaturedStories({ onNavigate }) {
               })}
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Asymmetric Photography Grid - 100% Full Cover on All 6 Photos */}
+        {/* Asymmetric Photography Grid - 100% Full Cover on All 6 Photos with Scroll Reveal */}
         <motion.div
           layout
           className="grid grid-cols-12 gap-6 sm:gap-8 md:gap-10"
         >
           <AnimatePresence>
-            {filteredItems.map((item) => (
+            {filteredItems.map((item, index) => (
               <motion.div
                 layout
                 key={item.id}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.65, delay: (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => {
                   if (item.targetUrl) {
                     if (onNavigate) {
