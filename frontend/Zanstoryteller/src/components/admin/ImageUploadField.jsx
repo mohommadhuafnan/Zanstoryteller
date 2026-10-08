@@ -1,14 +1,17 @@
 import React, { useState, useRef } from 'react'
 import { Upload, Link2, Trash2, Eye, Check, X, RefreshCw, Image as ImageIcon, Cloud } from 'lucide-react'
-import { compressImageFile, fileToBase64, isValidImageUrl, formatBytes } from '../../utils/imageHandler'
-import { uploadImageToSupabase } from '../../utils/supabase'
+import { uploadImageToCloudinary } from '../../utils/cloudinaryUpload'
+import { isValidImageUrl } from '../../utils/imageHandler'
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
 export default function ImageUploadField({
   label = "Section Image",
   currentImage,
   onImageChange,
   onImageDelete,
-  aspectHint = "Recommended: High resolution 1600×1200 or 1920×1080",
+  aspectHint = "Supported: JPG, PNG, WebP (Max 5MB) - Automatically converted to WebP",
   allowDelete = true
 }) {
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
@@ -16,44 +19,48 @@ export default function ImageUploadField({
   const [previewZoom, setPreviewZoom] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState('')
+  const [localPreview, setLocalPreview] = useState(null)
   const fileInputRef = useRef(null)
 
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // 1. Validation: Allowed formats
+    if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+      alert("Invalid image format! Only JPG, JPEG, PNG, and WebP files are supported.")
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    // 2. Validation: Maximum file size (5 MB)
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
+      alert(`File is too large (${sizeMb} MB). Maximum allowed size is 5 MB.`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    // 3. Show instant preview in admin UI before/during upload
+    const objectUrl = URL.createObjectURL(file)
+    setLocalPreview(objectUrl)
+
     try {
       setIsUploading(true)
-      setUploadStatus('Optimizing image...')
+      setUploadStatus('Uploading to Cloudinary (Converting to WebP)...')
 
-      // Step 1: Ultra-fast client-side WebP optimization
-      // Shrinks raw 10MB-40MB camera photos to lightweight ~200-400KB WebP in ~100ms
-      const { file: optimizedFile, compressedSize } = await compressImageFile(file, {
-        maxWidth: 2200,
-        maxHeight: 2200,
-        quality: 0.85
-      })
+      // 4. Upload to Cloudinary via backend service
+      const res = await uploadImageToCloudinary(file, 'products')
 
-      const sizeLabel = formatBytes(compressedSize)
-      setUploadStatus(`Uploading (${sizeLabel})...`)
-      
-      // Step 2: Stream the compressed 250KB WebP directly to Supabase Storage (<1 second)
-      try {
-        const uploadRes = await uploadImageToSupabase(optimizedFile, 'site-media')
-        if (uploadRes && uploadRes.url) {
-          onImageChange(uploadRes.url)
-          return
-        }
-      } catch (storageErr) {
-        console.warn("Supabase storage upload failed, falling back to local encoding:", storageErr)
+      if (res && res.url) {
+        onImageChange(res.url)
+      } else {
+        throw new Error('No Cloudinary URL returned from upload service.')
       }
-
-      // Step 3: Safe fallback with bounded base64 if storage is completely offline
-      setUploadStatus('Saving local copy...')
-      const base64 = await fileToBase64(optimizedFile, 1600, 1600, 0.80)
-      onImageChange(base64)
     } catch (err) {
-      alert("Error processing image: " + err.message)
+      console.error("Cloudinary upload failed:", err)
+      alert(`Upload failed: ${err.message}`)
+      setLocalPreview(null) // Revert preview on failure
     } finally {
       setIsUploading(false)
       setUploadStatus('')
@@ -70,10 +77,20 @@ export default function ImageUploadField({
       return
     }
 
+    setLocalPreview(null)
     onImageChange(urlInput.trim())
     setUrlInput('')
     setIsUrlModalOpen(false)
   }
+
+  const handleDelete = () => {
+    if (window.confirm("Remove this image?")) {
+      setLocalPreview(null)
+      if (onImageDelete) onImageDelete()
+    }
+  }
+
+  const displayedImage = localPreview || currentImage
 
   return (
     <div className="w-full">
@@ -89,12 +106,12 @@ export default function ImageUploadField({
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-        {/* Thumbnail Preview */}
+        {/* Thumbnail Preview: Shows instant preview before/during upload and uploaded image after */}
         <div className="relative group w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-lg overflow-hidden bg-slate-200 border border-slate-300 shadow-sm flex items-center justify-center">
-          {currentImage ? (
+          {displayedImage ? (
             <>
               <img
-                src={currentImage}
+                src={displayedImage}
                 alt="Preview"
                 className="w-full h-full object-cover"
               />
@@ -113,10 +130,11 @@ export default function ImageUploadField({
             </div>
           )}
 
+          {/* Loading/Uploading State */}
           {isUploading && (
-            <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center text-white text-[10px] font-mono text-center p-1">
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white text-[10px] font-mono text-center p-2 z-20">
               <RefreshCw className="w-4 h-4 animate-spin mb-1 text-[#D8BB7B]" />
-              <span className="line-clamp-2">{uploadStatus || 'Uploading...'}</span>
+              <span className="line-clamp-2 leading-tight">{uploadStatus || 'Uploading...'}</span>
             </div>
           )}
         </div>
@@ -124,12 +142,12 @@ export default function ImageUploadField({
         {/* Controls & Action Buttons */}
         <div className="flex-1 min-w-0 space-y-2 w-full">
           <div className="flex flex-wrap items-center gap-2">
-            {/* Hidden File Input */}
+            {/* Hidden File Input (Enforces image/* accept with strict 5MB backend check) */}
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileSelect}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               className="hidden"
             />
 
@@ -138,32 +156,30 @@ export default function ImageUploadField({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1b2a] hover:bg-[#1b263b] text-white rounded-lg text-xs font-medium tracking-wide shadow-sm transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0d1b2a] hover:bg-[#1b263b] text-white rounded-lg text-xs font-medium tracking-wide shadow-sm transition cursor-pointer disabled:opacity-50"
             >
               <Upload className="w-3.5 h-3.5 text-[#D8BB7B]" />
-              <span>Upload from PC</span>
+              <span>{isUploading ? 'Uploading...' : 'Upload Image'}</span>
             </button>
 
             {/* Paste Image URL */}
             <button
               type="button"
               onClick={() => setIsUrlModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium tracking-wide shadow-sm transition cursor-pointer"
+              disabled={isUploading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-medium tracking-wide shadow-sm transition cursor-pointer disabled:opacity-50"
             >
               <Link2 className="w-3.5 h-3.5 text-slate-500" />
               <span>Paste URL</span>
             </button>
 
             {/* Delete / Clear Image */}
-            {allowDelete && currentImage && onImageDelete && (
+            {allowDelete && displayedImage && onImageDelete && (
               <button
                 type="button"
-                onClick={() => {
-                  if (window.confirm("Remove this image?")) {
-                    onImageDelete()
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-red-600 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-medium transition cursor-pointer"
+                onClick={handleDelete}
+                disabled={isUploading}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-red-600 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-medium transition cursor-pointer disabled:opacity-50"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete</span>
@@ -171,19 +187,19 @@ export default function ImageUploadField({
             )}
           </div>
 
-          {/* Current Path & Format Info */}
+          {/* Current Path & Format Info Display */}
           <div className="text-[11px] text-slate-500 truncate max-w-md font-mono flex items-center gap-2">
-            {currentImage?.includes('supabase.co') || currentImage?.includes('zanstoryteller-images') ? (
+            {currentImage?.includes('cloudinary.com') ? (
+              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-sans text-[10px] font-semibold flex items-center gap-1">
+                <Check className="w-3 h-3 text-emerald-600 inline" /> Cloudinary Storage (WebP HD)
+              </span>
+            ) : currentImage?.includes('supabase.co') || currentImage?.includes('zanstoryteller-images') ? (
               <span className="text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded font-sans text-[10px] font-semibold flex items-center gap-1">
-                <Cloud className="w-3 h-3 text-sky-600 inline" /> Supabase Cloud Storage (Fast CDN)
+                <Cloud className="w-3 h-3 text-sky-600 inline" /> Cloud Storage
               </span>
             ) : currentImage?.startsWith('data:image/webp') ? (
               <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-sans text-[10px] font-semibold flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-600 inline" /> Converted to WebP (HD Quality Preserved)
-              </span>
-            ) : currentImage?.startsWith('data:image') ? (
-              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-sans text-[10px] font-semibold flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-600 inline" /> Converted to Web-Ready Image
+                <Check className="w-3 h-3 text-emerald-600 inline" /> WebP Format
               </span>
             ) : (
               <span className="truncate" title={currentImage}>{currentImage || 'No image attached'}</span>
@@ -213,7 +229,7 @@ export default function ImageUploadField({
                 type="text"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="https://images.unsplash.com/... or /about/...webp"
+                placeholder="https://res.cloudinary.com/... or https://images.unsplash.com/..."
                 className="w-full text-xs font-mono p-3 bg-slate-50 border border-slate-300 rounded-xl focus:border-[#0d1b2a] outline-none"
                 autoFocus
               />
@@ -238,14 +254,14 @@ export default function ImageUploadField({
       )}
 
       {/* Full Preview Zoom Modal */}
-      {previewZoom && currentImage && (
+      {previewZoom && displayedImage && (
         <div
           onClick={() => setPreviewZoom(false)}
           className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 cursor-zoom-out"
         >
           <div className="relative max-w-4xl max-h-[90vh] bg-black rounded-lg overflow-hidden border border-white/20">
             <img
-              src={currentImage}
+              src={displayedImage}
               alt="Zoom Preview"
               className="w-full h-full object-contain"
             />

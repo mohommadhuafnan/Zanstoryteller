@@ -1,77 +1,81 @@
 import { Router } from 'express'
 import multer from 'multer'
-import { supabase, STORAGE_BUCKET } from '../supabase.js'
+import { uploadImageToCloudinary, deleteImageFromCloudinary } from '../services/cloudinaryService.js'
+import { supabase } from '../supabase.js'
 
 const router = Router()
+
+// Strict validation: Only allow JPG, JPEG, PNG, and WebP formats
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage: multer.memoryStorage(), // In-memory buffer only (Never stored on local filesystem)
   limits: {
-    fileSize: 20 * 1024 * 1024 // 20MB limit
+    fileSize: MAX_FILE_SIZE_BYTES
+  },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME_TYPES.includes(file.mimetype.toLowerCase())) {
+      cb(null, true)
+    } else {
+      const error = new Error('Unsupported file type. Only JPG, JPEG, PNG, and WebP images are allowed.')
+      error.code = 'INVALID_FILE_TYPE'
+      cb(error, false)
+    }
   }
 })
 
 /**
- * POST /api/upload
- * Upload image and permanently save its record into the Supabase database.
- * Supports Supabase Storage with graceful database-backed base64 fallback.
+ * Middleware wrapper to catch Multer file validation and size limit errors cleanly
  */
-router.post('/', upload.single('image'), async (req, res) => {
+function handleMulterUpload(req, res, next) {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          success: false,
+          error: 'File too large. Maximum allowed size is 5 MB.'
+        })
+      }
+      if (err.code === 'INVALID_FILE_TYPE' || err.message?.includes('Unsupported file type')) {
+        return res.status(400).json({
+          success: false,
+          error: err.message
+        })
+      }
+      return res.status(400).json({
+        success: false,
+        error: err.message || 'Image upload validation failed.'
+      })
+    }
+    next()
+  })
+}
+
+/**
+ * POST /api/upload
+ * Upload an image directly to Cloudinary storage via in-memory stream.
+ * Automatically converts image to WebP and returns secure_url and publicId.
+ */
+router.post('/', handleMulterUpload, async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No image file uploaded' })
+      return res.status(400).json({
+        success: false,
+        error: 'No image file uploaded. Please select an image.'
+      })
     }
 
-    const folder = req.body.folder || 'portfolio'
-    const originalName = req.file.originalname || 'image.jpg'
-    const ext = originalName.split('.').pop()
-    const cleanName = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_')
-    const fileName = `${folder}/${Date.now()}_${cleanName}.${ext}`
+    const folderName = req.body.folder || 'products'
+    const targetFolder = `zanstoryteller/${folderName}`
 
-    let imageUrl = null
-    let storageMethod = 'supabase_storage'
+    // Upload directly to Cloudinary with WebP conversion
+    const uploadResult = await uploadImageToCloudinary(req.file.buffer, {
+      folder: targetFolder,
+      format: 'webp'
+    })
 
-    // 1. Try Supabase Storage bucket first
-    try {
-      const { data, error } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(fileName, req.file.buffer, {
-          contentType: req.file.mimetype,
-          cacheControl: '3600',
-          upsert: true
-        })
-
-      if (!error) {
-        const { data: publicUrlData } = supabase.storage
-          .from(STORAGE_BUCKET)
-          .getPublicUrl(fileName)
-        imageUrl = publicUrlData.publicUrl
-      } else {
-        console.warn('Supabase storage upload notice, falling back to database storage:', error.message)
-      }
-    } catch (storageErr) {
-      console.warn('Storage exception:', storageErr.message)
-    }
-
-    // 2. If storage bucket is not ready, store directly as database image
-    if (!imageUrl) {
-      storageMethod = 'database_data_url'
-      const base64Data = req.file.buffer.toString('base64')
-      imageUrl = `data:${req.file.mimetype};base64,${base64Data}`
-    }
-
-    const imageRecord = {
-      id: 'img_' + Date.now(),
-      name: originalName,
-      path: fileName,
-      url: imageUrl,
-      folder,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-      storageMethod,
-      uploadedAt: new Date().toISOString()
-    }
-
-    // 3. Save the image into the Supabase database (site_content -> mediaLibrary)
+    // Optionally record in database mediaLibrary list (URL only, no binary/base64 stored)
     try {
       const { data: existingContent } = await supabase
         .from('site_content')
@@ -80,36 +84,53 @@ router.post('/', upload.single('image'), async (req, res) => {
         .single()
 
       const currentList = Array.isArray(existingContent?.data) ? existingContent.data : []
-      // Prepend newest image
-      const updatedList = [imageRecord, ...currentList].slice(0, 100)
+      const newEntry = {
+        id: 'img_' + Date.now(),
+        name: req.file.originalname,
+        url: uploadResult.url,
+        publicId: uploadResult.publicId,
+        folder: targetFolder,
+        size: uploadResult.bytes || req.file.size,
+        format: uploadResult.format || 'webp',
+        storageMethod: 'cloudinary',
+        uploadedAt: new Date().toISOString()
+      }
 
       await supabase
         .from('site_content')
         .upsert({
           key: 'mediaLibrary',
-          data: updatedList,
+          data: [newEntry, ...currentList].slice(0, 100),
           updated_at: new Date().toISOString()
         })
     } catch (dbErr) {
-      console.warn('Could not update mediaLibrary in site_content:', dbErr.message)
+      // Non-blocking notice
+      console.warn('Database mediaLibrary update notice:', dbErr.message)
     }
 
+    // Required response format
     return res.status(200).json({
       success: true,
-      url: imageUrl,
-      path: fileName,
-      storageMethod,
-      imageRecord
+      image: {
+        url: uploadResult.url,
+        publicId: uploadResult.publicId
+      },
+      url: uploadResult.url,
+      publicId: uploadResult.publicId
     })
   } catch (err) {
-    console.error('Error in /api/upload:', err)
-    return res.status(500).json({ error: 'Internal server error', details: err.message })
+    console.error('Cloudinary upload failure in /api/upload:', err)
+    return res.status(500).json({
+      success: false,
+      error: 'Cloudinary upload failure',
+      message: err.message
+    })
   }
 })
 
 /**
  * GET /api/upload/list
- * Retrieve all images saved in the database
+ * Retrieve media library images list
  */
 router.get('/list', async (req, res) => {
   try {
@@ -120,51 +141,58 @@ router.get('/list', async (req, res) => {
       .single()
 
     if (error) {
-      return res.status(200).json({ files: [] })
+      return res.status(200).json({ success: true, files: [] })
     }
 
-    return res.status(200).json({ files: data?.data || [] })
+    return res.status(200).json({ success: true, files: data?.data || [] })
   } catch (err) {
-    return res.status(500).json({ error: err.message })
+    return res.status(500).json({ success: false, error: err.message })
   }
 })
 
 /**
  * DELETE /api/upload
- * Remove image from database mediaLibrary
+ * Delete image from Cloudinary and remove from mediaLibrary list
  */
 router.delete('/', async (req, res) => {
   try {
-    const { id, path } = req.body
-    if (!id && !path) {
-      return res.status(400).json({ error: 'Image id or path required' })
+    const { id, publicId } = req.body
+    if (!id && !publicId) {
+      return res.status(400).json({ success: false, error: 'Image id or publicId required' })
     }
 
-    const { data } = await supabase
-      .from('site_content')
-      .select('data')
-      .eq('key', 'mediaLibrary')
-      .single()
-
-    const currentList = Array.isArray(data?.data) ? data.data : []
-    const updatedList = currentList.filter(img => img.id !== id && img.path !== path)
-
-    await supabase
-      .from('site_content')
-      .upsert({
-        key: 'mediaLibrary',
-        data: updatedList,
-        updated_at: new Date().toISOString()
+    if (publicId) {
+      await deleteImageFromCloudinary(publicId).catch((err) => {
+        console.warn('Cloudinary delete notice:', err.message)
       })
-
-    // Also attempt deleting from storage bucket if path provided
-    if (path) {
-      supabase.storage.from(STORAGE_BUCKET).remove([path]).catch(() => {})
     }
 
-    return res.status(200).json({ success: true, remaining: updatedList.length })
+    try {
+      const { data } = await supabase
+        .from('site_content')
+        .select('data')
+        .eq('key', 'mediaLibrary')
+        .single()
+
+      const currentList = Array.isArray(data?.data) ? data.data : []
+      const updatedList = currentList.filter(
+        (img) => img.id !== id && img.publicId !== publicId
+      )
+
+      await supabase
+        .from('site_content')
+        .upsert({
+          key: 'mediaLibrary',
+          data: updatedList,
+          updated_at: new Date().toISOString()
+        })
+    } catch (e) {
+      console.warn('Database deletion sync notice:', e.message)
+    }
+
+    return res.status(200).json({ success: true, message: 'Image deleted successfully' })
   } catch (err) {
-    return res.status(500).json({ error: err.message })
+    return res.status(500).json({ success: false, error: err.message })
   }
 })
 

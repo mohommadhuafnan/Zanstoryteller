@@ -74,7 +74,7 @@ const buildColumns = (items, colCount) => {
 export default function MasterAlbumPage({ onNavigate }) {
   const [selectedImage, setSelectedImage] = useState(null)
   const [colCount, setColCount] = useState(getColCount())
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => checkIsMobile())
   const containerRef = useRef(null)
 
   // Track responsive column count & mobile state
@@ -375,40 +375,68 @@ function MfrportsCard({
   }, [])
 
   // Signature mfrports.com scroll-driven entrance animation via GSAP ScrollTrigger
+  // Calibrated for both desktop (dynamic multi-column physics) and mobile (fluid single-column tilt & glide)
   useEffect(() => {
-    if (!imgRef.current || isMobile) return
+    if (!imgRef.current) return
 
     const el = imgRef.current
+    const isMobileScreen = isMobile || (typeof window !== 'undefined' && window.innerWidth < 768)
     const { animation: anim } = MFR_CONFIG
-    const W = (colCount - 1) / 2
-    const j = colIndex - W
-    const isCenter = j === 0
 
-    // Direction & multiplier math from mfrports.com:
-    const rotDir = isCenter ? (Math.random() > 0.5 ? 1 : -1) : (j < 0 ? 1 : -1)
-    const xDir = isCenter ? (Math.random() > 0.5 ? 1 : -1) : (j < 0 ? -1 : 1)
-    const xMult = isCenter ? anim.centerMultiplier : Math.abs(j) / W
-    const rotMult = isCenter ? anim.centerMultiplier : 1
+    let rot, xDist, yDist, startOffset, transformDuration, scrub
 
-    const { rotation, xDistance, yDistance, startOffset } = animParams
+    if (isMobileScreen) {
+      // Fluid mobile physics: organic alternating tilt & glide in single-column feed
+      const isEven = (imgIndex % 2 === 0)
+      const rotDir = isEven ? 1 : -1
+      const xDir = isEven ? -1 : 1
+
+      rot = 1.4 * rotDir // subtle 1.4 degree tilt
+      xDist = 12 * xDir  // subtle 12px horizontal float
+      yDist = 45         // 45px vertical glide
+      startOffset = -30
+      transformDuration = 280
+      scrub = 0.8
+    } else {
+      // Desktop multi-column physics (exact mfrports.com math)
+      const W = (colCount - 1) / 2
+      const j = colIndex - W
+      const isCenter = j === 0
+
+      // Direction & multiplier math from mfrports.com:
+      const rotDir = isCenter ? (Math.random() > 0.5 ? 1 : -1) : (j < 0 ? 1 : -1)
+      const xDir = isCenter ? (Math.random() > 0.5 ? 1 : -1) : (j < 0 ? -1 : 1)
+      const xMult = isCenter ? anim.centerMultiplier : Math.abs(j) / W
+      const rotMult = isCenter ? anim.centerMultiplier : 1
+
+      rot = animParams.rotation * rotDir * rotMult
+      xDist = animParams.xDistance * xDir * xMult
+      yDist = animParams.yDistance
+      startOffset = animParams.startOffset
+      transformDuration = anim.transformDuration
+      scrub = anim.scrub
+    }
 
     const tween = gsap.fromTo(
       el,
       {
-        rotation: rotation * rotDir * rotMult,
-        x: xDistance * xDir * xMult,
-        y: yDistance,
+        rotation: rot,
+        x: xDist,
+        y: yDist,
+        scale: isMobileScreen ? 0.96 : 1,
       },
       {
         rotation: 0,
         x: 0,
         y: 0,
+        scale: 1,
         ease: 'none',
         scrollTrigger: {
-          trigger: el,
-          start: `top bottom-=${startOffset}px`,
-          end: `top bottom-=${startOffset + anim.transformDuration}px`,
-          scrub: anim.scrub,
+          trigger: containerRef.current || el,
+          start: isMobileScreen ? 'top bottom-=20px' : `top bottom-=${startOffset}px`,
+          end: isMobileScreen ? 'top center+=50px' : `top bottom-=${startOffset + transformDuration}px`,
+          scrub: scrub,
+          invalidateOnRefresh: true,
         },
       }
     )
@@ -416,8 +444,9 @@ function MfrportsCard({
     return () => {
       tween.scrollTrigger?.kill()
       tween.kill()
+      gsap.set(el, { clearProps: 'transform' })
     }
-  }, [isMobile, colIndex, colCount, animParams, aspectRatio])
+  }, [isMobile, colIndex, colCount, imgIndex, animParams, aspectRatio])
 
   return (
     <div

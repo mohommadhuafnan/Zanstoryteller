@@ -12,7 +12,13 @@ export default function ServicesSection({ onNavigate }) {
   const { data } = useCMS()
   const servicesData = data?.servicesData || defaultServicesData
   const [selectedService, setSelectedService] = useState(null)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      window.innerWidth < 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    )
+  })
   const sectionRef = useRef(null)
 
   useEffect(() => {
@@ -23,7 +29,6 @@ export default function ServicesSection({ onNavigate }) {
       )
       ScrollTrigger.refresh()
     }
-    checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
@@ -305,19 +310,23 @@ function ServiceAlbumCard({
     service.aspectRatio || (index === 1 ? 1.05 : 0.72)
   )
   const containerRef = useRef(null)
-  const imgRef = useRef(null)
+  const cardFloatingRef = useRef(null)
 
   // Signature mfrports scroll-driven entrance physics via GSAP ScrollTrigger
+  // Calibrated for both desktop (dynamic multi-column float) and mobile (fluid single-column tilt & glide)
   useEffect(() => {
-    if (!imgRef.current || isMobile) return
+    if (!cardFloatingRef.current) return
 
-    const el = imgRef.current
+    const el = cardFloatingRef.current
     const isLeftColumn = index % 2 === 0
     const rotDir = isLeftColumn ? 1 : -1
     const xDir = isLeftColumn ? -1 : 1
-    const rotAmount = 3.0 * rotDir
-    const xAmount = 50 * xDir
-    const yAmount = 80
+
+    // Proportional physical offsets: subtle & organic on mobile, expressive on desktop
+    const rotAmount = (isMobile ? 1.4 : 2.8) * rotDir
+    const xAmount = (isMobile ? 10 : 45) * xDir
+    const yAmount = isMobile ? 40 : 70
+    const scaleAmount = isMobile ? 0.96 : 0.98
 
     const tween = gsap.fromTo(
       el,
@@ -325,17 +334,20 @@ function ServiceAlbumCard({
         rotation: rotAmount,
         x: xAmount,
         y: yAmount,
+        scale: scaleAmount,
       },
       {
         rotation: 0,
         x: 0,
         y: 0,
+        scale: 1,
         ease: 'none',
         scrollTrigger: {
-          trigger: el,
-          start: 'top bottom-=20px',
-          end: 'top center+=60px',
-          scrub: 1.2,
+          trigger: containerRef.current || el,
+          start: isMobile ? 'top bottom-=20px' : 'top bottom-=30px',
+          end: isMobile ? 'top center+=50px' : 'top center+=60px',
+          scrub: isMobile ? 0.8 : 1.2,
+          invalidateOnRefresh: true,
         },
       }
     )
@@ -343,15 +355,16 @@ function ServiceAlbumCard({
     return () => {
       tween.scrollTrigger?.kill()
       tween.kill()
+      gsap.set(el, { clearProps: 'transform' })
     }
   }, [isMobile, index, totalCards, aspectRatio])
 
   return (
     <div ref={containerRef} className="flex flex-col group relative">
       
-      {/* 1. Large Pure Photography Card Slot — ZERO overflow-hidden so the image floats on top of the layer unclipped */}
+      {/* 1. Large Pure Photography Card Slot */}
       <div
-        className="relative bg-[#F3F4F6] rounded-2xl cursor-pointer shadow-[0_10px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_24px_60px_rgba(216,187,123,0.22)] border border-black/[0.08] hover:border-[#D8BB7B]/60 transition-all duration-500"
+        className="relative rounded-2xl cursor-pointer"
         style={{ paddingBottom: `${aspectRatio * 100}%` }}
         onClick={() => onSelect(service)}
       >
@@ -360,41 +373,44 @@ function ServiceAlbumCard({
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[#EAEBED] via-[#F5F6F7] to-[#EAEBED] animate-pulse pointer-events-none" />
         )}
 
-        {/* Unclipped Image Element floating on TOP of the layer with GSAP ScrollTrigger scrub physics */}
-        <img
-          ref={imgRef}
-          src={service.image}
-          alt={service.alt || service.title}
-          loading="lazy"
-          decoding="async"
-          onLoad={(e) => {
-            setIsLoaded(true)
-            if (e.target.naturalWidth && e.target.naturalHeight) {
-              const rawRatio = e.target.naturalHeight / e.target.naturalWidth
-              // Constrain aspect ratio to comfortable bounds (0.70 to 1.1) so cards don't stretch into massive towers
-              const boundedRatio = Math.min(Math.max(rawRatio, 0.70), 1.1)
-              setAspectRatio(boundedRatio)
-            }
-            ScrollTrigger.refresh()
-          }}
-          className={`reveal-img absolute inset-0 w-full h-full object-cover rounded-2xl will-change-transform shadow-[0_12px_35px_rgba(0,0,0,0.12)] group-hover:scale-105 transition-transform duration-700 ease-out z-10 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          draggable={false}
-        />
+        {/* Floating Card Element with GSAP Scroll physics: holds the photo, pill, and expand icon as one unified physical piece */}
+        <div
+          ref={cardFloatingRef}
+          className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.12)] border border-black/[0.08] hover:border-[#D8BB7B]/60 will-change-transform z-10 bg-[#F3F4F6]"
+        >
+          <img
+            src={service.image}
+            alt={service.alt || service.title}
+            loading="lazy"
+            decoding="async"
+            onLoad={(e) => {
+              setIsLoaded(true)
+              if (e.target.naturalWidth && e.target.naturalHeight) {
+                const rawRatio = e.target.naturalHeight / e.target.naturalWidth
+                const boundedRatio = Math.min(Math.max(rawRatio, 0.70), 1.1)
+                setAspectRatio(boundedRatio)
+              }
+              ScrollTrigger.refresh()
+            }}
+            className={`w-full h-full object-cover transition-opacity duration-700 ease-out ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            draggable={false}
+          />
 
-        {/* Minimalist Floating Top Pill (On top of layer) */}
-        <div className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 pointer-events-none">
-          <div className="flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[#D8BB7B] text-[10px] font-mono tracking-widest uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D8BB7B]" />
-            <span>DISCIPLINE {service.number} // 04</span>
+          {/* Minimalist Floating Top Pill */}
+          <div className="absolute top-4 left-4 sm:top-5 sm:left-5 z-20 pointer-events-none">
+            <div className="flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[#D8BB7B] text-[10px] font-mono tracking-widest uppercase shadow-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D8BB7B]" />
+              <span>DISCIPLINE {service.number} // 04</span>
+            </div>
           </div>
-        </div>
 
-        {/* Expand Icon Button (Bottom Right on top of layer) */}
-        <div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-[#D8BB7B] shadow-lg">
-            <Maximize2 className="w-4 h-4" />
+          {/* Expand Icon Button (Bottom Right) */}
+          <div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-[#D8BB7B] shadow-lg">
+              <Maximize2 className="w-4 h-4" />
+            </div>
           </div>
         </div>
       </div>
