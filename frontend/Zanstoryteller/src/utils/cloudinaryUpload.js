@@ -1,10 +1,26 @@
-import { BACKEND_URL } from './apiClient'
+import { uploadImageToSupabase, recordImageInDatabase } from './supabase'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
 
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dtpeeydfz'
+const CLOUDINARY_API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY || '566583749895769'
+const CLOUDINARY_API_SECRET = import.meta.env.VITE_CLOUDINARY_API_SECRET || 'K8YAdHcTQAJdhpBbpPUAdCn6Eko'
+
 /**
- * Validates and uploads an image to Cloudinary through the backend API.
+ * Computes SHA-1 hash using Web Crypto API
+ */
+async function computeSha1(text) {
+  const enc = new TextEncoder()
+  const buf = await crypto.subtle.digest('SHA-1', enc.encode(text))
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+/**
+ * Validates and uploads an image directly to Cloudinary storage with automatic WebP conversion,
+ * with seamless fallback to Supabase storage.
  * 
  * @param {File} file - Selected image file
  * @param {string} [folder='products'] - Target folder in Cloudinary
@@ -26,49 +42,71 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
     throw new Error(`File is too large (${sizeMb} MB). Maximum allowed size is 5 MB.`)
   }
 
-  // 3. Prepare FormData for backend upload
-  const formData = new FormData()
-  formData.append('image', file)
-  formData.append('folder', folder)
-
-  const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('zan_admin_token') : null
-  const headers = {}
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
-  const endpoint = `${BACKEND_URL}/api/upload`
-
+  // 3. Direct Cloudinary REST API Upload
   try {
-    const response = await fetch(endpoint, {
+    const targetFolder = `zanstoryteller/${folder}`
+    const timestamp = Math.floor(Date.now() / 1000)
+
+    // Sign request parameters
+    const strToSign = `folder=${targetFolder}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`
+    const signature = await computeSha1(strToSign)
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('api_key', CLOUDINARY_API_KEY)
+    formData.append('timestamp', String(timestamp))
+    formData.append('folder', targetFolder)
+    formData.append('signature', signature)
+
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`
+
+    const response = await fetch(uploadUrl, {
       method: 'POST',
-      body: formData,
-      credentials: 'include',
-      headers
+      body: formData
     })
 
-    const data = await response.json().catch(() => ({}))
+    if (response.ok) {
+      const data = await response.json()
+      // Apply Cloudinary automatic WebP & quality optimization
+      const finalUrl = data.secure_url
+        ? data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')
+        : data.url
 
-    if (!response.ok) {
-      throw new Error(data.error || data.message || `Upload failed with status ${response.status}`)
+      // Persist in media library catalog
+      recordImageInDatabase({
+        name: file.name,
+        url: finalUrl,
+        path: data.public_id,
+        folder: targetFolder,
+        format: data.format || 'webp'
+      }).catch(() => {})
+
+      return {
+        success: true,
+        url: finalUrl,
+        publicId: data.public_id || ''
+      }
     }
 
-    if (!data.success && !data.url && !data.image?.url) {
-      throw new Error(data.error || 'Cloudinary upload failure')
-    }
-
-    const finalUrl = data.image?.url || data.url
-    const publicId = data.image?.publicId || data.publicId || ''
-
-    return {
-      success: true,
-      url: finalUrl,
-      publicId
-    }
-  } catch (err) {
-    if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      throw new Error('Network failure: Unable to connect to upload server. Please verify backend is running on http://localhost:5000.')
-    }
-    throw err
+    const errData = await response.json().catch(() => ({}))
+    console.warn('Cloudinary direct upload status notice:', response.status, errData)
+  } catch (cloudinaryErr) {
+    console.warn('Cloudinary direct upload attempt notice:', cloudinaryErr.message)
   }
+
+  // 4. Resilient Fallback: Supabase Storage direct upload
+  try {
+    const fallbackRes = await uploadImageToSupabase(file, folder)
+    if (fallbackRes && fallbackRes.url) {
+      return {
+        success: true,
+        url: fallbackRes.url,
+        publicId: fallbackRes.path || ''
+      }
+    }
+  } catch (supabaseErr) {
+    console.error('Supabase fallback upload error:', supabaseErr.message)
+  }
+
+  throw new Error('Image upload failed. Please verify your internet connection.')
 }

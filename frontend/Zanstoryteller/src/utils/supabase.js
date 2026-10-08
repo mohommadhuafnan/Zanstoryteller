@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { apiFetch } from './apiClient'
+import { apiFetch, BACKEND_URL } from './apiClient'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cixleelzsctwspdtoffh.supabase.co'
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_16yegiH2CxP4x0Lu6OcATg_QzXSaomQ'
@@ -101,13 +101,13 @@ async function uploadViaBackendFallback(file, folder) {
     throw new Error('Supabase direct upload failed. Storage bucket unreachable.')
   }
 
-  const targetUrl = backendUrl || 'http://localhost:5000'
+  const targetUrl = BACKEND_URL
   const formData = new FormData()
   formData.append('image', file)
   formData.append('folder', folder)
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 6000)
+  const timeoutId = setTimeout(() => controller.abort(), 8000)
 
   try {
     const res = await fetch(`${targetUrl}/api/upload`, {
@@ -219,7 +219,7 @@ export async function submitBookingToSupabase(bookingData) {
     if (error) {
       console.warn('Supabase booking direct insert notice:', error.message)
       // Fallback to backend API
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+      const backendUrl = BACKEND_URL
       const res = await fetch(`${backendUrl}/api/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
