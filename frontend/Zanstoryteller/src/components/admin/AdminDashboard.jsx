@@ -83,7 +83,7 @@ const NAVIGATION_SECTIONS = [
 ]
 
 export default function AdminDashboard({ onNavigateHome }) {
-  const { credentials, logout } = useAdminAuth()
+  const { adminUser, logout } = useAdminAuth()
   const { toastMessage, exportDataJSON } = useCMS()
   const [activeTab, setActiveTab] = useState('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -202,15 +202,15 @@ export default function AdminDashboard({ onNavigateHome }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 truncate">
               <div className="w-8 h-8 rounded-full bg-[#1b263b] border border-[#D8BB7B]/40 flex items-center justify-center text-xs font-mono text-[#D8BB7B]">
-                {credentials.username?.charAt(0).toUpperCase() || 'A'}
+                Z
               </div>
               <div className="truncate">
                 <p className="text-xs font-semibold text-white truncate">
-                  {credentials.displayName || credentials.username}
+                  Mohammad Zan
                 </p>
                 <p className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Authenticated
+                  Sovereign Admin
                 </p>
               </div>
             </div>

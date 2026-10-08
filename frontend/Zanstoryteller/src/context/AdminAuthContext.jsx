@@ -1,135 +1,172 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-
-const AUTH_STORAGE_KEY = 'zan_admin_credentials_v2'
-const SESSION_STORAGE_KEY = 'zan_admin_session_token'
-const LOCKOUT_KEY = 'zan_admin_lockout'
-
-// Default credentials
-const DEFAULT_CREDENTIALS = {
-  username: 'admin',
-  email: 'fowzan80@gmail.com',
-  password: 'zanadmin2026',
-  displayName: 'Mohammad Zan',
-  role: 'Master Admin'
-}
+import { apiFetch } from '../utils/apiClient'
 
 const AdminAuthContext = createContext(null)
 
 export function AdminAuthProvider({ children }) {
-  const [credentials, setCredentials] = useState(() => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [adminUser, setAdminUser] = useState(null)
+  const [lastRequestedEmail, setLastRequestedEmail] = useState(() => {
     try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY)
-      if (stored) return { ...DEFAULT_CREDENTIALS, ...JSON.parse(stored) }
+      return sessionStorage.getItem('zan_admin_pending_email') || ''
     } catch {
-      // fallback
-    }
-    return DEFAULT_CREDENTIALS
-  })
-
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    try {
-      const session = sessionStorage.getItem(SESSION_STORAGE_KEY) || localStorage.getItem(SESSION_STORAGE_KEY)
-      return !!session
-    } catch {
-      return false
+      return ''
     }
   })
 
-  const [failedAttempts, setFailedAttempts] = useState(0)
-  const [lockoutUntil, setLockoutUntil] = useState(() => {
+  // -------------------------------------------------------------
+  // Verify existing authenticated session on startup / page refresh
+  // -------------------------------------------------------------
+  const checkSession = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(LOCKOUT_KEY)
-      if (stored && Number(stored) > Date.now()) {
-        return Number(stored)
-      }
-    } catch {
-      // fallback
-    }
-    return null
-  })
+      setIsCheckingSession(true)
+      const res = await apiFetch('/api/admin/auth/me')
 
-  // Check lockout on timer
-  useEffect(() => {
-    if (!lockoutUntil) return
-    const interval = setInterval(() => {
-      if (Date.now() >= lockoutUntil) {
-        setLockoutUntil(null)
-        setFailedAttempts(0)
-        localStorage.removeItem(LOCKOUT_KEY)
-      }
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [lockoutUntil])
-
-  const login = useCallback((usernameOrEmail, password, rememberMe = false) => {
-    // Check if locked out
-    if (lockoutUntil && Date.now() < lockoutUntil) {
-      const remainingSec = Math.ceil((lockoutUntil - Date.now()) / 1000)
-      return {
-        success: false,
-        error: `Too many failed attempts. Security lockout active for ${remainingSec}s.`
-      }
-    }
-
-    const inputUser = usernameOrEmail.trim().toLowerCase()
-    const validUser = (inputUser === credentials.username.toLowerCase() || inputUser === credentials.email.toLowerCase())
-    const validPass = password === credentials.password
-
-    if (validUser && validPass) {
-      const token = `zan_sec_${Date.now()}_${Math.random().toString(36).substring(2)}`
-      if (rememberMe) {
-        localStorage.setItem(SESSION_STORAGE_KEY, token)
-      } else {
-        sessionStorage.setItem(SESSION_STORAGE_KEY, token)
-      }
-      setIsAuthenticated(true)
-      setFailedAttempts(0)
-      localStorage.removeItem(LOCKOUT_KEY)
-      return { success: true }
-    } else {
-      const newAttempts = failedAttempts + 1
-      setFailedAttempts(newAttempts)
-      if (newAttempts >= 5) {
-        const lockoutTime = Date.now() + 60 * 1000 // 60 seconds
-        setLockoutUntil(lockoutTime)
-        localStorage.setItem(LOCKOUT_KEY, String(lockoutTime))
-        return {
-          success: false,
-          error: "5 consecutive failed attempts. Locked for 60 seconds for security."
+      if (res.ok) {
+        const data = await res.json()
+        if (data.authenticated && data.admin) {
+          setIsAuthenticated(true)
+          setAdminUser({
+            email: data.email,
+            role: 'Master Admin'
+          })
+          return true
         }
       }
-      return {
-        success: false,
-        error: `Invalid username or password. (${5 - newAttempts} attempts remaining before lockout)`
-      }
-    }
-  }, [credentials, failedAttempts, lockoutUntil])
 
-  const logout = useCallback(() => {
-    sessionStorage.removeItem(SESSION_STORAGE_KEY)
-    localStorage.removeItem(SESSION_STORAGE_KEY)
-    setIsAuthenticated(false)
+      // Not authenticated or expired
+      setIsAuthenticated(false)
+      setAdminUser(null)
+      sessionStorage.removeItem('zan_admin_token')
+      return false
+    } catch (err) {
+      console.warn('Session check network notice:', err.message)
+      setIsAuthenticated(false)
+      setAdminUser(null)
+      return false
+    } finally {
+      setIsCheckingSession(false)
+    }
   }, [])
 
-  const updateCredentials = useCallback((newCreds) => {
-    setCredentials(prev => {
-      const next = { ...prev, ...newCreds }
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
-      return next
-    })
-    return true
+  useEffect(() => {
+    checkSession()
+  }, [checkSession])
+
+  // -------------------------------------------------------------
+  // Step 1: Request OTP for the administrator email
+  // -------------------------------------------------------------
+  const requestOtp = useCallback(async (email) => {
+    try {
+      const trimmedEmail = email.trim()
+      const res = await apiFetch('/api/admin/auth/request-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email: trimmedEmail })
+      })
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.error || 'Unable to send verification code.'
+        }
+      }
+
+      setLastRequestedEmail(trimmedEmail)
+      try {
+        sessionStorage.setItem('zan_admin_pending_email', trimmedEmail)
+      } catch {}
+
+      return {
+        success: true,
+        message: data.message || 'Verification code sent.',
+        expiresInMinutes: data.expiresInMinutes || 5
+      }
+    } catch (err) {
+      return {
+        success: false,
+        error: 'Unable to connect to verification server. Please check your connection.'
+      }
+    }
+  }, [])
+
+  // -------------------------------------------------------------
+  // Step 2: Verify OTP
+  // -------------------------------------------------------------
+  const verifyOtp = useCallback(async (email, otp) => {
+    try {
+      const trimmedEmail = (email || lastRequestedEmail).trim()
+      const trimmedOtp = String(otp).trim()
+
+      const res = await apiFetch('/api/admin/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email: trimmedEmail, otp: trimmedOtp })
+      })
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: data.error || 'Invalid verification code.'
+        }
+      }
+
+      // Store fallback Bearer token for client headers & update state
+      if (data.token) {
+        try {
+          sessionStorage.setItem('zan_admin_token', data.token)
+          sessionStorage.removeItem('zan_admin_pending_email')
+        } catch {}
+      }
+
+      setIsAuthenticated(true)
+      setAdminUser({
+        email: data.admin?.email || trimmedEmail,
+        role: 'Master Admin'
+      })
+
+      return { success: true }
+    } catch (err) {
+      return {
+        success: false,
+        error: 'Unable to verify code at this time.'
+      }
+    }
+  }, [lastRequestedEmail])
+
+  // -------------------------------------------------------------
+  // Logout
+  // -------------------------------------------------------------
+  const logout = useCallback(async () => {
+    try {
+      await apiFetch('/api/admin/auth/logout', { method: 'POST' })
+    } catch (e) {
+      console.warn('Logout notice:', e)
+    } finally {
+      setIsAuthenticated(false)
+      setAdminUser(null)
+      try {
+        sessionStorage.removeItem('zan_admin_token')
+        sessionStorage.removeItem('zan_admin_pending_email')
+      } catch {}
+    }
   }, [])
 
   return (
     <AdminAuthContext.Provider
       value={{
         isAuthenticated,
-        credentials,
-        login,
+        isCheckingSession,
+        adminUser,
+        lastRequestedEmail,
+        setLastRequestedEmail,
+        requestOtp,
+        verifyOtp,
         logout,
-        updateCredentials,
-        lockoutUntil,
-        failedAttempts
+        checkSession
       }}
     >
       {children}

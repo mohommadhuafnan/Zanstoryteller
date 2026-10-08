@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { supabase } from '../supabase.js'
+import { requireAdmin } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -52,7 +53,7 @@ router.post('/', async (req, res) => {
  * GET /api/bookings
  * Retrieve list of bookings for Admin Portal
  */
-router.get('/', async (req, res) => {
+router.get('/', requireAdmin, async (req, res) => {
   try {
     const { status, limit = 50 } = req.query
     let query = supabase
@@ -81,7 +82,7 @@ router.get('/', async (req, res) => {
  * PATCH /api/bookings/:id
  * Update status of a booking (confirmed, completed, archived)
  */
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params
     const { status, notes } = req.body

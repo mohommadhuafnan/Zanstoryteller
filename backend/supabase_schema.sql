@@ -110,3 +110,46 @@ DROP POLICY IF EXISTS "Allow public delete in zanstoryteller-images" ON storage.
 CREATE POLICY "Allow public delete in zanstoryteller-images"
     ON storage.objects FOR DELETE TO public
     USING (bucket_id = 'zanstoryteller-images');
+
+
+-- ========================================================
+-- 5. SOVEREIGN ADMIN AUTHENTICATION (OTP & AUDIT LOGS)
+-- ========================================================
+
+CREATE TABLE IF NOT EXISTS public.admin_otps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    otp_hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    attempts INT DEFAULT 0,
+    max_attempts INT DEFAULT 5,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_otps_email_created ON public.admin_otps(email, created_at DESC);
+
+ALTER TABLE public.admin_otps ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "admin_otps_rw" ON public.admin_otps;
+CREATE POLICY "admin_otps_rw" ON public.admin_otps FOR ALL USING (true) WITH CHECK (true);
+
+
+CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event TEXT NOT NULL,
+    email TEXT,
+    ip_address TEXT,
+    user_agent TEXT,
+    status TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_created ON public.admin_audit_logs(created_at DESC);
+
+ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "admin_audit_logs_rw" ON public.admin_audit_logs;
+CREATE POLICY "admin_audit_logs_rw" ON public.admin_audit_logs FOR ALL USING (true) WITH CHECK (true);

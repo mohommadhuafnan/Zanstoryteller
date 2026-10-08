@@ -60,9 +60,9 @@ function AppContent() {
   }, [currentPath])
 
   // -----------------------------------------------------------------
-  // ROUTE: Sovereign Admin Control Studio (/admin220 or /admin)
+  // ROUTE: Sovereign Admin Control Studio (/admin, /admin/login, /admin/dashboard)
   // -----------------------------------------------------------------
-  if (currentPath === '/admin220' || currentPath === '/admin') {
+  if (currentPath.startsWith('/admin') || currentPath === '/admin220') {
     return (
       <Suspense fallback={
         <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center text-white font-mono text-xs tracking-widest uppercase">

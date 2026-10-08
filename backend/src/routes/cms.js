@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { supabase } from '../supabase.js'
+import { requireAdmin } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -34,7 +35,7 @@ router.get('/', async (req, res) => {
  * POST /api/cms
  * Save full or partial CMS state to Supabase
  */
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const payload = req.body
     if (!payload || typeof payload !== 'object') {
