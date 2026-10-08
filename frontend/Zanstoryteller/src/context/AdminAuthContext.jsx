@@ -311,9 +311,10 @@ export function AdminAuthProvider({ children }) {
         message: data.message || 'Password reset code sent to your email.'
       }
     } catch (err) {
+      console.warn('Forgot password network error:', err)
       return {
         success: false,
-        error: 'Unable to process password reset request.'
+        error: err.message ? `Connection error: ${err.message}` : 'Unable to process password reset request. Please check your connection.'
       }
     }
   }, [])

@@ -14,6 +14,25 @@ export default async function handler(req, res) {
   const pathname = url.split('?')[0].replace(/\/$/, '')
   const method = req.method
 
+  // Safely parse body if passed as string or stream
+  let body = req.body || {}
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body) } catch {}
+  } else if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
+    if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
+      try {
+        const buffers = []
+        for await (const chunk of req) {
+          buffers.push(chunk)
+        }
+        const raw = Buffer.concat(buffers).toString()
+        if (raw) {
+          body = JSON.parse(raw)
+        }
+      } catch {}
+    }
+  }
+
   // 1. HEALTH CHECK
   if (pathname === '/api/health' || pathname === '/api') {
     return res.status(200).json({ status: 'ok', project: 'Zan Storyteller Sovereign API' })
@@ -22,7 +41,7 @@ export default async function handler(req, res) {
   // 2. ADMIN LOGIN (POST)
   if (pathname === '/api/admin/auth/login' && method === 'POST') {
     try {
-      const { email, password, forceOtp } = req.body || {}
+      const { email, password, forceOtp } = body || {}
       const inputEmail = (email || '').trim().toLowerCase()
 
       if (!inputEmail || inputEmail !== ADMIN_EMAIL) {
@@ -100,7 +119,7 @@ export default async function handler(req, res) {
   // 3. REQUEST OTP (POST)
   if (pathname === '/api/admin/auth/request-otp' && method === 'POST') {
     try {
-      const { email, purpose } = req.body || {}
+      const { email, purpose } = body || {}
       const inputEmail = (email || '').trim().toLowerCase()
 
       if (!inputEmail || inputEmail !== ADMIN_EMAIL) {
@@ -137,7 +156,7 @@ export default async function handler(req, res) {
   // 4. VERIFY OTP (POST)
   if (pathname === '/api/admin/auth/verify-otp' && method === 'POST') {
     try {
-      const { email, otp } = req.body || {}
+      const { email, otp } = body || {}
       const inputEmail = (email || '').trim().toLowerCase()
       const cleanOtp = String(otp || '').trim()
 
@@ -193,7 +212,7 @@ export default async function handler(req, res) {
   // 5. FORGOT PASSWORD (POST)
   if (pathname === '/api/admin/auth/forgot-password' && method === 'POST') {
     try {
-      const { email } = req.body || {}
+      const { email } = body || {}
       const inputEmail = (email || '').trim().toLowerCase()
 
       if (!inputEmail || inputEmail !== ADMIN_EMAIL) {
@@ -230,7 +249,7 @@ export default async function handler(req, res) {
   // 6. RESET PASSWORD (POST)
   if (pathname === '/api/admin/auth/reset-password' && method === 'POST') {
     try {
-      const { email, otp, newPassword } = req.body || {}
+      const { email, otp, newPassword } = body || {}
       const inputEmail = (email || '').trim().toLowerCase()
       const cleanOtp = String(otp || '').trim()
       const cleanPassword = String(newPassword || '').trim()
@@ -326,7 +345,7 @@ export default async function handler(req, res) {
   // 9. NOTIFY BOOKING (POST)
   if (pathname === '/api/notify-booking' && method === 'POST') {
     try {
-      const booking = req.body || {}
+      const booking = body || {}
       if (!booking.name || !booking.email) {
         return res.status(400).json({ error: 'Client name and email are required.' })
       }
@@ -355,7 +374,7 @@ export default async function handler(req, res) {
 
     if (method === 'POST') {
       try {
-        const { name, email, phone, location, sessionType, date, time, message } = req.body || {}
+        const { name, email, phone, location, sessionType, date, time, message } = body || {}
         if (!name || !email || !phone) return res.status(400).json({ error: 'Name, email, and phone are required.' })
 
         const record = {
@@ -384,7 +403,7 @@ export default async function handler(req, res) {
 
     if (method === 'PATCH') {
       try {
-        const { id, status: st, notes } = req.body || {}
+        const { id, status: st, notes } = body || {}
         if (!id) return res.status(400).json({ error: 'Booking ID required' })
 
         const upd = {}
