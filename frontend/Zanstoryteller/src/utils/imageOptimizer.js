@@ -48,12 +48,13 @@ export function getOptimizedImageUrl(url, { width = 1200, quality = 75 } = {}) {
     else if (targetUrl.includes('scroll_05')) targetUrl = CLOUDINARY_MAP['/scrolling/scroll_05.webp']
   }
 
-  // 1. Cloudinary URL optimization
+  // 1. Cloudinary URL optimization: enforces auto-format (WebP/AVIF), auto-quality, and responsive sizing
   if (targetUrl.includes('res.cloudinary.com')) {
     if (targetUrl.includes('/upload/')) {
       const parts = targetUrl.split('/upload/')
+      const vMatch = parts[1].match(/v\d+\/.*$/)
+      const cleanPath = vMatch ? vMatch[0] : parts[1].replace(/^([^/]*?(?:f_|q_|w_|c_|g_|h_)[^/]*?\/)+/, '')
       const transform = `f_auto,q_auto:good${width ? `,w_${width}` : ''}`
-      const cleanPath = parts[1].replace(/^(f_[^/]+\/|q_[^/]+\/|w_[^/]+\/)+/, '')
       return `${parts[0]}/upload/${transform}/${cleanPath}`
     }
     return targetUrl
