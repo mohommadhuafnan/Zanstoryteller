@@ -1,10 +1,13 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { footerData } from '../data/photographyData'
+import { footerData as defaultFooterData } from '../data/photographyData'
 import { ArrowUp } from 'lucide-react'
 import { InstagramIcon, FacebookIcon, WhatsAppIcon } from './Icons'
+import { useCMS } from '../context/CMSContext'
 
-export default function Footer() {
+export default function Footer({ className = '' }) {
+  const { data } = useCMS()
+  const footerData = data?.footerData || defaultFooterData
   const scrollToTop = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
@@ -29,7 +32,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="relative z-10 w-full bg-[#020202] text-white pt-20 pb-12 px-6 sm:px-12 md:px-20 border-t border-white/[0.08]">
+    <footer className={`relative z-10 w-full text-white pt-20 pb-12 px-6 sm:px-12 md:px-20 border-t border-white/[0.08] ${className || 'bg-[#020202]'}`}>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -47,7 +50,7 @@ export default function Footer() {
               <div className="flex items-center gap-3 mb-4">
                 <img
                   src="/logo.png"
-                  alt="Zanstoryteller Logo"
+                  alt="Zan Storyteller Logo"
                   className="w-8 h-8 object-contain drop-shadow-[0_2px_10px_rgba(216,187,123,0.4)]"
                 />
                 <span className="font-light tracking-[0.28em] text-lg uppercase font-sans text-white">

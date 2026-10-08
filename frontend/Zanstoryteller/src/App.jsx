@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import Navbar from './components/Navbar'
+import ExperienceLoader from './components/ExperienceLoader'
 import HeroSection from './components/HeroSection'
 import AboutSection from './components/AboutSection'
 import EditorialCarousel from './components/EditorialCarousel'
@@ -14,14 +15,15 @@ import QASection from './components/QASection'
 import FinalCTA from './components/FinalCTA'
 import Footer from './components/Footer'
 import FloatingMessageWidget from './components/FloatingMessageWidget'
+import { CMSProvider } from './context/CMSContext'
 
 // Lazily load separate routes and non-critical overlays to drastically reduce initial JS payload
 const BookingPage = lazy(() => import('./components/booking/BookingPage'))
-const CategoryGalleryPage = lazy(() => import('./components/gallery/CategoryGalleryPage'))
-const ClientAlbumPage = lazy(() => import('./components/gallery/ClientAlbumPage'))
+const MasterAlbumPage = lazy(() => import('./components/gallery/MasterAlbumPage'))
 const ExitIntentPopup = lazy(() => import('./components/ExitIntentPopup'))
+const AdminPortal = lazy(() => import('./components/admin/AdminPortal'))
 
-export default function App() {
+function AppContent() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
   // Listen to browser forward/backward navigation
@@ -58,6 +60,24 @@ export default function App() {
   }, [currentPath])
 
   // -----------------------------------------------------------------
+  // ROUTE: Sovereign Admin Control Studio (/admin220 or /admin)
+  // -----------------------------------------------------------------
+  if (currentPath === '/admin220' || currentPath === '/admin') {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center text-white font-mono text-xs tracking-widest uppercase">
+          <div className="flex items-center gap-3">
+            <span className="w-3.5 h-3.5 border-2 border-[#D8BB7B] border-t-transparent rounded-full animate-spin" />
+            <span>Loading Zan Storyteller Admin Portal...</span>
+          </div>
+        </div>
+      }>
+        <AdminPortal onNavigateHome={() => navigate('/')} />
+      </Suspense>
+    )
+  }
+
+  // -----------------------------------------------------------------
   // ROUTE: Dedicated Booking Page (/book-session)
   // -----------------------------------------------------------------
   if (currentPath === '/book-session') {
@@ -80,33 +100,19 @@ export default function App() {
   }
 
   // -----------------------------------------------------------------
-  // ROUTE: Gallery Categories & Client Albums (/gallery/...)
+  // ROUTE: Unified Master Album & Portfolio (/album or /gallery)
+  // Luxury dark navy aesthetic (#0d1b2a) matching loading screen and mfrports physics
   // -----------------------------------------------------------------
-  if (currentPath.startsWith('/gallery')) {
-    const parts = currentPath.split('/').filter(Boolean)
-    const categorySlug = parts[1] || 'wedding'
-    const clientSlug = parts[2] || null
-
+  if (currentPath.startsWith('/album') || currentPath.startsWith('/gallery')) {
     return (
-      <div className="relative min-h-screen bg-white text-[#111111] selection:bg-[#111111] selection:text-white">
+      <div className="relative min-h-screen bg-[#0d1b2a] text-white selection:bg-[#D8BB7B] selection:text-black">
         <Navbar onNavigate={navigate} currentPath={currentPath} />
         <main className="w-full">
-          <Suspense fallback={<div className="min-h-screen bg-white" />}>
-            {clientSlug ? (
-              <ClientAlbumPage
-                categorySlug={categorySlug}
-                clientSlug={clientSlug}
-                onNavigate={navigate}
-              />
-            ) : (
-              <CategoryGalleryPage
-                categorySlug={categorySlug}
-                onNavigate={navigate}
-              />
-            )}
+          <Suspense fallback={<div className="min-h-screen bg-[#0d1b2a]" />}>
+            <MasterAlbumPage onNavigate={navigate} currentPath={currentPath} />
           </Suspense>
         </main>
-        <Footer />
+        <Footer className="bg-[#091420] border-t border-white/[0.08]" />
         <FloatingMessageWidget />
         <Suspense fallback={null}>
           <ExitIntentPopup onNavigate={navigate} />
@@ -123,22 +129,25 @@ export default function App() {
       {/* Subtle cinematic film grain texture */}
       <div className="film-grain" aria-hidden="true" />
 
+      {/* Cinematic Experience Loader */}
+      <ExperienceLoader />
+
       {/* Header Navigation */}
       <Navbar onNavigate={navigate} currentPath={currentPath} />
 
       {/* Main Flow */}
       <main className="w-full">
-        {/* 01. Cinematic Hero Scrollytelling Section */}
+        {/* 01. Senawa Studio-Inspired Editorial Hero Section */}
         <HeroSection />
 
-        {/* 02. About Zanstoryteller (White Editorial Background) */}
+        {/* 02. About Zan Storyteller (White Editorial Background) */}
         <AboutSection />
 
         {/* 02.5. Editorial Moments Carousel (Smooth auto-loop & manual scrolling gallery) */}
         <EditorialCarousel />
 
         {/* 03. What We Capture / Photography Services */}
-        <ServicesSection />
+        <ServicesSection onNavigate={navigate} />
 
         {/* 04. Featured Stories / Asymmetric Portfolio Grid */}
         <FeaturedStories onNavigate={navigate} />
@@ -179,5 +188,13 @@ export default function App() {
         <ExitIntentPopup onNavigate={navigate} />
       </Suspense>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <CMSProvider>
+      <AppContent />
+    </CMSProvider>
   )
 }

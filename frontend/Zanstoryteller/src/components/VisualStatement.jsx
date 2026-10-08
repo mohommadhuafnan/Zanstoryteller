@@ -1,9 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { visualStatementData } from '../data/photographyData'
+import { visualStatementData as defaultVisualStatementData } from '../data/photographyData'
 import { getResponsiveUnsplash } from '../utils/imageOptimizer'
+import { useCMS } from '../context/CMSContext'
 
 export default function VisualStatement() {
+  const { data } = useCMS()
+  const visualStatementData = data?.visualStatementData || defaultVisualStatementData
   return (
     <section
       className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center bg-[#050505] text-white z-0"
@@ -11,8 +14,8 @@ export default function VisualStatement() {
       {/* Static Background Photo */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
-          {...getResponsiveUnsplash(visualStatementData.image, 1200, '100vw')}
-          alt={visualStatementData.alt}
+          src={visualStatementData.image}
+          alt={visualStatementData.alt || 'Visual Statement'}
           className="w-full h-full object-cover object-center filter brightness-[0.55] contrast-[1.08]"
           loading="lazy"
           decoding="async"
@@ -38,10 +41,14 @@ export default function VisualStatement() {
           </span>
         </div>
 
-        <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light tracking-tight uppercase leading-[1.04] mb-8 text-white">
-          Your Moments <br />
-          <span className="font-serif italic font-normal text-white/95 lowercase tracking-normal">deserve</span> <br />
-          To Be Remembered.
+        <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light tracking-tight uppercase leading-[1.04] mb-8 text-white whitespace-pre-line">
+          {visualStatementData.heading || (
+            <>
+              Your Moments <br />
+              <span className="font-serif italic font-normal text-white/95 lowercase tracking-normal">deserve</span> <br />
+              To Be Remembered.
+            </>
+          )}
         </h2>
 
         <p className="text-base sm:text-lg text-white/70 font-light max-w-md mx-auto tracking-wide">

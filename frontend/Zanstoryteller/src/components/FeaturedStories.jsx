@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
-import { portfolioCategories, portfolioItems } from '../data/photographyData'
+import { portfolioCategories as defaultCategories, portfolioItems as defaultItems } from '../data/photographyData'
 import { getResponsiveUnsplash } from '../utils/imageOptimizer'
+import { useCMS } from '../context/CMSContext'
 
 export default function FeaturedStories({ onNavigate }) {
+  const { data } = useCMS()
+  const portfolioCategories = data?.portfolioCategories || defaultCategories
+  const portfolioItems = data?.portfolioItems || defaultItems
   const [selectedCategory, setSelectedCategory] = useState("ALL")
 
   const filteredItems = selectedCategory === "ALL"
@@ -14,7 +18,7 @@ export default function FeaturedStories({ onNavigate }) {
   return (
     <section id="portfolio" className="relative w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
       <div className="max-w-7xl mx-auto">
-        
+
         {/* Section Header with Scroll Reveal */}
         <motion.div
           initial={{ opacity: 0, y: 35 }}
@@ -50,11 +54,10 @@ export default function FeaturedStories({ onNavigate }) {
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`text-[11px] font-mono tracking-widest px-4 py-2 uppercase transition-all duration-300 rounded-full ${
-                      isActive
+                    className={`text-[11px] font-mono tracking-widest px-4 py-2 uppercase transition-all duration-300 rounded-full ${isActive
                         ? 'bg-[#111111] text-white'
                         : 'bg-[#F5F5F5] text-[#666666] hover:text-[#111111] hover:bg-[#EAEAEA]'
-                    }`}
+                      }`}
                   >
                     {cat}
                   </button>

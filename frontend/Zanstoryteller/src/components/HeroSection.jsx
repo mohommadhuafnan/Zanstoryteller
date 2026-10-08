@@ -1,387 +1,403 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react'
-import { useScroll, motion, AnimatePresence } from 'framer-motion'
-import ScrollImageSequence from './ScrollImageSequence'
-import ScrollParticleField from './ScrollParticleField'
-import HeroTextOverlay from './HeroTextOverlay'
-import {
-  frameCacheManager,
-} from '../utils/frameSequence'
+import React, { useRef, useState, useEffect } from 'react'
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
+import { ChevronLeft, ChevronRight, ArrowDown, ArrowUpRight, Sparkles } from 'lucide-react'
 
-/**
- * Bottom Cinematic Stage & Scroll Indicator:
- * SCROLL ————————— 01 / 05
- * 5 full stages synchronized to hero scroll progress, with responsive mobile layout.
- */
-function BottomScrollStageIndicator({ scrollYProgress, isReady }) {
-  const [stageIndex, setStageIndex] = useState('01 / 05')
-  const [lineProgress, setLineProgress] = useState(0)
+import { HERO_SLIDES } from '../data/heroSlidesData'
+import { useCMS } from '../context/CMSContext'
 
-  useEffect(() => {
-    if (!scrollYProgress) return
-    return scrollYProgress.on('change', (v) => {
-      setLineProgress(v)
-      if (v < 0.18) {
-        setStageIndex('01 / 05')
-      } else if (v < 0.40) {
-        setStageIndex('02 / 05')
-      } else if (v < 0.64) {
-        setStageIndex('03 / 05')
-      } else if (v < 0.84) {
-        setStageIndex('04 / 05')
-      } else {
-        setStageIndex('05 / 05')
-      }
-    })
-  }, [scrollYProgress])
+// Individual Full-Bleed Slide with Dynamic Scroll-Driven Zoom
+function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
+  let opacity
+  let scale
+
+  if (totalSlides <= 1) {
+    opacity = 1
+    scale = useTransform(smoothProgress, [0, 1], [1.02, 1.15])
+  } else if (index === 0) {
+    const fadeEnd = (1 / totalSlides) * 1.2
+    opacity = useTransform(smoothProgress, [0, fadeEnd * 0.7, fadeEnd], [1, 1, 0])
+    scale = useTransform(smoothProgress, [0, fadeEnd * 0.7, fadeEnd], [1.02, 1.10, 1.18])
+  } else if (index === totalSlides - 1) {
+    const enterStart = ((totalSlides - 1) / totalSlides) - 0.08
+    opacity = useTransform(smoothProgress, [Math.max(0, enterStart), 0.95, 1.0], [0, 1, 1])
+    scale = useTransform(smoothProgress, [Math.max(0, enterStart), 0.95, 1.0], [1.22, 1.04, 1.10])
+  } else {
+    const enterStart = Math.max(0, (index / totalSlides) - 0.08)
+    const enterPeak = (index / totalSlides) + 0.04
+    const exitStart = Math.min(0.96, ((index + 1) / totalSlides) - 0.06)
+    const exitEnd = Math.min(1.0, ((index + 1) / totalSlides) + 0.04)
+    opacity = useTransform(smoothProgress, [enterStart, enterPeak, exitStart, exitEnd], [0, 1, 1, 0])
+    scale = useTransform(smoothProgress, [enterStart, enterPeak, exitStart, exitEnd], [1.22, 1.04, 1.12, 1.18])
+  }
+
 
   return (
-    <AnimatePresence>
-      {isReady && (
-        <motion.div
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 22 }}
-          transition={{ duration: 0.85, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex items-center gap-2.5 sm:gap-5 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] sm:tracking-[0.28em] text-white/80 select-none max-w-[92vw] justify-center"
-        >
-          <span className="text-white/70 tracking-[0.25em] text-[10px] sm:text-xs">SCROLL</span>
+    <motion.div
+      style={{
+        opacity,
+        zIndex: 10 + index,
+      }}
+      className="absolute inset-0 w-full h-full overflow-hidden will-change-transform pointer-events-none"
+    >
+      {/* Outer motion wrapper drives the scroll zoom animation */}
+      <motion.div
+        style={{ scale }}
+        className="relative w-full h-full will-change-transform transform-gpu"
+      >
+        {/* Inner subtle breathing ambient Ken Burns float */}
+        <motion.img
+          src={slide.image}
+          alt={slide.title}
+          fetchPriority={index === 0 ? 'high' : 'auto'}
+          loading={index === 0 ? 'eager' : 'lazy'}
+          decoding="async"
+          animate={{ scale: [1, 1.03, 1] }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-full h-full object-cover object-center filter brightness-[0.90] contrast-[1.05]"
+        />
+      </motion.div>
 
-          {/* Sleek Line Track */}
-          <div className="w-16 xs:w-24 sm:w-36 md:w-44 h-[1.5px] bg-white/20 relative overflow-hidden rounded-full">
-            <motion.div
-              className="h-full bg-gradient-to-r from-[#D8BB7B] via-[#FFF5D6] to-white"
-              style={{ width: `${Math.max(8, lineProgress * 100)}%` }}
-            />
-          </div>
+      {/* Top Gradient for Navbar legibility */}
+      <div className="absolute top-0 left-0 right-0 h-44 bg-gradient-to-b from-black/85 via-black/45 to-transparent pointer-events-none z-10" />
 
-          <span className="text-white/90 font-medium tracking-[0.2em] sm:tracking-[0.24em] text-[10px] sm:text-xs min-w-[48px] sm:min-w-[56px] text-right">
-            {stageIndex}
-          </span>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      {/* Center Cinematic Radial Vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.65)_100%)] pointer-events-none z-10" />
+
+      {/* Bottom Gradient for Controls legibility */}
+      <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none z-10" />
+    </motion.div>
   )
 }
 
-// Vector stroke paths for each letter of ZANSTORYTELLER (matching Unifixz SVG stroke-draw architecture)
-const ZAN_LETTER_PATHS = [
-  { id: 'Z1', char: 'Z', d: 'M 24 8 L 72 8 L 24 76 L 72 76' },
-  { id: 'A1', char: 'A', d: 'M 88 76 L 114 8 L 140 76 M 99 50 L 129 50' },
-  { id: 'N1', char: 'N', d: 'M 156 76 L 156 8 L 206 76 L 206 8' },
-  { id: 'S1', char: 'S', d: 'M 266 22 Q 266 8 245 8 Q 222 8 222 24 Q 222 40 245 42 Q 268 44 268 60 Q 268 76 245 76 Q 224 76 224 62' },
-  { id: 'T1', char: 'T', d: 'M 284 8 L 332 8 M 308 8 L 308 76' },
-  { id: 'O1', char: 'O', d: 'M 364 8 L 384 8 Q 400 8 400 24 L 400 60 Q 400 76 384 76 L 364 76 Q 348 76 348 60 L 348 24 Q 348 8 364 8 Z' },
-  { id: 'R1', char: 'R', d: 'M 416 76 L 416 8 L 442 8 Q 464 8 464 25 Q 464 42 442 42 L 416 42 M 440 42 L 464 76' },
-  { id: 'Y1', char: 'Y', d: 'M 480 8 L 504 42 L 504 76 M 528 8 L 504 42' },
-  { id: 'T2', char: 'T', d: 'M 544 8 L 592 8 M 568 8 L 568 76' },
-  { id: 'E1', char: 'E', d: 'M 652 8 L 608 8 L 608 76 L 652 76 M 608 42 L 644 42' },
-  { id: 'L1', char: 'L', d: 'M 668 8 L 668 76 L 710 76' },
-  { id: 'L2', char: 'L', d: 'M 726 8 L 726 76 L 768 76' },
-  { id: 'E2', char: 'E', d: 'M 828 8 L 784 8 L 784 76 L 828 76 M 784 42 L 820 42' },
-  { id: 'R2', char: 'R', d: 'M 844 76 L 844 8 L 870 8 Q 892 8 892 25 Q 892 42 870 42 L 844 42 M 868 42 L 892 76' },
-]
-
-// Ghost architectural drafting lines spanning viewBox="0 0 916 84"
-const GHOST_BLUEPRINT_PATHS = [
-  'M 48 42 A 62 62 0 1 1 172 42 A 62 62 0 1 1 48 42',
-  'M 180 42 A 62 62 0 1 1 304 42 A 62 62 0 1 1 180 42',
-  'M 312 42 A 62 62 0 1 1 436 42 A 62 62 0 1 1 312 42',
-  'M 444 42 A 62 62 0 1 1 568 42 A 62 62 0 1 1 444 42',
-  'M 576 42 A 62 62 0 1 1 700 42 A 62 62 0 1 1 576 42',
-  'M 708 42 A 62 62 0 1 1 832 42 A 62 62 0 1 1 708 42',
-  'M 0 21 L 916 21',
-  'M 0 63 L 916 63',
-  'M 0 42 L 916 42',
-  'M 0 84 L 916 0',
-  'M 0 0 L 916 84',
-]
-
-/**
- * Luxury cinematic loading indicator with Unifixz-Style SVG Stroke-Drawing Animation:
- * - Huge scale matching the "THAT BECOME" headline weight and impact.
- * - Every letter stroke draws slowly and sequentially with rounded line caps.
- * - Blueprint drafting grid lines and aperture circles behind letters.
- * - 3 animated wave bouncing dots (. . .) centered below.
- * - Gold emblem logo & glowing progress telemetry.
- */
-function MinimalExperienceLoader({ progress, isReady }) {
-  return (
-    <AnimatePresence>
-      {!isReady && (
-        <motion.div
-          key="minimal-loader"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }}
-          className="fixed inset-0 z-[99999] w-screen h-screen flex flex-col items-center justify-center bg-[#121E2C] text-white px-4 sm:px-8 pointer-events-auto select-none overflow-hidden"
-          style={{ background: 'radial-gradient(circle at center, #18293d 0%, #121E2C 100%)' }}
-        >
-          <div className="flex flex-col items-center w-full max-w-6xl text-center relative">
-            {/* Ambient Gold Aura Glow & Emblem */}
-            <div className="relative flex items-center justify-center mb-3 sm:mb-4">
-              <div className="absolute w-36 h-36 rounded-full bg-[#D8BB7B]/20 blur-3xl animate-pulse pointer-events-none" />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-[#D8BB7B]/20 border-dashed absolute pointer-events-none"
-              />
-              
-              <motion.div
-                animate={{
-                  scale: [0.96, 1.03, 0.96],
-                  opacity: [0.9, 1, 0.9],
-                }}
-                transition={{
-                  duration: 2.4,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                className="relative z-10 flex items-center justify-center"
-              >
-                <img
-                  src="/logo.png"
-                  alt="Zanstoryteller Logo"
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-[0_4px_24px_rgba(216,187,123,0.5)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
-                />
-              </motion.div>
-            </div>
-
-            {/* Massive Unifixz-Style Stroke Drawing SVG for ZANSTORYTELLER */}
-            <div className="w-full flex items-center justify-center my-2 sm:my-4">
-              <svg
-                viewBox="0 0 916 84"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-label="Zanstoryteller"
-                className="w-[92vw] max-w-[1100px] h-auto select-none drop-shadow-[0_4px_28px_rgba(216,187,123,0.35)]"
-              >
-                <defs>
-                  <linearGradient id="goldGradientStroke" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FFFFFF" />
-                    <stop offset="16%" stopColor="#FFF5D8" />
-                    <stop offset="45%" stopColor="#E5C788" />
-                    <stop offset="75%" stopColor="#D8BB7B" />
-                    <stop offset="100%" stopColor="#8C6520" />
-                  </linearGradient>
-                  <filter id="goldGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#D8BB7B" floodOpacity="0.5" />
-                  </filter>
-                </defs>
-
-                {/* Ghost Architectural Blueprint Guidelines */}
-                {GHOST_BLUEPRINT_PATHS.map((d, idx) => (
-                  <motion.path
-                    key={`ghost-${idx}`}
-                    d={d}
-                    fill="none"
-                    stroke="#D8BB7B"
-                    strokeOpacity="0.2"
-                    strokeWidth="1.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 0.2 }}
-                    transition={{
-                      duration: 1.5,
-                      ease: [0.16, 1, 0.3, 1],
-                      delay: idx * 0.04,
-                    }}
-                  />
-                ))}
-
-                {/* Main Stroke-Drawn Letters (Slow sequential reveal with rounded caps) */}
-                {ZAN_LETTER_PATHS.map((letter, index) => (
-                  <motion.path
-                    key={letter.id}
-                    d={letter.d}
-                    fill="none"
-                    stroke="url(#goldGradientStroke)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    filter="url(#goldGlowFilter)"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{
-                      pathLength: 1,
-                      opacity: [0, 1, 1],
-                    }}
-                    transition={{
-                      pathLength: {
-                        duration: 0.7,
-                        ease: [0.22, 1, 0.36, 1],
-                        delay: 0.05 + index * 0.06,
-                      },
-                      opacity: {
-                        duration: 0.15,
-                        delay: 0.05 + index * 0.06,
-                      },
-                    }}
-                  />
-                ))}
-              </svg>
-            </div>
-
-            {/* Unifixz Signature 3 Animated Bouncing Dots (. . .) */}
-            <div className="flex items-center justify-center gap-3 mt-3 mb-6">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  animate={{
-                    y: [0, -8, 0],
-                    opacity: [0.35, 1, 0.35],
-                    scale: [0.85, 1.35, 0.85],
-                  }}
-                  transition={{
-                    duration: 0.85,
-                    repeat: Infinity,
-                    delay: i * 0.18,
-                    ease: 'easeInOut',
-                  }}
-                  className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#D8BB7B] shadow-[0_0_10px_rgba(216,187,123,0.9)]"
-                />
-              ))}
-            </div>
-
-            {/* Glowing Gold Progress Track */}
-            <div className="w-64 sm:w-80 bg-white/10 h-[2px] rounded-full overflow-hidden relative border border-white/5">
-              <motion.div
-                className="h-full bg-gradient-to-r from-[#8C6520] via-[#FFF2C8] to-[#D8BB7B] shadow-[0_0_14px_rgba(216,187,123,0.8)] transition-all duration-200 ease-out"
-                style={{ width: `${Math.max(10, progress)}%` }}
-              />
-            </div>
-
-            {/* Telemetry info */}
-            <div className="flex items-center justify-between w-64 sm:w-80 text-[10px] font-mono tracking-widest text-white/40 uppercase pt-2.5">
-              <span className="text-white/50">Initializing Optics</span>
-              <span className="text-[#D8BB7B] font-semibold">{String(Math.round(progress)).padStart(2, '0')}%</span>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
-// Module-level cache to ensure initial loader only runs on first site entrance/refresh,
-// never when navigating between internal routes (e.g. Back to Home from Gallery).
-let hasCompletedInitialLoad = false
-
-/**
- * HeroSection Component
- * Master scroll container with 420vh track, sticky 100vh viewport,
- * cinematic HTML5 canvas sequence, narrative text overlays, and telemetry HUD.
- */
 export default function HeroSection() {
+  const { data } = useCMS()
+  const currentSlides = (data?.heroSlides && data.heroSlides.length > 0) ? data.heroSlides : HERO_SLIDES
   const containerRef = useRef(null)
-  const [initialProgress, setInitialProgress] = useState(hasCompletedInitialLoad ? 100 : 0)
-  const [isInitialReady, setIsInitialReady] = useState(hasCompletedInitialLoad)
+  const [activeIdx, setActiveIdx] = useState(0)
+  const [isAtEnd, setIsAtEnd] = useState(false)
 
-  // Strictly lock page scrolling while initial experience loader is active
-  useEffect(() => {
-    if (!isInitialReady) {
-      const originalBodyOverflow = document.body.style.overflow
-      const originalHtmlOverflow = document.documentElement.style.overflow
+  const totalSlides = currentSlides.length
 
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
-
-      const preventScroll = (e) => {
-        e.preventDefault()
-      }
-
-      window.addEventListener('wheel', preventScroll, { passive: false })
-      window.addEventListener('touchmove', preventScroll, { passive: false })
-
-      return () => {
-        document.body.style.overflow = originalBodyOverflow
-        document.documentElement.style.overflow = originalHtmlOverflow
-        window.removeEventListener('wheel', preventScroll)
-        window.removeEventListener('touchmove', preventScroll)
-      }
-    }
-  }, [isInitialReady])
-
-  // Track scroll progress strictly within this 420vh container
+  // Track scroll progress across dynamic height pinned section
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   })
 
-  // Preload initial burst immediately on mount with responsive burst and smooth pacing
+  // Smooth physics spring for fluid zoom transitions without harsh snapping
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 85,
+    damping: 24,
+    restDelta: 0.0005,
+  })
+
+  // Progress bar active pill indicator
+  const indicatorLeft = useTransform(
+    smoothProgress,
+    [0, 1],
+    ['0%', `${Math.max(0, (totalSlides - 1) / totalSlides) * 100}%`]
+  )
+
+  // Update active slide index and end state based on scroll
   useEffect(() => {
-    if (hasCompletedInitialLoad) {
-      setIsInitialReady(true)
-      setInitialProgress(100)
-      return
-    }
+    return scrollYProgress.on('change', (p) => {
+      const idx = Math.min(
+        totalSlides - 1,
+        Math.max(0, Math.round(p * (totalSlides - 1)))
+      )
+      setActiveIdx(idx)
+      setIsAtEnd(p >= 0.94)
+    })
+  }, [scrollYProgress, totalSlides])
 
-    let isMounted = true
-    const startTime = Date.now()
-    const isMobile =
-      typeof window !== 'undefined' &&
-      (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
-    const MIN_LOADER_TIME = isMobile ? 1200 : 1500
-    const preloadCount = isMobile ? 35 : 50
-
-    frameCacheManager.preloadInitial(preloadCount, (pct) => {
-      if (isMounted) setInitialProgress(pct)
-    }).then(() => {
-      if (isMounted) {
-        const elapsed = Date.now() - startTime
-        const remaining = Math.max(0, MIN_LOADER_TIME - elapsed)
-        setInitialProgress(100)
-        setTimeout(() => {
-          hasCompletedInitialLoad = true
-          if (isMounted) setIsInitialReady(true)
-        }, remaining + 100)
+  // Preload high-res slides into browser memory
+  useEffect(() => {
+    currentSlides.forEach((slide) => {
+      if (slide?.image) {
+        const img = new Image()
+        img.src = slide.image
       }
     })
+  }, [currentSlides])
 
-    return () => {
-      isMounted = false
+  // Programmatic scroll helper to jump directly to any slide
+  const scrollToSlide = (index) => {
+    if (!containerRef.current) return
+    const containerTop = containerRef.current.offsetTop
+    const scrollDistance = containerRef.current.offsetHeight - window.innerHeight
+    const targetY = containerTop + (index / Math.max(1, totalSlides - 1)) * scrollDistance
+    window.scrollTo({ top: targetY, behavior: 'smooth' })
+  }
+
+  // Keyboard navigation support (Arrow keys cycle through slides)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const inView = rect.top <= 100 && rect.bottom >= window.innerHeight / 2
+      if (!inView) return
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        if (activeIdx < totalSlides - 1) {
+          e.preventDefault()
+          scrollToSlide(activeIdx + 1)
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        if (activeIdx > 0) {
+          e.preventDefault()
+          scrollToSlide(activeIdx - 1)
+        }
+      }
     }
-  }, [])
+    window.addEventListener('keydown', handleKeyDown, { passive: false })
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeIdx, totalSlides])
 
-  // Optimized lightweight canvas frame update callback
-  const handleFrameUpdate = useCallback(() => {
-    // Handled directly inside canvas loop without triggering React component re-renders
-  }, [])
+  const handlePrev = () => {
+    if (activeIdx > 0) {
+      scrollToSlide(activeIdx - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (activeIdx < totalSlides - 1) {
+      scrollToSlide(activeIdx + 1)
+    } else {
+      const about = document.getElementById('about')
+      if (about) about.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const safeIdx = Math.min(activeIdx, totalSlides - 1)
+  const currentActiveSlide = currentSlides[safeIdx] || currentSlides[0]
 
   return (
     <section
       id="hero"
       ref={containerRef}
-      className="relative w-full bg-[#020202] text-white selection:bg-white/20"
-      style={{
-        height: '420vh',
-      }}
+      className="relative w-full bg-[#020202] text-white"
+      style={{ height: `${Math.max(2, totalSlides) * 100}vh` }}
     >
-      {/* Sticky Viewport: Confines Canvas, Overlays, and HUD strictly to the Hero */}
-      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
-        {/* Minimal Initial Loader */}
-        <MinimalExperienceLoader
-          progress={initialProgress}
-          isReady={isInitialReady}
-        />
+      {/* Sticky Viewport Container: Pinned 100vh viewport */}
+      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none">
+        
+        {/* Stacked Full-Bleed Slides Container (Images come one by one with zooming animation) */}
+        <div className="relative w-full h-full overflow-hidden">
+          {currentSlides.map((slide, idx) => (
+            <ZoomSlide
+              key={slide.id || idx}
+              slide={slide}
+              index={idx}
+              smoothProgress={smoothProgress}
+              totalSlides={totalSlides}
+            />
+          ))}
+        </div>
 
-        {/* HTML5 Canvas Scrollytelling Sequence */}
-        <ScrollImageSequence
-          scrollYProgress={scrollYProgress}
-          onFrameUpdate={handleFrameUpdate}
-        />
+        {/* Prominent Editorial Overlay (Synchronized with active slide zoom) */}
+        <div className="absolute inset-0 pointer-events-none z-20 flex flex-col justify-center px-6 sm:px-14 md:px-20 lg:px-28">
+          <div className="max-w-3xl pt-12 sm:pt-8">
+            <AnimatePresence mode="wait">
+              {currentActiveSlide && (
+                <motion.div
+                  key={currentActiveSlide.id || safeIdx}
+                  initial={{ opacity: 0, y: 28, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -20, filter: 'blur(6px)' }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className="space-y-4 sm:space-y-5"
+                >
+                  {/* Category & Counter Badge */}
+                  <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-[#FFF5D6] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.22em] shadow-lg">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D8BB7B] animate-pulse" />
+                    <span>0{safeIdx + 1} / 0{totalSlides}</span>
+                    <span className="opacity-40">•</span>
+                    <span>{currentActiveSlide.category}</span>
+                  </div>
 
-        {/* Interactive Scroll-Accelerated Small Dots Particle Field (like unifixz.com) */}
-        <ScrollParticleField scrollYProgress={scrollYProgress} />
+                  {/* Grand Editorial Headline */}
+                  <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-white uppercase leading-[1.04] drop-shadow-[0_4px_28px_rgba(0,0,0,0.9)]">
+                    {currentActiveSlide.title}
+                  </h1>
 
-        {/* Cinematic Text Overlays with smooth bottom-to-top letter entrance */}
-        <HeroTextOverlay
-          scrollYProgress={scrollYProgress}
-          isReady={isInitialReady}
-        />
+                  {/* Poetic Subtitle & Narrative Quote */}
+                  <p className="text-sm sm:text-base md:text-lg text-white/85 font-light leading-relaxed max-w-xl drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]">
+                    {currentActiveSlide.tagline}
+                  </p>
 
-        {/* Cinematic Bottom Stage & Scroll Indicator (matching Screenshot 4: SCROLL ——— 01 / 03) */}
-        <BottomScrollStageIndicator
-          scrollYProgress={scrollYProgress}
-          isReady={isInitialReady}
-        />
+                  {/* Metadata Pill: Location & Year */}
+                  <div className="flex items-center gap-3 text-[11px] font-mono tracking-widest text-[#D8BB7B] uppercase pt-1">
+                    <span>{currentActiveSlide.location}</span>
+                    <span className="opacity-40">•</span>
+                    <span>{currentActiveSlide.year}</span>
+                  </div>
+
+                  {/* Interactive Action CTA */}
+                  <div className="pointer-events-auto pt-2 sm:pt-4 flex items-center gap-3.5">
+                    <a
+                      href="#portfolio"
+                      className="group inline-flex items-center gap-2.5 px-6 py-3 bg-[#D8BB7B] hover:bg-[#ebd59f] text-black font-mono text-[11px] uppercase tracking-[0.22em] font-medium rounded-sm transition-all duration-300 shadow-[0_4px_20px_rgba(216,187,123,0.35)] hover:scale-105 cursor-pointer"
+                    >
+                      <span>Explore Story</span>
+                      <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </a>
+
+                    <button
+                      onClick={() => scrollToSlide((activeIdx + 1) % totalSlides)}
+                      className="inline-flex items-center gap-2 px-5 py-3 bg-black/40 hover:bg-black/65 text-white/80 hover:text-white font-mono text-[11px] uppercase tracking-[0.18em] rounded-sm border border-white/20 transition-all duration-300 backdrop-blur-md cursor-pointer hover:border-white/40"
+                    >
+                      <span>Next Slide</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Center Scroll Hint */}
+        <div className="absolute bottom-28 sm:bottom-32 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2 transition-all duration-300">
+          {!isAtEnd ? (
+            <div className="flex flex-col items-center gap-2 opacity-75">
+              <div className="w-5 h-8 rounded-full border border-white/60 flex items-start justify-center p-1 shadow-sm">
+                <motion.div
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                  className="w-1 h-2 bg-white rounded-full"
+                />
+              </div>
+              <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-white/70">
+                Scroll to Zoom & Explore
+              </span>
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-1.5 opacity-90 text-[#FFF5D6]"
+            >
+              <ArrowDown className="w-4 h-4 animate-bounce" />
+              <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-[#FFF5D6]">
+                Scroll Down to Continue
+              </span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Left & Right Clickable Navigation Chevrons */}
+        <button
+          onClick={handlePrev}
+          disabled={activeIdx === 0}
+          aria-label="Previous Slide"
+          className={`absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all transform hover:scale-105 shadow-xl ${
+            activeIdx === 0 ? 'opacity-20 pointer-events-none' : 'opacity-85 hover:opacity-100 cursor-pointer'
+          }`}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={handleNext}
+          aria-label={activeIdx === totalSlides - 1 ? 'Scroll Down' : 'Next Slide'}
+          className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all transform hover:scale-105 cursor-pointer opacity-85 hover:opacity-100 shadow-xl"
+        >
+          {activeIdx === totalSlides - 1 ? (
+            <ArrowDown className="w-5 h-5 text-[#FFF5D6]" />
+          ) : (
+            <ChevronRight className="w-5 h-5" />
+          )}
+        </button>
+
+        {/* Bottom Horizontal Interactive Timeline & Project Selector */}
+        <div className="absolute bottom-0 left-0 right-0 z-30 pb-6 sm:pb-8 pt-3 px-4 sm:px-12 flex flex-col items-center">
+          
+          {/* Desktop & Tablet: Clean Project Selectors */}
+          <div className="hidden sm:flex items-center justify-center gap-2 md:gap-4 max-w-6xl w-full py-2">
+            {currentSlides.map((slide, idx) => {
+              const isActive = idx === safeIdx
+              return (
+                <button
+                  key={slide.id || idx}
+                  onClick={() => scrollToSlide(idx)}
+                  className={`group relative px-4 py-2 rounded-md text-left transition-all duration-300 cursor-pointer focus:outline-none flex-1 max-w-[220px] ${
+                    isActive
+                      ? 'bg-white/12 backdrop-blur-md border border-white/25 shadow-[0_4px_16px_rgba(0,0,0,0.6)]'
+                      : 'hover:bg-white/5 opacity-45 hover:opacity-85 border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-mono tracking-wider ${isActive ? 'text-[#D8BB7B]' : 'text-white/60'}`}>
+                      0{idx + 1}
+                    </span>
+                    <span className={`text-xs md:text-sm truncate font-normal tracking-tight ${isActive ? 'text-white font-medium' : 'text-white/80'}`}>
+                      {slide.title}
+                    </span>
+                  </div>
+                  <div className="text-[9px] font-mono uppercase tracking-widest text-white/50 truncate mt-0.5">
+                    {slide.category}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Mobile: Compact Active Pill with Dots */}
+          <div className="flex sm:hidden items-center justify-between w-full max-w-sm px-2 py-2">
+            <span className="text-xs font-mono text-[#D8BB7B]">
+              0{safeIdx + 1} / 0{totalSlides}
+            </span>
+            <span className="text-xs font-medium text-white truncate max-w-[180px]">
+              {currentActiveSlide?.title}
+            </span>
+            <div className="flex items-center gap-1.5">
+              {currentSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollToSlide(i)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === safeIdx ? 'w-5 bg-[#D8BB7B]' : 'w-1.5 bg-white/30'
+                  }`}
+                  aria-label={`Slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Sleek Gold Progress Track */}
+          <div className="w-full max-w-4xl mt-2 sm:mt-3 flex items-center gap-4">
+            <span className="text-[10px] font-mono text-white/60 tracking-wider">
+              0{activeIdx + 1}
+            </span>
+
+            <div className="relative flex-1 h-[2px] bg-white/20 rounded-full overflow-hidden">
+              {/* Background click zones for each slide */}
+              <div className="absolute inset-0 grid grid-cols-5 gap-1.5 z-10">
+                {HERO_SLIDES.map((_, i) => (
+                  <div
+                    key={i}
+                    onClick={() => scrollToSlide(i)}
+                    className="h-full cursor-pointer hover:bg-white/10 transition-colors"
+                  />
+                ))}
+              </div>
+
+              {/* Active sliding progress pill */}
+              <motion.div
+                style={{
+                  left: indicatorLeft,
+                  width: `${(1 / totalSlides) * 100}%`,
+                }}
+                className="absolute top-0 bottom-0 bg-gradient-to-r from-[#D8BB7B] via-[#FFF5D6] to-white rounded-full shadow-[0_0_8px_rgba(216,187,123,0.7)]"
+              />
+            </div>
+
+            <span className="text-[10px] font-mono text-white/60 tracking-wider">
+              0{totalSlides}
+            </span>
+          </div>
+
+        </div>
+
       </div>
     </section>
   )

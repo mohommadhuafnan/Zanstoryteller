@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build artifacts
+dist
+**/dist
+
+# Large docs and raw media
+*.docx
+*.zip
+*.tar.gz
+proposal_assets/
+frontend/Zanstoryteller/src/assets/scrolling/*.jpg
+
+# Git & agents
+.git
+.agents
+backend/

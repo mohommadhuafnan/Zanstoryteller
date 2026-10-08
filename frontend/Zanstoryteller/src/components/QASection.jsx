@@ -47,15 +47,19 @@ const faqItems = [
   }
 ]
 
+import { useCMS } from '../context/CMSContext'
+
 export default function QASection() {
-  const [openId, setOpenId] = useState("faq-1") // First item open by default
+  const { data } = useCMS()
+  const currentFaqItems = (data?.faqItems && data.faqItems.length > 0) ? data.faqItems : faqItems
+  const [openId, setOpenId] = useState(currentFaqItems[0]?.id || "faq-1")
 
   const toggleItem = (id) => {
     setOpenId((prev) => (prev === id ? null : id))
   }
 
-  const whatsappNumber = "+974 6690 4220"
-  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello Zanstoryteller, I have a question about booking a session.")}`
+  const whatsappNumber = data?.footerData?.contact?.phone || "+974 6690 4220"
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello Zan Storyteller, I have a question about booking a session.")}`
 
   return (
     <section id="faq" className="relative z-10 w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
@@ -101,7 +105,7 @@ export default function QASection() {
 
         {/* Accordion List with Smooth Animation */}
         <div className="space-y-4">
-          {faqItems.map((item, index) => {
+          {currentFaqItems.map((item, index) => {
             const isOpen = openId === item.id
 
             return (

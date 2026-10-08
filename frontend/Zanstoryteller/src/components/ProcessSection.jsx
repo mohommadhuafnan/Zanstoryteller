@@ -1,8 +1,11 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { processSteps } from '../data/photographyData'
+import { processSteps as defaultProcessSteps } from '../data/photographyData'
+import { useCMS } from '../context/CMSContext'
 
 export default function ProcessSection() {
+  const { data } = useCMS()
+  const processSteps = data?.processSteps || defaultProcessSteps
   return (
     <section id="process" className="relative z-10 w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
       <div className="max-w-7xl mx-auto">

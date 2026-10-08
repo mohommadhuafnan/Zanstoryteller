@@ -20,7 +20,7 @@ export default function BookingSuccess({ bookingData, onBookAnother, onGoHome })
       initial={{ opacity: 0, scale: 0.98, y: 15 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-2xl mx-auto bg-[#0a0a0a] border border-white/15 rounded-sm p-8 sm:p-12 text-center"
+      className="max-w-2xl mx-auto bg-[#102236] border border-white/15 rounded-sm p-8 sm:p-12 text-center"
     >
       {/* Top Success Badge */}
       <div className="w-16 h-16 rounded-full bg-white/[0.06] border border-white/20 flex items-center justify-center mx-auto mb-6">
@@ -43,7 +43,7 @@ export default function BookingSuccess({ bookingData, onBookAnother, onGoHome })
       </p>
 
       {/* Structured Details Card */}
-      <div className="bg-[#121212] border border-white/10 rounded-sm p-6 mb-8 text-left space-y-3 font-mono text-xs sm:text-sm">
+      <div className="bg-[#0d1b2a] border border-white/10 rounded-sm p-6 mb-8 text-left space-y-3 font-mono text-xs sm:text-sm">
         <div className="flex items-center justify-between pb-2.5 border-b border-white/5">
           <span className="text-white/40 flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5" />

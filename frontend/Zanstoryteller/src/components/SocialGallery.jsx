@@ -2,10 +2,13 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { InstagramIcon } from './Icons'
-import { socialPosts } from '../data/photographyData'
+import { socialPosts as defaultSocialPosts } from '../data/photographyData'
 import { getResponsiveUnsplash } from '../utils/imageOptimizer'
+import { useCMS } from '../context/CMSContext'
 
 export default function SocialGallery() {
+  const { data } = useCMS()
+  const socialPosts = data?.socialPosts || defaultSocialPosts
   return (
     <section className="relative z-10 w-full bg-[#FAFAFA] text-[#111111] py-24 sm:py-32 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
       <div className="max-w-7xl mx-auto">

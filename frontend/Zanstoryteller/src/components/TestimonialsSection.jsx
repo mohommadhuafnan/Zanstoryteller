@@ -1,9 +1,12 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { testimonialsData } from '../data/photographyData'
+import { testimonialsData as defaultTestimonialsData } from '../data/photographyData'
 import { Quote } from 'lucide-react'
+import { useCMS } from '../context/CMSContext'
 
 export default function TestimonialsSection() {
+  const { data } = useCMS()
+  const testimonialsData = data?.testimonialsData || defaultTestimonialsData
   return (
     <section id="testimonials" className="relative z-10 w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA] shadow-[0_-25px_60px_rgba(0,0,0,0.45)]">
       <div className="max-w-7xl mx-auto">

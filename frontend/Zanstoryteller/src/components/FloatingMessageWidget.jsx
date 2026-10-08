@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { useCMS } from '../context/CMSContext'
 
 // Authentic WhatsApp icon with phone handset
 function WhatsAppSolidIcon({ className = "w-6 h-6" }) {
@@ -30,12 +31,13 @@ function ChatBubbleDotsIcon({ className = "w-7 h-7" }) {
 }
 
 export default function FloatingMessageWidget() {
+  const { data } = useCMS()
   const [isOpen, setIsOpen] = useState(false)
   const [hoveredButton, setHoveredButton] = useState(null) // 'whatsapp' | 'messenger' | 'hide' | null
 
-  // Direct links for WhatsApp and Facebook
-  const whatsappNumber = "+974 6690 4220" // Customizable via phone or business number
-  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello Zanstoryteller, I would like to inquire about booking a photography session.")}`
+  // Direct links for WhatsApp and Facebook synchronized with CMS
+  const whatsappNumber = data?.footerData?.contact?.phone || "+974 6690 4220"
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Hello Zan Storyteller, I would like to inquire about booking a photography session.")}`
   const messengerUrl = "https://m.me/zanstoryteller"
 
   return (

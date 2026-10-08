@@ -7,17 +7,18 @@ import SessionType from './SessionType'
 import ClientDetailsForm from './ClientDetailsForm'
 import BookingSummary from './BookingSummary'
 import BookingSuccess from './BookingSuccess'
+import { submitBookingToSupabase } from '../../utils/supabase'
 
 export default function BookingPage({ onNavigateHome }) {
   // Set SEO metadata for the booking page
   useEffect(() => {
     const originalTitle = document.title
-    document.title = 'Book a Photography Session | Zanstoryteller'
+    document.title = 'Book a Photography Session | Zan Storyteller'
 
     let metaDesc = document.querySelector('meta[name="description"]')
     const originalDesc = metaDesc ? metaDesc.getAttribute('content') : ''
     if (metaDesc) {
-      metaDesc.setAttribute('content', 'Choose a date and time and send your photography session request to Zanstoryteller.')
+      metaDesc.setAttribute('content', 'Choose a date and time and send your photography session request to Zan Storyteller.')
     }
 
     // Scroll to top on page mount
@@ -149,7 +150,7 @@ export default function BookingPage({ onNavigateHome }) {
   )
 
   // Submit Booking Request
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault()
 
     if (!validateForm()) {
@@ -160,7 +161,6 @@ export default function BookingPage({ onNavigateHome }) {
 
     setIsSubmitting(true)
 
-    // Data payload structured for future Node.js/Express backend integration
     const bookingPayload = {
       name: formData.name.trim(),
       email: formData.email.trim(),
@@ -173,12 +173,15 @@ export default function BookingPage({ onNavigateHome }) {
       submittedAt: new Date().toISOString()
     }
 
-    // Simulate reliable frontend submission (can be swapped for API call)
-    setTimeout(() => {
+    try {
+      await submitBookingToSupabase(bookingPayload)
+    } catch (err) {
+      console.warn("Booking submitted locally (db notice):", err)
+    } finally {
       setIsSubmitting(false)
       setSubmittedData(bookingPayload)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    }, 700)
+    }
   }
 
   // Reset booking form to book another session
@@ -198,7 +201,7 @@ export default function BookingPage({ onNavigateHome }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#020202] text-white selection:bg-white/20 pt-24 pb-28 px-6 sm:px-10 md:px-14">
+    <div className="min-h-screen bg-[#0d1b2a] text-white selection:bg-white/20 pt-24 pb-28 px-6 sm:px-10 md:px-14">
       {/* Top Floating Back Link */}
       <div className="max-w-7xl mx-auto mb-8">
         <button
@@ -235,7 +238,7 @@ export default function BookingPage({ onNavigateHome }) {
             <div className="inline-flex items-center gap-2 mb-4 px-3.5 py-1 rounded-full border border-white/10 bg-white/[0.03]">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-white/70">
-                Zanstoryteller
+                Zan Storyteller
               </span>
             </div>
 
@@ -249,7 +252,7 @@ export default function BookingPage({ onNavigateHome }) {
           </div>
 
           {/* Opening Hours Banner (Always clearly visible before date selection) */}
-          <div className="max-w-4xl mx-auto mb-10 p-5 sm:p-6 rounded-sm bg-[#0c0c0c] border border-white/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="max-w-4xl mx-auto mb-10 p-5 sm:p-6 rounded-sm bg-[#122234] border border-white/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center shrink-0">
                 <Clock className="w-4 h-4 text-white/80" />

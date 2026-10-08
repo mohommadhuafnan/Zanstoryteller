@@ -1,10 +1,13 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
-import { GALLERY_CATEGORIES, getCategoryBySlug } from '../../data/galleryCategoriesData'
+import { GALLERY_CATEGORIES as defaultCategories, getCategoryBySlug } from '../../data/galleryCategoriesData'
+import { useCMS } from '../../context/CMSContext'
 
 export default function CategoryGalleryPage({ categorySlug, onNavigate }) {
-  const currentCategory = getCategoryBySlug(categorySlug)
+  const { data } = useCMS()
+  const categories = data?.galleryCategories || defaultCategories
+  const currentCategory = categories.find(c => c.slug === categorySlug || c.id === categorySlug) || getCategoryBySlug(categorySlug)
 
   return (
     <div className="min-h-screen bg-white text-[#111111] pt-28 pb-32 px-6 sm:px-10 md:px-16 selection:bg-[#111111] selection:text-white">

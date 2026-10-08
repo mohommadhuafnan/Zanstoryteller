@@ -45,7 +45,7 @@ export default function Navbar({ onNavigate, currentPath }) {
     { label: "About", href: "#about" },
     { label: "Services", href: "#services" },
     { label: "Portfolio", href: "#portfolio" },
-    { label: "Gallery", href: "/gallery/wedding", isDropdown: true },
+    { label: "Album", href: "/album" },
     { label: "Process", href: "#process" },
     { label: "Contact", href: "#contact" }
   ]
@@ -96,7 +96,15 @@ export default function Navbar({ onNavigate, currentPath }) {
   }
 
   const handleLinkClick = (e, href) => {
-    if (href.startsWith('#')) {
+    if (href.startsWith('/')) {
+      e.preventDefault()
+      if (onNavigate) {
+        onNavigate(href)
+      } else {
+        window.history.pushState({}, '', href)
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      }
+    } else if (href.startsWith('#')) {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth'
       if (currentPath !== '/') {
@@ -129,14 +137,20 @@ export default function Navbar({ onNavigate, currentPath }) {
     }
   }
 
-  const isDarkNav = isScrolled || currentPath.startsWith('/book-session') || currentPath.startsWith('/gallery')
+  const isDarkNav =
+    isScrolled ||
+    currentPath.startsWith('/book-session') ||
+    currentPath.startsWith('/gallery') ||
+    currentPath.startsWith('/album')
 
   return (
     <>
       <header
         className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 ${
           isDarkNav
-            ? 'bg-[#020202]/90 backdrop-blur-md border-b border-white/[0.08] py-3.5'
+            ? (currentPath.startsWith('/album') || currentPath.startsWith('/gallery'))
+              ? 'bg-[#0d1b2a]/90 backdrop-blur-md border-b border-white/[0.08] py-3.5'
+              : 'bg-[#020202]/90 backdrop-blur-md border-b border-white/[0.08] py-3.5'
             : 'bg-transparent py-5'
         }`}
       >
@@ -146,15 +160,15 @@ export default function Navbar({ onNavigate, currentPath }) {
             href="/"
             onClick={handleBrandClick}
             className="group flex items-center gap-2 text-white/90 hover:text-white transition-colors duration-300"
-            aria-label="Zanstoryteller Home"
+            aria-label="Zan Storyteller Home"
           >
             <img
               src="/logo.png"
-              alt="Zanstoryteller Logo"
+              alt="Zan Storyteller Logo"
               className="h-6 sm:h-7 md:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_2px_8px_rgba(216,187,123,0.35)]"
             />
             <span className="font-light tracking-[0.24em] sm:tracking-[0.28em] text-[13px] sm:text-base uppercase text-white font-sans">
-              Zanstoryteller
+              Zan Storyteller
             </span>
           </a>
 
@@ -295,11 +309,11 @@ export default function Navbar({ onNavigate, currentPath }) {
                   <div className="flex items-center gap-2.5">
                     <img
                       src="/logo.png"
-                      alt="Zanstoryteller Logo"
+                      alt="Zan Storyteller Logo"
                       className="h-6 w-auto object-contain drop-shadow-[0_2px_8px_rgba(216,187,123,0.35)]"
                     />
                     <span className="text-[12px] font-sans font-light tracking-[0.25em] uppercase text-white/90">
-                      Zanstoryteller
+                      Zan Storyteller
                     </span>
                   </div>
                   <button

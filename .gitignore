@@ -33,3 +33,5 @@ __pycache__/
 
 .vercel
 .env*
+.agents/
+frontend/Zanstoryteller/src/assets/scrolling/*.jpg

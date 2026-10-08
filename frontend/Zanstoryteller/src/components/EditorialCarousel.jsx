@@ -1,12 +1,23 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, X, Maximize2 } from 'lucide-react'
-import { editorialCarouselImages } from '../data/photographyData'
+import { editorialCarouselImages as defaultCarouselImages } from '../data/photographyData'
+import { useCMS } from '../context/CMSContext'
 
 export default function EditorialCarousel() {
+  const { data } = useCMS()
+  const carouselImages = (data?.editorialCarouselImages && data.editorialCarouselImages.length > 0)
+    ? data.editorialCarouselImages
+    : defaultCarouselImages
+
+  // Stable triple repetition for seamless continuous infinite loop in both directions
+  const REPEATED_IMAGES = [
+    ...carouselImages,
+    ...carouselImages,
+    ...carouselImages
+  ]
+
   const scrollContainerRef = useRef(null)
-  const isPausedRef = useRef(false)
-  const resumeTimeoutRef = useRef(null)
   const isDraggingRef = useRef(false)
   const startXRef = useRef(0)
   const scrollStartRef = useRef(0)
@@ -19,13 +30,6 @@ export default function EditorialCarousel() {
   const [currentBgImage, setCurrentBgImage] = useState('/editorial/abaya_composite_backdrop.webp')
   const [activeLightboxIndex, setActiveLightboxIndex] = useState(null)
   const [isGrabbing, setIsGrabbing] = useState(false)
-
-  // Triple the items for 100% seamless infinite loop in both directions
-  const repeatedImages = [
-    ...editorialCarouselImages,
-    ...editorialCarouselImages,
-    ...editorialCarouselImages
-  ]
 
   // Detect card closest to viewport center and smoothly update section background
   const detectCenterCard = useCallback(() => {
@@ -49,102 +53,77 @@ export default function EditorialCarousel() {
       }
     })
 
-    if (closestIndex >= 0 && closestIndex < repeatedImages.length) {
-      const targetImg = repeatedImages[closestIndex]?.image
+    if (closestIndex >= 0 && closestIndex < REPEATED_IMAGES.length) {
+      const targetImg = REPEATED_IMAGES[closestIndex]?.image
       if (targetImg && targetImg !== lastReportedImgRef.current) {
         lastReportedImgRef.current = targetImg
         setCurrentBgImage(targetImg)
       }
     }
-  }, [repeatedImages])
-
-  // Pause helper with auto-resume timeout
-  const pauseAutoScrollTemporarily = useCallback((durationMs = 2500) => {
-    isPausedRef.current = true
-    if (resumeTimeoutRef.current) {
-      clearTimeout(resumeTimeoutRef.current)
-    }
-    resumeTimeoutRef.current = setTimeout(() => {
-      if (!isDraggingRef.current) {
-        if (scrollContainerRef.current) {
-          scrollPosRef.current = scrollContainerRef.current.scrollLeft
-        }
-        isPausedRef.current = false
-      }
-    }, durationMs)
   }, [])
 
-  // Continuous smooth auto-scroll loop with IntersectionObserver visibility gating
+  // Continuous smooth auto-scroll loop that moves non-stop
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
 
-    let isVisible = false
-
-    // Position initially in the middle repetition to allow smooth left & right scrolling
+    // Position initially in the middle repetition to allow seamless infinite wrapping
     const initScrollPosition = () => {
-      const singleSetWidth = container.scrollWidth / 3
-      if (singleSetWidth > 0 && container.scrollLeft === 0) {
-        container.scrollLeft = singleSetWidth
-        scrollPosRef.current = singleSetWidth
+      if (container && container.scrollWidth > 0) {
+        const singleSetWidth = container.scrollWidth / 3
+        if (singleSetWidth > 0 && container.scrollLeft === 0) {
+          container.scrollLeft = singleSetWidth
+          scrollPosRef.current = singleSetWidth
+        }
       }
       detectCenterCard()
     }
 
-    const timer = setTimeout(initScrollPosition, 150)
+    initScrollPosition()
+    const timer = setTimeout(initScrollPosition, 200)
 
-    // Smooth drift speed (pixels per frame at 60fps)
-    const scrollSpeed = 0.85
-    let lastCheckTime = 0
+    // Smooth continuous drift speed (pixels per frame at 60fps)
+    const scrollSpeed = 1.15
+    let lastTime = performance.now()
+    let lastCheckTime = performance.now()
 
     const animateLoop = (time) => {
-      if (!isVisible) {
-        animFrameRef.current = null
-        return
-      }
+      const delta = Math.min(32, time - lastTime)
+      lastTime = time
 
-      if (container && !isPausedRef.current) {
-        scrollPosRef.current += scrollSpeed
+      if (container && !isDraggingRef.current) {
+        // Continuous auto-movement without stop
+        scrollPosRef.current += (scrollSpeed * delta) / 16.667
 
         const singleSetWidth = container.scrollWidth / 3
         if (singleSetWidth > 0) {
           if (scrollPosRef.current >= singleSetWidth * 2) {
             scrollPosRef.current -= singleSetWidth
-          } else if (scrollPosRef.current <= 5) {
+            container.scrollLeft = scrollPosRef.current
+          } else if (scrollPosRef.current <= 0) {
             scrollPosRef.current += singleSetWidth
+            container.scrollLeft = scrollPosRef.current
           }
         }
 
         container.scrollLeft = scrollPosRef.current
 
-        // Check center card every 300ms to smoothly sync background
-        if (time - lastCheckTime > 300) {
+        // Check center card every 350ms to update background
+        if (time - lastCheckTime > 350) {
           detectCenterCard()
           lastCheckTime = time
         }
       }
+
       animFrameRef.current = requestAnimationFrame(animateLoop)
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisible = entry.isIntersecting
-        if (isVisible && !animFrameRef.current) {
-          animFrameRef.current = requestAnimationFrame(animateLoop)
-        }
-      },
-      { threshold: 0.05, rootMargin: '120px' }
-    )
-    observer.observe(container)
+    animFrameRef.current = requestAnimationFrame(animateLoop)
 
     return () => {
-      observer.disconnect()
       clearTimeout(timer)
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current)
-      }
-      if (resumeTimeoutRef.current) {
-        clearTimeout(resumeTimeoutRef.current)
       }
     }
   }, [detectCenterCard])
@@ -162,7 +141,7 @@ export default function EditorialCarousel() {
       } else if (container.scrollLeft <= 5) {
         container.scrollLeft += singleSetWidth
         scrollPosRef.current = container.scrollLeft
-      } else if (isDraggingRef.current || isPausedRef.current) {
+      } else if (isDraggingRef.current) {
         scrollPosRef.current = container.scrollLeft
       }
     }
@@ -170,14 +149,13 @@ export default function EditorialCarousel() {
     detectCenterCard()
   }
 
-  // Manual Arrow Navigation (Left / Right)
+  // Manual Arrow Navigation (Left / Right) - scrolls smoothly and immediately continues auto-moving
   const handleManualScroll = (direction) => {
-    pauseAutoScrollTemporarily(3500)
     const container = scrollContainerRef.current
     if (!container) return
 
-    const scrollAmount = 420 * (direction === 'left' ? -1 : 1)
-
+    const scrollAmount = 400 * (direction === 'left' ? -1 : 1)
+    scrollPosRef.current += scrollAmount
     container.scrollBy({
       left: scrollAmount,
       behavior: 'smooth'
@@ -188,7 +166,7 @@ export default function EditorialCarousel() {
         scrollPosRef.current = container.scrollLeft
         detectCenterCard()
       }
-    }, 400)
+    }, 350)
   }
 
   // Mouse Grab and Drag Handlers
@@ -199,7 +177,6 @@ export default function EditorialCarousel() {
 
     isDraggingRef.current = true
     setIsGrabbing(true)
-    isPausedRef.current = true
     startXRef.current = e.pageX - container.offsetLeft
     scrollStartRef.current = container.scrollLeft
     dragDistanceRef.current = 0
@@ -228,7 +205,6 @@ export default function EditorialCarousel() {
       scrollPosRef.current = scrollContainerRef.current.scrollLeft
       detectCenterCard()
     }
-    pauseAutoScrollTemporarily(2000)
   }
 
   const handleMouseLeave = () => {
@@ -237,26 +213,41 @@ export default function EditorialCarousel() {
       setIsGrabbing(false)
       if (scrollContainerRef.current) {
         scrollPosRef.current = scrollContainerRef.current.scrollLeft
+        detectCenterCard()
       }
     }
-    pauseAutoScrollTemporarily(1000)
-  }
-
-  const handleMouseEnter = () => {
-    isPausedRef.current = true
   }
 
   // Touch Handlers for Mobile Devices
-  const handleTouchStart = () => {
-    isPausedRef.current = true
+  const handleTouchStart = (e) => {
+    const container = scrollContainerRef.current
+    if (!container || !e.touches[0]) return
+    isDraggingRef.current = true
+    startXRef.current = e.touches[0].pageX - container.offsetLeft
+    scrollStartRef.current = container.scrollLeft
+    dragDistanceRef.current = 0
+  }
+
+  const handleTouchMove = (e) => {
+    if (!isDraggingRef.current || !e.touches[0]) return
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const currentX = e.touches[0].pageX - container.offsetLeft
+    const diff = (currentX - startXRef.current) * 1.2
+    const targetScroll = scrollStartRef.current - diff
+    container.scrollLeft = targetScroll
+    scrollPosRef.current = targetScroll
+    dragDistanceRef.current += 5
+    detectCenterCard()
   }
 
   const handleTouchEnd = () => {
+    isDraggingRef.current = false
     if (scrollContainerRef.current) {
       scrollPosRef.current = scrollContainerRef.current.scrollLeft
       detectCenterCard()
     }
-    pauseAutoScrollTemporarily(2500)
   }
 
   // Card click with drag threshold check
@@ -269,7 +260,7 @@ export default function EditorialCarousel() {
     setActiveLightboxIndex(originalIndex)
   }
 
-  // Card hover syncs background smoothly
+  // Card hover syncs background smoothly without stopping motion
   const handleCardHover = (itemImage) => {
     if (itemImage && !isDraggingRef.current) {
       lastReportedImgRef.current = itemImage
@@ -284,10 +275,10 @@ export default function EditorialCarousel() {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setActiveLightboxIndex(null)
       if (e.key === 'ArrowRight') {
-        setActiveLightboxIndex((prev) => (prev + 1) % editorialCarouselImages.length)
+        setActiveLightboxIndex((prev) => (prev + 1) % carouselImages.length)
       }
       if (e.key === 'ArrowLeft') {
-        setActiveLightboxIndex((prev) => (prev - 1 + editorialCarouselImages.length) % editorialCarouselImages.length)
+        setActiveLightboxIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length)
       }
     }
 
@@ -335,7 +326,7 @@ export default function EditorialCarousel() {
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 w-[95%] sm:w-[92%] xl:w-[88%] max-w-[1480px] 2xl:max-w-[1600px] mx-auto bg-[#F3F1EE] rounded-none sm:rounded-sm shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_10px_25px_-5px_rgba(0,0,0,0.3)] border border-white/40 p-3.5 sm:p-5 md:p-6 lg:p-7"
+        className="relative z-10 w-[95%] sm:w-[92%] xl:w-[88%] max-w-[1480px] 2xl:max-w-[1600px] mx-auto bg-[#F3F1EE] rounded-none sm:rounded-sm shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_10px_25px_-5px_rgba(0,0,0,0.3)] border border-white/40 p-1.5 sm:p-2"
       >
         
         {/* Relative wrapper for track + buttons */}
@@ -368,11 +359,11 @@ export default function EditorialCarousel() {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className={`flex items-center gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-none py-1 px-1 ${
+            className={`flex items-center gap-3 sm:gap-4 md:gap-5 overflow-x-auto scrollbar-none p-0 ${
               isGrabbing ? 'cursor-grabbing' : 'cursor-grab'
             } [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}
             style={{
@@ -380,8 +371,8 @@ export default function EditorialCarousel() {
               scrollBehavior: 'auto'
             }}
           >
-            {repeatedImages.map((item, idx) => {
-              const originalIndex = idx % editorialCarouselImages.length
+            {REPEATED_IMAGES.map((item, idx) => {
+              const originalIndex = idx % carouselImages.length
               return (
                 <div
                   key={`${item.id}-${idx}`}
@@ -458,9 +449,9 @@ export default function EditorialCarousel() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                const newIdx = (activeLightboxIndex - 1 + editorialCarouselImages.length) % editorialCarouselImages.length
+                const newIdx = (activeLightboxIndex - 1 + carouselImages.length) % carouselImages.length
                 setActiveLightboxIndex(newIdx)
-                setCurrentBgImage(editorialCarouselImages[newIdx].image)
+                setCurrentBgImage(carouselImages[newIdx].image)
               }}
               className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Previous photo"
@@ -473,9 +464,9 @@ export default function EditorialCarousel() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                const newIdx = (activeLightboxIndex + 1) % editorialCarouselImages.length
+                const newIdx = (activeLightboxIndex + 1) % carouselImages.length
                 setActiveLightboxIndex(newIdx)
-                setCurrentBgImage(editorialCarouselImages[newIdx].image)
+                setCurrentBgImage(carouselImages[newIdx].image)
               }}
               className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Next photo"

@@ -1,7 +1,8 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUpRight, Mail } from 'lucide-react'
-import { finalCTAData } from '../data/photographyData'
+import { finalCTAData as defaultFinalCTAData } from '../data/photographyData'
+import { useCMS } from '../context/CMSContext'
 
 const marqueeCategories = [
   "Weddings",
@@ -19,6 +20,8 @@ const marqueeCategories = [
 ]
 
 export default function FinalCTA() {
+  const { data } = useCMS()
+  const finalCTAData = data?.finalCTAData || defaultFinalCTAData
   return (
     <section id="contact" className="relative z-10 w-full bg-[#050505] text-white pb-32 sm:pb-44 overflow-hidden">
       {/* Subtle Ambient Background Glow & Photo Texture */}

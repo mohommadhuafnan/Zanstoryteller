@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "npm --prefix frontend/Zanstoryteller run dev",
+    "backend": "npm --prefix backend run dev",
+    "backend:start": "npm --prefix backend run start",
     "build": "npm --prefix frontend/Zanstoryteller run build",
     "preview": "npm --prefix frontend/Zanstoryteller run preview"
   }

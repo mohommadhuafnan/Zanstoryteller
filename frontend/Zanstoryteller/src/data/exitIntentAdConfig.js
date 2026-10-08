@@ -17,7 +17,7 @@ export const exitIntentAdConfig = {
   desktopOnly: true,
 
   // Content configuration
-  brandLabel: "ZANSTORYTELLER",
+  brandLabel: "ZAN STORYTELLER",
   badgeText: "2025 / 2026 CALENDAR OPEN",
   headline: "Your Story Deserves",
   headlineEmphasized: "To Be Remembered.",
@@ -25,7 +25,7 @@ export const exitIntentAdConfig = {
 
   // High-resolution photography matching brand aesthetics
   image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=85",
-  imageAlt: "Intimate golden-hour wedding moment captured by ZanStoryTeller",
+  imageAlt: "Intimate golden-hour wedding moment captured by Zan Storyteller",
 
   // Primary Call to Action
   primaryCtaText: "EXPLORE OUR STORIES",

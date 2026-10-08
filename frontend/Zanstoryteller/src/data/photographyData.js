@@ -4,15 +4,15 @@
  */
 
 export const aboutData = {
-  label: "ABOUT ZANSTORYTELLER",
+  label: "ABOUT ZAN STORYTELLER",
   heading: "WE DON'T JUST\nCAPTURE MOMENTS.\nWE TELL STORIES.",
   paragraphs: [
     "Every photograph holds a moment, an emotion and a story waiting to be remembered.",
-    "At Zanstoryteller, we focus on capturing genuine moments with creativity, patience and an eye for detail. From intimate celebrations to unforgettable milestones, our goal is to create photographs that feel as meaningful years from now as they did in the moment."
+    "At Zan Storyteller, we focus on capturing genuine moments with creativity, patience and an eye for detail. From intimate celebrations to unforgettable milestones, our goal is to create photographs that feel as meaningful years from now as they did in the moment."
   ],
   ctaText: "DISCOVER OUR STORY",
-  image: "/about/zan_photographer_transparent.webp",
-  imageAlt: "Mohammad Zan - Founder & Cinematographer of Zanstoryteller",
+  image: "/about/zan_portrait.webp",
+  imageAlt: "Mohammad Zan - Founder & Cinematographer of Zan Storyteller",
   badge: "EST. 2020 • CEYLON & WORLDWIDE"
 }
 
@@ -25,7 +25,7 @@ export const servicesData = [
     description: "From quiet morning preparations to heartfelt vows and joyous celebrations under starlight, we unobtrusively preserve the emotion, tears, and spontaneous laughter of your wedding day.",
     deliverables: ["Full Day Narrative Coverage", "High-Resolution Curation", "Handcrafted Fine Art Album", "Private Online Gallery"],
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1400&q=85",
-    alt: "Intimate and emotional wedding celebration captured by Zanstoryteller"
+    alt: "Intimate and emotional wedding celebration captured by Zan Storyteller"
   },
   {
     id: "portraits",
@@ -34,8 +34,8 @@ export const servicesData = [
     tagline: "Natural, expressive imagery revealing the genuine soul.",
     description: "Whether editorial portraits, artist profiles, or personal branding, our sessions celebrate authenticity. We guide lighting and mood while allowing your true personality to shine through naturally.",
     deliverables: ["Studio & Location Shoots", "Wardrobe & Mood Styling Consultation", "High-End Retouching", "Print Ready Formats"],
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1400&q=85",
-    alt: "Cinematic expressive portrait photography"
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=85",
+    alt: "Cinematic expressive fine art portrait photography"
   },
   {
     id: "events",
@@ -162,6 +162,14 @@ export const storyScrollSteps = [
     quote: "Crafting visual heirlooms that never age, preserving the timeless poetry of who you are.",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1920&q=85",
     alt: "Masterpiece fine-art portraiture with enduring cinematic elegance"
+  },
+  {
+    stage: "05",
+    category: "05 / Monumental Grandeur",
+    keyword: "HERITAGE",
+    quote: "Monumental ballroom gatherings and palatial celebrations immortalized with archival prestige.",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=85",
+    alt: "Monumental architectural grandeur and regal wedding celebration"
   }
 ]
 
@@ -193,7 +201,7 @@ export const processSteps = [
 ]
 
 export const visualStatementData = {
-  label: "ZANSTORYTELLER",
+  label: "ZAN STORYTELLER",
   heading: "YOUR MOMENTS\nDESERVE\nTO BE REMEMBERED.",
   subtext: "Photographs that endure when words fade.",
   image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2000&q=85",
@@ -217,7 +225,7 @@ export const testimonialsData = [
   },
   {
     id: "test-3",
-    quote: "We hate posing for cameras, but with Zanstoryteller, we didn't pose at all. He observed, guided gently, and caught laughter and moments we didn't even notice happening.",
+    quote: "We hate posing for cameras, but with Zan Storyteller, we didn't pose at all. He observed, guided gently, and caught laughter and moments we didn't even notice happening.",
     author: "Samantha & Ruwan",
     role: "Intimate Anniversary Celebration",
     date: "October 2024"
@@ -273,7 +281,7 @@ export const finalCTAData = {
 }
 
 export const footerData = {
-  brand: "ZANSTORYTELLER",
+  brand: "ZAN STORYTELLER",
   tagline: "Photography that turns real moments into lasting stories.",
   navLinks: [
     { label: "Home", href: "#hero" },
@@ -293,7 +301,7 @@ export const footerData = {
     phone: "+974 6690 4220",
     location: "Doha, Qatar • Available Worldwide"
   },
-  copyright: "© 2026 Zanstoryteller. All rights reserved.",
+  copyright: "© 2026 Zan Storyteller. All rights reserved.",
   developer: "Webcoder (Mohommadhu Afnan)"
 }
 
