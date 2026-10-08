@@ -7,7 +7,37 @@ import { useCMS } from '../context/CMSContext'
 
 export default function Footer({ className = '' }) {
   const { data } = useCMS()
-  const footerData = data?.footerData || defaultFooterData
+  const rawFooter = data?.footerData || defaultFooterData
+
+  // Safe fallback guarantees against partial or missing cloud database fields
+  const footerData = {
+    brand: rawFooter?.brand || defaultFooterData.brand || 'ZAN STORYTELLER',
+    tagline: rawFooter?.tagline || defaultFooterData.tagline || 'Cinematic Documentary & Fine Art Photography',
+    contact: {
+      email: rawFooter?.contact?.email || defaultFooterData.contact?.email || 'info@zanstoryteller.com',
+      phone: rawFooter?.contact?.phone || defaultFooterData.contact?.phone || '+974 6690 4220',
+      location: rawFooter?.contact?.location || defaultFooterData.contact?.location || 'Colombo, Sri Lanka & Doha, Qatar'
+    },
+    navLinks: Array.isArray(rawFooter?.navLinks) && rawFooter.navLinks.length > 0
+      ? rawFooter.navLinks
+      : (defaultFooterData.navLinks || [
+          { label: "Home", href: "#hero" },
+          { label: "About", href: "#about" },
+          { label: "Services", href: "#services" },
+          { label: "Portfolio", href: "#portfolio" },
+          { label: "Album", href: "/album" },
+          { label: "Contact", href: "#contact" }
+        ]),
+    socials: Array.isArray(rawFooter?.socials) && rawFooter.socials.length > 0
+      ? rawFooter.socials
+      : (defaultFooterData.socials || []),
+    socialLinks: rawFooter?.socialLinks || {}
+  }
+
+  const instagramUrl = footerData.socialLinks.instagram || footerData.socials?.[0]?.href || 'https://instagram.com'
+  const facebookUrl = footerData.socialLinks.facebook || footerData.socials?.[1]?.href || 'https://facebook.com'
+  const whatsappUrl = footerData.socialLinks.whatsapp || footerData.socials?.[2]?.href || 'https://wa.me/97466904220'
+
   const scrollToTop = () => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
@@ -40,7 +70,6 @@ export default function Footer({ className = '' }) {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-7xl mx-auto"
       >
-        
         {/* Main Footer Top Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 pb-16 border-b border-white/[0.08]">
           
@@ -64,8 +93,16 @@ export default function Footer({ className = '' }) {
 
             <div className="space-y-1 text-xs font-mono text-white/60">
               <p>{footerData.contact.location}</p>
-              <p><a href={`mailto:${footerData.contact.email}`} className="hover:text-white transition-colors">{footerData.contact.email}</a></p>
-              <p><a href={`tel:${footerData.contact.phone}`} className="hover:text-white transition-colors">{footerData.contact.phone}</a></p>
+              <p>
+                <a href={`mailto:${footerData.contact.email}`} className="hover:text-white transition-colors">
+                  {footerData.contact.email}
+                </a>
+              </p>
+              <p>
+                <a href={`tel:${footerData.contact.phone}`} className="hover:text-white transition-colors">
+                  {footerData.contact.phone}
+                </a>
+              </p>
             </div>
           </div>
 
@@ -97,7 +134,7 @@ export default function Footer({ className = '' }) {
               </div>
               <div className="flex items-center gap-4">
                 <a
-                  href={footerData.socials[0].href}
+                  href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"
@@ -106,7 +143,7 @@ export default function Footer({ className = '' }) {
                   <InstagramIcon className="w-4 h-4" />
                 </a>
                 <a
-                  href="https://facebook.com"
+                  href={facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"
@@ -115,7 +152,7 @@ export default function Footer({ className = '' }) {
                   <FacebookIcon className="w-4 h-4" />
                 </a>
                 <a
-                  href={footerData.socials[2].href}
+                  href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full border border-white/15 flex items-center justify-center text-white/70 hover:text-white hover:border-white transition-all"
@@ -129,7 +166,7 @@ export default function Footer({ className = '' }) {
             {/* Back to top button */}
             <button
               onClick={scrollToTop}
-              className="mt-8 md:mt-0 flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/50 hover:text-white transition-colors"
+              className="mt-8 md:mt-0 flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/50 hover:text-white transition-colors cursor-pointer"
             >
               <span>Back To Top</span>
               <ArrowUp className="w-3.5 h-3.5" />
@@ -138,10 +175,13 @@ export default function Footer({ className = '' }) {
 
         </div>
 
-        {/* Bottom Credits & Copyright */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-white/40">
-          <div>{footerData.copyright}</div>
-          <div className="tracking-wider">{footerData.developer}</div>
+        {/* Bottom Bar: Copyright & Attribution */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-white/40 font-mono gap-4">
+          <p>© {new Date().getFullYear()} Zan Storyteller. All rights reserved.</p>
+          <p className="flex items-center gap-2">
+            <span>Visual Craft by</span>
+            <span className="text-white/80 font-medium tracking-wide">Webcoder (Mohommadhu Afnan)</span>
+          </p>
         </div>
 
       </motion.div>

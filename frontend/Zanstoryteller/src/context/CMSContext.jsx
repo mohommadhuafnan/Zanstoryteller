@@ -122,10 +122,70 @@ export function CMSProvider({ children }) {
       try {
         const cloudData = await fetchCMSFromSupabase()
         if (cloudData && Object.keys(cloudData).length > 0 && isMounted) {
-          setData(prev => ({
-            ...prev,
-            ...cloudData
-          }))
+          setData(prev => {
+            const mergedFooter = {
+              ...defaultCMSState.footerData,
+              ...(cloudData.footerData || {}),
+              navLinks: Array.isArray(cloudData.footerData?.navLinks) && cloudData.footerData.navLinks.length > 0
+                ? cloudData.footerData.navLinks
+                : defaultCMSState.footerData.navLinks,
+              socials: Array.isArray(cloudData.footerData?.socials) && cloudData.footerData.socials.length > 0
+                ? cloudData.footerData.socials
+                : defaultCMSState.footerData.socials,
+              contact: {
+                ...defaultCMSState.footerData.contact,
+                ...(cloudData.footerData?.contact || {})
+              }
+            }
+
+            // Normalize heroSlides images so broken /src/ paths fall back safely
+            const mergedHeroSlides = Array.isArray(cloudData.heroSlides) && cloudData.heroSlides.length > 0
+              ? cloudData.heroSlides.map((slide, i) => {
+                  let img = slide.image
+                  if (typeof img === 'string' && img.startsWith('/src/assets/scrolling/')) {
+                    img = defaultCMSState.heroSlides[i]?.image || img.replace('/src/assets/scrolling/', '/scrolling/')
+                  }
+                  return { ...slide, image: img }
+                })
+              : defaultCMSState.heroSlides
+
+            return {
+              ...prev,
+              ...cloudData,
+              heroSlides: mergedHeroSlides,
+              footerData: mergedFooter,
+              aboutData: { ...defaultCMSState.aboutData, ...(cloudData.aboutData || {}) },
+              visualStatementData: { ...defaultCMSState.visualStatementData, ...(cloudData.visualStatementData || {}) },
+              finalCTAData: { ...defaultCMSState.finalCTAData, ...(cloudData.finalCTAData || {}) },
+              servicesData: Array.isArray(cloudData.servicesData) && cloudData.servicesData.length > 0
+                ? cloudData.servicesData
+                : defaultCMSState.servicesData,
+              portfolioItems: Array.isArray(cloudData.portfolioItems) && cloudData.portfolioItems.length > 0
+                ? cloudData.portfolioItems
+                : defaultCMSState.portfolioItems,
+              portfolioCategories: Array.isArray(cloudData.portfolioCategories) && cloudData.portfolioCategories.length > 0
+                ? cloudData.portfolioCategories
+                : defaultCMSState.portfolioCategories,
+              storyScrollSteps: Array.isArray(cloudData.storyScrollSteps) && cloudData.storyScrollSteps.length >= 5
+                ? cloudData.storyScrollSteps
+                : defaultCMSState.storyScrollSteps,
+              processSteps: Array.isArray(cloudData.processSteps) && cloudData.processSteps.length > 0
+                ? cloudData.processSteps
+                : defaultCMSState.processSteps,
+              testimonialsData: Array.isArray(cloudData.testimonialsData) && cloudData.testimonialsData.length > 0
+                ? cloudData.testimonialsData
+                : defaultCMSState.testimonialsData,
+              socialPosts: Array.isArray(cloudData.socialPosts) && cloudData.socialPosts.length > 0
+                ? cloudData.socialPosts
+                : defaultCMSState.socialPosts,
+              faqItems: Array.isArray(cloudData.faqItems) && cloudData.faqItems.length > 0
+                ? cloudData.faqItems
+                : defaultCMSState.faqItems,
+              editorialCarouselImages: Array.isArray(cloudData.editorialCarouselImages) && cloudData.editorialCarouselImages.length > 0
+                ? cloudData.editorialCarouselImages
+                : defaultCMSState.editorialCarouselImages,
+            }
+          })
         }
       } catch (e) {
         console.warn("Notice: Continuing with cached CMS data:", e)
