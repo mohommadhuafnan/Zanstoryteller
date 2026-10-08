@@ -94,25 +94,39 @@ export async function recordImageInDatabase(imageInfo) {
  * Fallback to backend API upload if direct client upload faces CORS / bucket policy restrictions
  */
 async function uploadViaBackendFallback(file, folder) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  // In production without an explicit backend URL, skip localhost fetch to prevent 60-second connection timeouts
+  if (!backendUrl && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    throw new Error('Supabase direct upload failed. Storage bucket unreachable.')
+  }
+
+  const targetUrl = backendUrl || 'http://localhost:5000'
   const formData = new FormData()
   formData.append('image', file)
   formData.append('folder', folder)
 
-  const res = await fetch(`${backendUrl}/api/upload`, {
-    method: 'POST',
-    body: formData
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 6000)
 
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}))
-    throw new Error(errData.message || `Upload failed with status ${res.status}`)
-  }
+  try {
+    const res = await fetch(`${targetUrl}/api/upload`, {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    })
 
-  const result = await res.json()
-  return {
-    url: result.url,
-    path: result.path || ''
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}))
+      throw new Error(errData.message || `Upload failed with status ${res.status}`)
+    }
+
+    const result = await res.json()
+    return {
+      url: result.url,
+      path: result.path || ''
+    }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
