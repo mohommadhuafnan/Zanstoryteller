@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd frontend/Zanstoryteller && npm run build",
   "outputDirectory": "frontend/Zanstoryteller/dist",
-  "installCommand": "cd frontend/Zanstoryteller && npm install",
+  "installCommand": "npm install && cd frontend/Zanstoryteller && npm install",
   "framework": "vite",
   "headers": [
     {
@@ -25,7 +25,11 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

@@ -6,22 +6,44 @@ import AdminDashboard from './AdminDashboard'
 function AdminPortalInner({ onNavigateHome }) {
   const { isAuthenticated, isCheckingSession } = useAdminAuth()
 
-  // Keep browser URL synchronized (/admin/login <-> /admin/dashboard)
+  // Verify secret URL access
+  const isDirectSecretUrl =
+    typeof window !== 'undefined' &&
+    (window.location.pathname === '/admin224' ||
+      window.location.pathname === '/admin220' ||
+      window.location.pathname.startsWith('/admin224') ||
+      window.location.pathname.startsWith('/admin220'))
+
+  if (isDirectSecretUrl && typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('zan_secret_admin_unlocked', 'true')
+  }
+
+  const isUnlocked =
+    typeof sessionStorage !== 'undefined' &&
+    (sessionStorage.getItem('zan_secret_admin_unlocked') === 'true' ||
+      localStorage.getItem('zan_admin_token'))
+
   useEffect(() => {
     if (isCheckingSession) return
 
-    if (!isAuthenticated) {
-      if (window.location.pathname === '/admin/dashboard' || window.location.pathname === '/admin') {
-        window.history.replaceState({}, '', '/admin/login')
-      }
-    } else {
-      if (window.location.pathname === '/admin/login' || window.location.pathname === '/admin') {
+    // If unauthenticated and didn't use the secret admin URL (/admin224 or /admin220)
+    if (!isAuthenticated && !isUnlocked && !isDirectSecretUrl) {
+      onNavigateHome()
+      return
+    }
+
+    if (isAuthenticated) {
+      if (
+        window.location.pathname === '/admin/login' ||
+        window.location.pathname === '/admin224' ||
+        window.location.pathname === '/admin220' ||
+        window.location.pathname === '/admin'
+      ) {
         window.history.replaceState({}, '', '/admin/dashboard')
       }
     }
-  }, [isAuthenticated, isCheckingSession])
+  }, [isAuthenticated, isCheckingSession, isUnlocked, isDirectSecretUrl, onNavigateHome])
 
-  // Prevent flicker while validating existing session cookie on startup/refresh
   if (isCheckingSession) {
     return (
       <div className="min-h-screen w-full bg-[#0d1b2a] flex items-center justify-center text-white font-mono text-xs tracking-widest uppercase">
@@ -34,6 +56,10 @@ function AdminPortalInner({ onNavigateHome }) {
   }
 
   if (!isAuthenticated) {
+    if (!isUnlocked && !isDirectSecretUrl) {
+      return null
+    }
+
     return (
       <AdminLoginPage
         onNavigateHome={onNavigateHome}

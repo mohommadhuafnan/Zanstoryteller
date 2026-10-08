@@ -22,6 +22,7 @@ import {
   X,
   CheckCircle2,
   ChevronRight,
+  CalendarCheck,
   Download
 } from 'lucide-react'
 import { useAdminAuth } from '../../context/AdminAuthContext'
@@ -29,6 +30,7 @@ import { useCMS } from '../../context/CMSContext'
 
 // Editors
 import OverviewDashboard from './editors/OverviewDashboard'
+import BookingsEditor from './editors/BookingsEditor'
 import HeroEditor from './editors/HeroEditor'
 import AboutEditor from './editors/AboutEditor'
 import EditorialCarouselEditor from './editors/EditorialCarouselEditor'
@@ -49,6 +51,12 @@ const NAVIGATION_SECTIONS = [
     group: "OVERVIEW",
     items: [
       { id: "overview", label: "Dashboard Hub", icon: LayoutDashboard }
+    ]
+  },
+  {
+    group: "CLIENT RESERVATIONS",
+    items: [
+      { id: "bookings", label: "Client Bookings", icon: CalendarCheck }
     ]
   },
   {
@@ -98,6 +106,8 @@ export default function AdminDashboard({ onNavigateHome }) {
     switch (activeTab) {
       case 'overview':
         return <OverviewDashboard onSelectTab={handleSelectTab} onNavigateHome={onNavigateHome} />
+      case 'bookings':
+        return <BookingsEditor />
       case 'hero':
         return <HeroEditor />
       case 'about':

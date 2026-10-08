@@ -1,5 +1,5 @@
 import React from 'react'
-import { Sparkles, Layers, Image as ImageIcon, Briefcase, Star, MessageSquare, HelpCircle, ExternalLink, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Sparkles, Layers, Image as ImageIcon, Briefcase, Star, MessageSquare, HelpCircle, ExternalLink, ShieldCheck, ArrowRight, CheckCircle2, CalendarCheck } from 'lucide-react'
 import { useCMS } from '../../../context/CMSContext'
 
 export default function OverviewDashboard({ onSelectTab, onNavigateHome }) {
@@ -43,10 +43,18 @@ export default function OverviewDashboard({ onSelectTab, onNavigateHome }) {
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
-              onClick={onNavigateHome}
+              onClick={() => onSelectTab('bookings')}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#D8BB7B] hover:bg-[#e2c78a] text-[#0d1b2a] rounded-xl text-xs font-semibold uppercase tracking-wider transition shadow-md cursor-pointer"
             >
-              <span>View Public Website</span>
+              <span>View Client Bookings</span>
+              <CalendarCheck className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={onNavigateHome}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-medium uppercase tracking-wider transition border border-white/15 cursor-pointer"
+            >
+              <span>Public Website</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </button>
 

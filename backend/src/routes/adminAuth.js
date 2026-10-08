@@ -320,4 +320,251 @@ router.get('/audit-logs', requireAdmin, async (req, res) => {
   }
 })
 
+const DEFAULT_PASSWORD_HASH = '3cb2f44c709bd4c4fe10cfa03f19ae8354524d1d4f882573442900571606d188' // ZanAdmin@2026
+
+/**
+ * POST /api/admin/auth/login
+ * Step: Email + Password authentication with optional OTP trigger on logout
+ */
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password, forceOtp } = req.body || {}
+    const adminEmail = (process.env.ADMIN_EMAIL || 'mohommadhuafnan756@gmail.com').trim().toLowerCase()
+    const inputEmail = (email || '').trim().toLowerCase()
+
+    if (!inputEmail || inputEmail !== adminEmail) {
+      await delay(200)
+      return res.status(401).json({ error: 'Invalid administrator email address.' })
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required.' })
+    }
+
+    // 1. Fetch current admin password hash from Supabase
+    let expectedHash = DEFAULT_PASSWORD_HASH
+    try {
+      const { data } = await supabase
+        .from('site_content')
+        .select('data')
+        .eq('key', 'admin_auth_config')
+        .maybeSingle()
+
+      if (data?.data?.password_hash) {
+        expectedHash = data.data.password_hash
+      }
+    } catch (e) {
+      console.warn('Supabase password fetch warning:', e)
+    }
+
+    // 2. Validate password
+    const inputHash = crypto.createHash('sha256').update(String(password).trim()).digest('hex')
+    if (inputHash !== expectedHash) {
+      await delay(200)
+      await recordAuditLog('admin_login_wrong_password', adminEmail, 'failed', req)
+      return res.status(401).json({ error: 'Invalid password. Please check credentials or use Forgot Password.' })
+    }
+
+    // 3. If OTP is required (e.g. after logout or first device check)
+    if (forceOtp) {
+      const rawOtp = String(crypto.randomInt(1000, 10000))
+      const salt = crypto.randomBytes(16).toString('hex')
+      const otpHash = crypto.createHash('sha256').update(salt + rawOtp).digest('hex')
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+
+      await supabase
+        .from('admin_otps')
+        .update({ used: true })
+        .eq('email', adminEmail)
+        .eq('used', false)
+
+      await supabase.from('admin_otps').insert([
+        {
+          email: adminEmail,
+          otp_hash: otpHash,
+          salt,
+          attempts: 0,
+          max_attempts: 5,
+          expires_at: expiresAt,
+          used: false,
+          created_at: new Date().toISOString()
+        }
+      ])
+
+      await sendOtpEmail(adminEmail, rawOtp, 'Admin Login Verification')
+      await recordAuditLog('admin_login_otp_dispatched', adminEmail, 'success', req)
+
+      return res.status(200).json({
+        success: true,
+        requiresOtp: true,
+        message: 'Security verification code dispatched to administrator email.'
+      })
+    }
+
+    // 4. Direct login (device remembered)
+    const jwtSecret = process.env.JWT_SECRET || 'zan_jwt_secret_99f3810a7b45e20d8847c2b512a86efd02a_production_key_2026'
+    const token = jwt.sign(
+      { sub: 'sovereign_admin', email: adminEmail, role: 'admin', jti: crypto.randomUUID() },
+      jwtSecret,
+      { expiresIn: '24h' }
+    )
+
+    await recordAuditLog('admin_login_success', adminEmail, 'success', req)
+
+    return res.status(200).json({
+      success: true,
+      requiresOtp: false,
+      token,
+      admin: {
+        email: adminEmail,
+        role: 'Master Admin'
+      }
+    })
+  } catch (err) {
+    console.error('Login error:', err)
+    return res.status(500).json({ error: 'Server authentication error: ' + err.message })
+  }
+})
+
+/**
+ * POST /api/admin/auth/forgot-password
+ * Generates password reset OTP and sends to administrator email
+ */
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body || {}
+    const adminEmail = (process.env.ADMIN_EMAIL || 'mohommadhuafnan756@gmail.com').trim().toLowerCase()
+    const inputEmail = (email || '').trim().toLowerCase()
+
+    if (!inputEmail || inputEmail !== adminEmail) {
+      await delay(200)
+      return res.status(400).json({ error: 'Invalid administrator email address.' })
+    }
+
+    const rawOtp = String(crypto.randomInt(1000, 10000))
+    const salt = crypto.randomBytes(16).toString('hex')
+    const otpHash = crypto.createHash('sha256').update(salt + rawOtp).digest('hex')
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+
+    await supabase
+      .from('admin_otps')
+      .update({ used: true })
+      .eq('email', adminEmail)
+      .eq('used', false)
+
+    await supabase.from('admin_otps').insert([
+      {
+        email: adminEmail,
+        otp_hash: otpHash,
+        salt,
+        attempts: 0,
+        max_attempts: 5,
+        expires_at: expiresAt,
+        used: false,
+        created_at: new Date().toISOString()
+      }
+    ])
+
+    await sendOtpEmail(adminEmail, rawOtp, 'Password Reset')
+    await recordAuditLog('admin_forgot_password_dispatched', adminEmail, 'success', req)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset code dispatched to administrator email.'
+    })
+  } catch (err) {
+    console.error('Forgot password error:', err)
+    return res.status(500).json({ error: 'Unable to initiate password reset: ' + err.message })
+  }
+})
+
+/**
+ * POST /api/admin/auth/reset-password
+ * Verifies reset OTP and saves new master password in site_content table
+ */
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body || {}
+    const adminEmail = (process.env.ADMIN_EMAIL || 'mohommadhuafnan756@gmail.com').trim().toLowerCase()
+    const inputEmail = (email || '').trim().toLowerCase()
+    const cleanOtp = String(otp || '').trim()
+    const cleanPassword = String(newPassword || '').trim()
+
+    if (!inputEmail || inputEmail !== adminEmail) {
+      return res.status(400).json({ error: 'Invalid administrator email address.' })
+    }
+
+    if (!cleanOtp) {
+      return res.status(400).json({ error: 'Verification code is required.' })
+    }
+
+    if (!cleanPassword || cleanPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters.' })
+    }
+
+    // Verify OTP
+    const { data: records, error } = await supabase
+      .from('admin_otps')
+      .select('*')
+      .eq('email', adminEmail)
+      .eq('used', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (error || !records || records.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired verification code.' })
+    }
+
+    const otpRecord = records[0]
+
+    if (new Date(otpRecord.expires_at) < new Date()) {
+      await supabase.from('admin_otps').update({ used: true }).eq('id', otpRecord.id)
+      return res.status(400).json({ error: 'Verification code has expired.' })
+    }
+
+    const candidateHash = crypto.createHash('sha256').update(otpRecord.salt + cleanOtp).digest('hex')
+    if (candidateHash !== otpRecord.otp_hash) {
+      return res.status(400).json({ error: 'Incorrect verification code.' })
+    }
+
+    // Mark OTP as used
+    await supabase.from('admin_otps').update({ used: true }).eq('id', otpRecord.id)
+
+    // Hash new password and save in site_content
+    const newHash = crypto.createHash('sha256').update(cleanPassword).digest('hex')
+    await supabase.from('site_content').upsert({
+      key: 'admin_auth_config',
+      data: {
+        admin_email: adminEmail,
+        password_hash: newHash,
+        updated_at: new Date().toISOString()
+      },
+      updated_at: new Date().toISOString()
+    })
+
+    const jwtSecret = process.env.JWT_SECRET || 'zan_jwt_secret_99f3810a7b45e20d8847c2b512a86efd02a_production_key_2026'
+    const token = jwt.sign(
+      { sub: 'sovereign_admin', email: adminEmail, role: 'admin', jti: crypto.randomUUID() },
+      jwtSecret,
+      { expiresIn: '24h' }
+    )
+
+    await recordAuditLog('admin_password_reset_success', adminEmail, 'success', req)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Master password successfully updated.',
+      token,
+      admin: {
+        email: adminEmail,
+        role: 'Master Admin'
+      }
+    })
+  } catch (err) {
+    console.error('Reset password error:', err)
+    return res.status(500).json({ error: 'Unable to update password: ' + err.message })
+  }
+})
+
 export default router
+

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { supabase } from '../supabase.js'
 import { requireAdmin } from '../middleware/auth.js'
+import { sendBookingNotificationEmail } from '../services/emailService.js'
 
 const router = Router()
 
@@ -39,9 +40,16 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ error: error.message })
     }
 
+    const createdBooking = data?.[0]
+
+    // Asynchronously dispatch booking notification email to admin
+    sendBookingNotificationEmail(createdBooking).catch((err) => {
+      console.warn('Booking notification email failed:', err.message)
+    })
+
     return res.status(201).json({
       success: true,
-      booking: data?.[0]
+      booking: createdBooking
     })
   } catch (err) {
     console.error('Error in POST /api/bookings:', err)

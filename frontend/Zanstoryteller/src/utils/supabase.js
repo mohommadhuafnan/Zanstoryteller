@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { apiFetch } from './apiClient'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cixleelzsctwspdtoffh.supabase.co'
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_16yegiH2CxP4x0Lu6OcATg_QzXSaomQ'
@@ -189,23 +190,31 @@ export async function persistCMSToSupabase(cmsState) {
  */
 export async function submitBookingToSupabase(bookingData) {
   try {
+    const payload = {
+      name: bookingData.name,
+      email: bookingData.email,
+      phone: bookingData.phone,
+      location: bookingData.location || 'Studio / To be agreed',
+      session_type: bookingData.sessionType || bookingData.session_type || 'Photoshoot',
+      date: bookingData.date || null,
+      time: bookingData.time || null,
+      message: bookingData.message || '',
+      status: 'pending',
+      created_at: new Date().toISOString()
+    }
+
     const { data, error } = await supabase
       .from('bookings')
-      .insert([
-        {
-          name: bookingData.name,
-          email: bookingData.email,
-          phone: bookingData.phone,
-          location: bookingData.location,
-          session_type: bookingData.sessionType,
-          date: bookingData.date,
-          time: bookingData.time,
-          message: bookingData.message,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([payload])
       .select()
+
+    const created = data?.[0] || payload
+
+    // Dispatch instant notification email to administrator
+    apiFetch('/api/notify-booking', {
+      method: 'POST',
+      body: JSON.stringify(created)
+    }).catch((e) => console.warn('Email notify API notice:', e.message))
 
     if (error) {
       console.warn('Supabase booking direct insert notice:', error.message)
@@ -222,7 +231,7 @@ export async function submitBookingToSupabase(bookingData) {
       return await res.json()
     }
 
-    return data?.[0] || bookingData
+    return created
   } catch (err) {
     console.warn('submitBookingToSupabase error:', err)
     throw err
