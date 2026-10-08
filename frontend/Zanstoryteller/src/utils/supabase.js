@@ -95,13 +95,7 @@ export async function recordImageInDatabase(imageInfo) {
  * Fallback to backend API upload if direct client upload faces CORS / bucket policy restrictions
  */
 async function uploadViaBackendFallback(file, folder) {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL
-  // In production without an explicit backend URL, skip localhost fetch to prevent 60-second connection timeouts
-  if (!backendUrl && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    throw new Error('Supabase direct upload failed. Storage bucket unreachable.')
-  }
-
-  const targetUrl = BACKEND_URL
+  const targetUrl = BACKEND_URL || ''
   const formData = new FormData()
   formData.append('image', file)
   formData.append('folder', folder)

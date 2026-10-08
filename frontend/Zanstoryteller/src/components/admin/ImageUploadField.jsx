@@ -3,15 +3,12 @@ import { Upload, Link2, Trash2, Eye, Check, X, RefreshCw, Image as ImageIcon, Cl
 import { uploadImageToCloudinary } from '../../utils/cloudinaryUpload'
 import { isValidImageUrl } from '../../utils/imageHandler'
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
-
 export default function ImageUploadField({
   label = "Section Image",
   currentImage,
   onImageChange,
   onImageDelete,
-  aspectHint = "Supported: JPG, PNG, WebP (Max 5MB) - Automatically converted to WebP",
+  aspectHint = "Supported: Any image (JPG, PNG, WebP, etc.) - Automatically converted to WebP on Cloudinary",
   allowDelete = true
 }) {
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
@@ -26,22 +23,15 @@ export default function ImageUploadField({
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 1. Validation: Allowed formats
-    if (!ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
-      alert("Invalid image format! Only JPG, JPEG, PNG, and WebP files are supported.")
+    // 1. Validation: Must be an image
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|svg)$/i.test(file.name)
+    if (!isImage) {
+      alert("Invalid file format! Please select an image file (PNG, JPG, WebP, etc.).")
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
-    // 2. Validation: Maximum file size (5 MB)
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMb = (file.size / (1024 * 1024)).toFixed(1)
-      alert(`File is too large (${sizeMb} MB). Maximum allowed size is 5 MB.`)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-
-    // 3. Show instant preview in admin UI before/during upload
+    // 2. Show instant preview in admin UI before/during upload
     const objectUrl = URL.createObjectURL(file)
     setLocalPreview(objectUrl)
 
@@ -142,12 +132,12 @@ export default function ImageUploadField({
         {/* Controls & Action Buttons */}
         <div className="flex-1 min-w-0 space-y-2 w-full">
           <div className="flex flex-wrap items-center gap-2">
-            {/* Hidden File Input (Enforces image/* accept with strict 5MB backend check) */}
+            {/* Hidden File Input: Accepts all image types without file size limits */}
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileSelect}
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/*"
               className="hidden"
             />
 

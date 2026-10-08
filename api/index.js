@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { setCorsHeaders } from './_lib/cors.js'
 import { supabase } from './_lib/supabase.js'
 import { sendOtpEmail, sendBookingNotificationEmail, ADMIN_EMAIL } from './_lib/email.js'
+import { uploadBufferToCloudinary, parseMultipartForm, cloudinary } from './_lib/cloudinary.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'zan_jwt_secret_99f3810a7b45e20d8847c2b512a86efd02a_production_key_2026'
 const DEFAULT_PASSWORD_HASH = '3cb2f44c709bd4c4fe10cfa03f19ae8354524d1d4f882573442900571606d188' // ZanAdmin@2026
@@ -13,12 +14,13 @@ export default async function handler(req, res) {
   const url = req.url || '/'
   const pathname = url.split('?')[0].replace(/\/$/, '')
   const method = req.method
+  const contentType = req.headers['content-type'] || req.headers['Content-Type'] || ''
 
-  // Safely parse body if passed as string or stream
+  // Safely parse JSON body if passed as string or stream (skip stream reading for multipart uploads)
   let body = req.body || {}
   if (typeof body === 'string') {
     try { body = JSON.parse(body) } catch {}
-  } else if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
+  } else if (!contentType.includes('multipart/form-data') && (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0))) {
     if (method === 'POST' || method === 'PATCH' || method === 'PUT') {
       try {
         const buffers = []
@@ -427,6 +429,100 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, message: 'Booking removed.' })
       } catch (err) {
         return res.status(500).json({ error: err.message })
+      }
+    }
+  }
+
+  // 11. IMAGE UPLOAD TO CLOUDINARY (POST / GET) - Supports any image type and size, auto-converted to WebP
+  if (pathname === '/api/upload') {
+    if (method === 'GET') {
+      return res.status(200).json({ status: 'ok', service: 'Cloudinary WebP Upload Service' })
+    }
+
+    if (method === 'POST') {
+      try {
+        let targetFolder = 'zanstoryteller/products'
+        let uploadedResult = null
+
+        if (contentType.includes('multipart/form-data')) {
+          const { fields, fileBuffer, fileName } = await parseMultipartForm(req)
+          if (!fileBuffer || fileBuffer.length === 0) {
+            return res.status(400).json({ success: false, error: 'No image file uploaded.' })
+          }
+          if (fields.folder) {
+            targetFolder = `zanstoryteller/${fields.folder}`
+          }
+          uploadedResult = await uploadBufferToCloudinary(fileBuffer, { folder: targetFolder })
+        } else {
+          const { image, file, folder } = body || {}
+          const imageSource = image || file
+          if (!imageSource) {
+            return res.status(400).json({ success: false, error: 'No image data provided.' })
+          }
+          if (folder) {
+            targetFolder = `zanstoryteller/${folder}`
+          }
+          const cRes = await cloudinary.uploader.upload(imageSource, {
+            folder: targetFolder,
+            resource_type: 'image',
+            format: 'webp'
+          })
+          const secureUrl = cRes.secure_url
+            ? cRes.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')
+            : cRes.url
+          uploadedResult = {
+            url: secureUrl,
+            publicId: cRes.public_id,
+            format: cRes.format || 'webp'
+          }
+        }
+
+        // Persist URL in database mediaLibrary list (URL only, non-blocking)
+        try {
+          const { data: existingContent } = await supabase
+            .from('site_content')
+            .select('data')
+            .eq('key', 'mediaLibrary')
+            .maybeSingle()
+
+          const currentList = Array.isArray(existingContent?.data) ? existingContent.data : []
+          const newEntry = {
+            id: 'img_' + Date.now(),
+            name: 'Uploaded Image',
+            url: uploadedResult.url,
+            publicId: uploadedResult.publicId,
+            folder: targetFolder,
+            format: 'webp',
+            storageMethod: 'cloudinary',
+            uploadedAt: new Date().toISOString()
+          }
+
+          await supabase
+            .from('site_content')
+            .upsert({
+              key: 'mediaLibrary',
+              data: [newEntry, ...currentList].slice(0, 100),
+              updated_at: new Date().toISOString()
+            })
+        } catch (dbErr) {}
+
+        return res.status(200).json({
+          success: true,
+          url: uploadedResult.url,
+          publicId: uploadedResult.publicId,
+          path: uploadedResult.publicId,
+          format: 'webp',
+          image: {
+            url: uploadedResult.url,
+            publicId: uploadedResult.publicId
+          }
+        })
+      } catch (uploadErr) {
+        console.error('Server upload failure in /api/upload:', uploadErr)
+        return res.status(500).json({
+          success: false,
+          error: 'Upload failed: ' + uploadErr.message
+        })
       }
     }
   }

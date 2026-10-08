@@ -5,20 +5,18 @@ import { supabase } from '../supabase.js'
 
 const router = Router()
 
-// Strict validation: Only allow JPG, JPEG, PNG, and WebP formats
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
-
+// Support any image format (JPG, PNG, WebP, AVIF, HEIC, TIFF, BMP, SVG, etc.) and any image size
 const upload = multer({
   storage: multer.memoryStorage(), // In-memory buffer only (Never stored on local filesystem)
   limits: {
-    fileSize: MAX_FILE_SIZE_BYTES
+    fileSize: 100 * 1024 * 1024 // 100 MB generous limit to support high-res photos and any size
   },
   fileFilter: (req, file, cb) => {
-    if (ALLOWED_MIME_TYPES.includes(file.mimetype.toLowerCase())) {
+    const isImage = file.mimetype.startsWith('image/') || /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|svg)$/i.test(file.originalname)
+    if (isImage) {
       cb(null, true)
     } else {
-      const error = new Error('Unsupported file type. Only JPG, JPEG, PNG, and WebP images are allowed.')
+      const error = new Error('Unsupported file type. Please select a valid image file.')
       error.code = 'INVALID_FILE_TYPE'
       cb(error, false)
     }
@@ -34,7 +32,7 @@ function handleMulterUpload(req, res, next) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({
           success: false,
-          error: 'File too large. Maximum allowed size is 5 MB.'
+          error: 'Image file exceeds 100 MB limit.'
         })
       }
       if (err.code === 'INVALID_FILE_TYPE' || err.message?.includes('Unsupported file type')) {
