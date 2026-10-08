@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ArrowDown, ArrowUpRight, Sparkles } from 'lu
 
 import { HERO_SLIDES } from '../data/heroSlidesData'
 import { useCMS } from '../context/CMSContext'
+import { getOptimizedImageUrl } from '../utils/imageOptimizer'
 
 // Individual Full-Bleed Slide with Dynamic Scroll-Driven Zoom
 function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
@@ -46,7 +47,7 @@ function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
       >
         {/* Inner subtle breathing ambient Ken Burns float */}
         <motion.img
-          src={slide.image}
+          src={getOptimizedImageUrl(slide.image, { width: 1400 })}
           alt={slide.title}
           fetchPriority={index === 0 ? 'high' : 'auto'}
           loading={index === 0 ? 'eager' : 'lazy'}
@@ -354,11 +355,15 @@ export default function HeroSection() {
                 <button
                   key={i}
                   onClick={() => scrollToSlide(i)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === safeIdx ? 'w-5 bg-[#D8BB7B]' : 'w-1.5 bg-white/30'
-                  }`}
+                  className="p-2 -m-2 flex items-center justify-center cursor-pointer"
                   aria-label={`Slide ${i + 1}`}
-                />
+                >
+                  <span
+                    className={`h-1.5 rounded-full transition-all inline-block ${
+                      i === safeIdx ? 'w-5 bg-[#D8BB7B]' : 'w-1.5 bg-white/50'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>

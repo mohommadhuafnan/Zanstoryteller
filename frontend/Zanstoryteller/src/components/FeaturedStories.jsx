@@ -30,7 +30,7 @@ export default function FeaturedStories({ onNavigate }) {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <span className="w-2 h-2 rounded-full bg-[#111111]" />
-              <span className="text-[11px] font-mono tracking-[0.28em] text-[#666666] uppercase">
+              <span className="text-[11px] font-mono tracking-[0.28em] text-[#555555] uppercase">
                 Featured Stories
               </span>
             </div>
@@ -42,7 +42,7 @@ export default function FeaturedStories({ onNavigate }) {
           </div>
 
           <div className="mt-8 lg:mt-0 flex flex-col items-start lg:items-end gap-6">
-            <p className="text-sm sm:text-base text-[#666666] font-light max-w-sm lg:text-right">
+            <p className="text-sm sm:text-base text-[#555555] font-light max-w-sm lg:text-right">
               A curated selection of authentic stories captured through our lens worldwide.
             </p>
 

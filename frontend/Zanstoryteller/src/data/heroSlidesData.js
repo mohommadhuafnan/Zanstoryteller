@@ -1,8 +1,4 @@
-import img1 from '../assets/scrolling/scroll_01.webp'
-import img2 from '../assets/scrolling/scroll_02.webp'
-import img3 from '../assets/scrolling/scroll_03.webp'
-import img4 from '../assets/scrolling/scroll_04.webp'
-import img5 from '../assets/scrolling/scroll_05.webp'
+const CLOUD_BASE = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_1400'
 
 export const HERO_SLIDES = [
   {
@@ -13,7 +9,7 @@ export const HERO_SLIDES = [
     year: '2025',
     category: 'WEDDING ARCHIVE',
     location: 'Doha // Archival',
-    image: img1,
+    image: `${CLOUD_BASE}/v1791468136/zanstoryteller/scrolling/scroll_01.webp`,
   },
   {
     id: 'slide-2',
@@ -23,7 +19,7 @@ export const HERO_SLIDES = [
     year: '2024',
     category: 'EDITORIAL CAMPAIGN',
     location: 'Coastal Light // 35mm',
-    image: img2,
+    image: `${CLOUD_BASE}/v1791468137/zanstoryteller/scrolling/scroll_02.webp`,
   },
   {
     id: 'slide-3',
@@ -33,7 +29,7 @@ export const HERO_SLIDES = [
     year: '2025',
     category: 'COUTURE CEREMONY',
     location: 'Palatial Atelier',
-    image: img3,
+    image: `${CLOUD_BASE}/v1791468139/zanstoryteller/scrolling/scroll_03.webp`,
   },
   {
     id: 'slide-4',
@@ -43,7 +39,7 @@ export const HERO_SLIDES = [
     year: '2024',
     category: 'PRIVATE PORTRAIT',
     location: 'Natural Light Study',
-    image: img4,
+    image: `${CLOUD_BASE}/v1791468141/zanstoryteller/scrolling/scroll_04.webp`,
   },
   {
     id: 'slide-5',
@@ -53,6 +49,6 @@ export const HERO_SLIDES = [
     year: '2025',
     category: 'HERITAGE CELEBRATION',
     location: 'Grand Ballroom',
-    image: img5,
+    image: `${CLOUD_BASE}/v1791468144/zanstoryteller/scrolling/scroll_05.webp`,
   },
 ]

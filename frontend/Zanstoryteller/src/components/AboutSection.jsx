@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { aboutData as defaultAboutData } from '../data/photographyData'
 import { useCMS } from '../context/CMSContext'
+import { getOptimizedImageUrl } from '../utils/imageOptimizer'
 
 export default function AboutSection() {
   const { data } = useCMS()
@@ -82,7 +83,7 @@ export default function AboutSection() {
               {/* Main Portrait Card with Film Border, Shadow & Darkroom Treatment */}
               <div className="relative overflow-hidden rounded-sm bg-[#0d1b2a] shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-[#111111]/10 aspect-[4/5]">
                 <img
-                  src={aboutData.image}
+                  src={getOptimizedImageUrl(aboutData.image, { width: 900 })}
                   alt={aboutData.imageAlt}
                   width="824"
                   height="1024"

@@ -16,6 +16,7 @@ import {
 import { GALLERY_CATEGORIES as initialGalleryCategories } from '../data/galleryCategoriesData'
 import { HERO_SLIDES as initialHeroSlides } from '../data/heroSlidesData'
 import { fetchCMSFromSupabase, persistCMSToSupabase } from '../utils/supabase'
+import { getOptimizedImageUrl } from '../utils/imageOptimizer'
 
 const CMS_STORAGE_KEY = 'zanstoryteller_cms_data_v2'
 
@@ -138,12 +139,11 @@ export function CMSProvider({ children }) {
               }
             }
 
-            // Normalize heroSlides images so broken /src/ paths fall back safely
             const mergedHeroSlides = Array.isArray(cloudData.heroSlides) && cloudData.heroSlides.length > 0
               ? cloudData.heroSlides.map((slide, i) => {
                   let img = slide.image
-                  if (typeof img === 'string' && img.startsWith('/src/assets/scrolling/')) {
-                    img = defaultCMSState.heroSlides[i]?.image || img.replace('/src/assets/scrolling/', '/scrolling/')
+                  if (typeof img === 'string' && (img.startsWith('/src/assets/scrolling/') || img.startsWith('/scrolling/'))) {
+                    img = defaultCMSState.heroSlides[i]?.image || getOptimizedImageUrl(img, { width: 1400 })
                   }
                   return { ...slide, image: img }
                 })

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, X, Maximize2 } from 'lucide-react'
 import { editorialCarouselImages as defaultCarouselImages } from '../data/photographyData'
 import { useCMS } from '../context/CMSContext'
+import { getOptimizedImageUrl } from '../utils/imageOptimizer'
 
 export default function EditorialCarousel() {
   const { data } = useCMS()
@@ -387,7 +388,7 @@ export default function EditorialCarousel() {
                 >
                   {/* Photo fills the card with object-cover */}
                   <img
-                    src={item.image}
+                    src={getOptimizedImageUrl(item.image, { width: 800 })}
                     alt={item.alt}
                     draggable={false}
                     loading="lazy"
@@ -485,8 +486,8 @@ export default function EditorialCarousel() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={editorialCarouselImages[activeLightboxIndex].image}
-                alt={editorialCarouselImages[activeLightboxIndex].alt}
+                src={getOptimizedImageUrl(editorialCarouselImages[activeLightboxIndex]?.image, { width: 1400 })}
+                alt={editorialCarouselImages[activeLightboxIndex]?.alt}
                 loading="eager"
                 decoding="async"
                 className="max-w-full max-h-[80vh] object-contain rounded-sm shadow-2xl"

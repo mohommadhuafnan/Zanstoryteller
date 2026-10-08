@@ -34,7 +34,7 @@ export default function SocialGallery() {
           </div>
 
           <div className="mt-4 md:mt-0 flex items-center gap-4">
-            <span className="text-sm text-[#777777] font-light">
+            <span className="text-sm text-[#555555] font-light">
               More moments, behind the scenes & recent work.
             </span>
             <a

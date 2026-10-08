@@ -11,6 +11,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('galleryCategoriesData')) {
+            return 'gallery-data'
+          }
           if (id.includes('node_modules/framer-motion')) {
             return 'vendor-framer'
           }

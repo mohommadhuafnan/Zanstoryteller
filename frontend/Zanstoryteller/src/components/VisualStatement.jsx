@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { visualStatementData as defaultVisualStatementData } from '../data/photographyData'
-import { getResponsiveUnsplash } from '../utils/imageOptimizer'
+import { getResponsiveUnsplash, getOptimizedImageUrl } from '../utils/imageOptimizer'
 import { useCMS } from '../context/CMSContext'
 
 export default function VisualStatement() {
@@ -14,7 +14,7 @@ export default function VisualStatement() {
       {/* Static Background Photo */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
-          src={visualStatementData.image}
+          src={getOptimizedImageUrl(visualStatementData.image, { width: 1400 })}
           alt={visualStatementData.alt || 'Visual Statement'}
           className="w-full h-full object-cover object-center filter brightness-[0.55] contrast-[1.08]"
           loading="lazy"

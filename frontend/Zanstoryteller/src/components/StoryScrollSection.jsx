@@ -1,21 +1,18 @@
 import React, { useRef, useEffect } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 
-import img1 from '../assets/scrolling/scroll_01.webp'
-import img2 from '../assets/scrolling/scroll_02.webp'
-import img3 from '../assets/scrolling/scroll_03.webp'
-import img4 from '../assets/scrolling/scroll_04.webp'
-import img5 from '../assets/scrolling/scroll_05.webp'
+import { useCMS } from '../context/CMSContext'
+import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+
+const CLOUD_SCROLL = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_1400'
 
 const SCROLL_IMAGES = [
-  { id: 'scroll-1', src: img1, alt: 'Editorial Moment 01' },
-  { id: 'scroll-2', src: img2, alt: 'Editorial Moment 02' },
-  { id: 'scroll-3', src: img3, alt: 'Editorial Moment 03' },
-  { id: 'scroll-4', src: img4, alt: 'Editorial Moment 04' },
-  { id: 'scroll-5', src: img5, alt: 'Editorial Moment 05' },
+  { id: 'scroll-1', src: `${CLOUD_SCROLL}/v1791468136/zanstoryteller/scrolling/scroll_01.webp`, alt: 'Editorial Moment 01' },
+  { id: 'scroll-2', src: `${CLOUD_SCROLL}/v1791468137/zanstoryteller/scrolling/scroll_02.webp`, alt: 'Editorial Moment 02' },
+  { id: 'scroll-3', src: `${CLOUD_SCROLL}/v1791468139/zanstoryteller/scrolling/scroll_03.webp`, alt: 'Editorial Moment 03' },
+  { id: 'scroll-4', src: `${CLOUD_SCROLL}/v1791468141/zanstoryteller/scrolling/scroll_04.webp`, alt: 'Editorial Moment 04' },
+  { id: 'scroll-5', src: `${CLOUD_SCROLL}/v1791468144/zanstoryteller/scrolling/scroll_05.webp`, alt: 'Editorial Moment 05' },
 ]
-
-import { useCMS } from '../context/CMSContext'
 
 /**
  * StoryScrollSection:
@@ -32,7 +29,7 @@ export default function StoryScrollSection() {
     const cmsImg = steps[idx]?.image
     return {
       id: def.id,
-      src: cmsImg || def.src,
+      src: getOptimizedImageUrl(cmsImg || def.src, { width: 1400 }),
       alt: steps[idx]?.keyword || def.alt
     }
   })
@@ -42,14 +39,28 @@ export default function StoryScrollSection() {
     offset: ['start start', 'end end'],
   })
 
-  // Preload all scroll images into browser cache immediately for zero-lag playback
+  // Preload scroll images only when approaching viewport to eliminate initial network blocking
   useEffect(() => {
-    scrollImages.forEach((item) => {
-      if (item.src) {
-        const img = new Image()
-        img.src = item.src
-      }
-    })
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          scrollImages.forEach((item) => {
+            if (item.src) {
+              const img = new Image()
+              img.src = item.src
+            }
+          })
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '600px 0px' }
+    )
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current)
+    }
+
+    return () => observer.disconnect()
   }, [scrollImages])
 
   // -----------------------------------------------------------------

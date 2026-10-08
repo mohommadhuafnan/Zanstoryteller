@@ -163,8 +163,10 @@ export default function Navbar({ onNavigate, currentPath }) {
             aria-label="Zan Storyteller Home"
           >
             <img
-              src="/logo.png"
+              src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_120/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
               alt="Zan Storyteller Logo"
+              width="32"
+              height="32"
               className="h-6 sm:h-7 md:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_2px_8px_rgba(216,187,123,0.35)]"
             />
             <span className="font-light tracking-[0.24em] sm:tracking-[0.28em] text-[13px] sm:text-base uppercase text-white font-sans">
@@ -308,8 +310,10 @@ export default function Navbar({ onNavigate, currentPath }) {
                 <div className="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
                   <div className="flex items-center gap-2.5">
                     <img
-                      src="/logo.png"
+                      src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_120/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
                       alt="Zan Storyteller Logo"
+                      width="24"
+                      height="24"
                       className="h-6 w-auto object-contain drop-shadow-[0_2px_8px_rgba(216,187,123,0.35)]"
                     />
                     <span className="text-[12px] font-sans font-light tracking-[0.25em] uppercase text-white/90">

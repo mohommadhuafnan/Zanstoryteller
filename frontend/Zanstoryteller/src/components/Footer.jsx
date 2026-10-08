@@ -78,8 +78,12 @@ export default function Footer({ className = '' }) {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src="/logo.png"
+                  src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_120/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
                   alt="Zan Storyteller Logo"
+                  width="32"
+                  height="32"
+                  loading="lazy"
+                  decoding="async"
                   className="w-8 h-8 object-contain drop-shadow-[0_2px_10px_rgba(216,187,123,0.4)]"
                 />
                 <span className="font-light tracking-[0.28em] text-lg uppercase font-sans text-white">

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Zan Storyteller",
+  "description": "Luxury editorial and wedding photography studio catalog",
+  "url": "https://zanstoryteller.vercel.app",
+  "version": "1.0.0",
+  "categories": [
+    "Photography",
+    "Cinematography",
+    "Weddings",
+    "Editorial",
+    "Luxury Services"
+  ],
+  "endpoints": [
+    {
+      "name": "Home Experience",
+      "path": "/",
+      "description": "Main cinematic scrollytelling portfolio and studio overview"
+    },
+    {
+      "name": "Master Album",
+      "path": "/album",
+      "description": "Comprehensive client archives and curated photo stories"
+    },
+    {
+      "name": "Booking Consultation",
+      "path": "/book-session",
+      "description": "Session reservation and date inquiries"
+    }
+  ],
+  "contact": {
+    "email": "fowzan80@gmail.com",
+    "phone": "+974 6690 4220"
+  }
+}

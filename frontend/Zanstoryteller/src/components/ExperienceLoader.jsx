@@ -138,8 +138,10 @@ export default function ExperienceLoader() {
                     className="flex items-center justify-center"
                   >
                     <img
-                      src="/logo.png"
+                      src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_240/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
                       alt="Zan Storyteller Logo"
+                      width="112"
+                      height="112"
                       className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain drop-shadow-[0_4px_24px_rgba(216,187,123,0.45)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
                     />
                   </motion.div>
