@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Sparkles, Plus, Trash2, Folder, Image as ImageIcon } from 'lucide-react'
 import { useCMS } from '../../../context/CMSContext'
 import ImageUploadField from '../ImageUploadField'
+import { getOptimizedImageUrl } from '../../../utils/imageOptimizer'
 
 export default function MasterAlbumEditor() {
   const { data, updateCategory, addGalleryImageToCategory, deleteGalleryImageFromCategory } = useCMS()
@@ -166,8 +167,10 @@ export default function MasterAlbumEditor() {
               {(currentCat.galleryImages || []).map((img, i) => (
                 <div key={img.id || i} className="group relative rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-[4/3]">
                   <img
-                    src={img.url}
+                    src={getOptimizedImageUrl(img.url, { width: 400 })}
                     alt={img.title || 'Category photo'}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition p-2.5 flex flex-col justify-between text-white">

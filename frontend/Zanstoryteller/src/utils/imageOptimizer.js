@@ -1,12 +1,15 @@
 /**
  * Universal Image Optimization Utility for Zan Storyteller
  * 
- * Guarantees every image is delivered in modern WebP format with:
- * - Cloudinary CDN automatic format & quality optimization (f_auto, q_auto:good)
- * - Dimension resizing based on responsive viewport needs
- * - Global edge CDN caching with immutable headers
- * - Fallback to Unsplash WebP auto-compression
+ * Guarantees every image is delivered in modern WebP / AVIF format with:
+ * - Cloudinary CDN automatic format & quality optimization (f_auto, q_auto)
+ * - Dimension resizing based on responsive viewport needs (w_500, w_800, w_1200, w_1600, w_2000)
+ * - Preserves original high-resolution uploaded photography untouched in Cloudinary storage
+ * - Responsive srcset generation for mobile, tablet, and desktop viewports
+ * - Fast edge CDN caching with immutable headers
  */
+
+const CLOUDINARY_CLOUD_NAME = 'dtpeeydfz'
 
 const CLOUDINARY_MAP = {
   '/scrolling/scroll_01.webp': 'https://res.cloudinary.com/dtpeeydfz/image/upload/v1791468136/zanstoryteller/scrolling/scroll_01.webp',
@@ -25,19 +28,38 @@ const CLOUDINARY_MAP = {
 }
 
 /**
- * Transforms any image URL into an optimized WebP format from Cloudinary or Unsplash CDN.
- * 
- * @param {string} url - Source image URL (Cloudinary, Unsplash, or relative local path)
- * @param {object} [options] - Optimization settings
- * @param {number} [options.width=1200] - Target render width
- * @param {number} [options.quality=75] - Compression quality
- * @returns {string} Fully optimized WebP CDN URL
+ * Strips existing transformations from a Cloudinary path after /upload/
+ * to allow cleanly inserting new delivery transformations.
  */
-export function getOptimizedImageUrl(url, { width = 1200, quality = 75 } = {}) {
-  if (!url || typeof url !== 'string') return url
+function cleanCloudinaryPath(afterUpload) {
+  if (!afterUpload) return ''
+  const vMatch = afterUpload.match(/(v\d+\/.+$)/)
+  if (vMatch) return vMatch[1]
+  return afterUpload.replace(/^((?:[a-z]{1,3}_[a-zA-Z0-9_.:-]+,?)+\/)+/, '')
+}
+
+/**
+ * Transforms any image URL or Cloudinary public ID into an optimized WebP/AVIF delivery URL.
+ * Never modifies or compresses the stored original asset in Cloudinary.
+ * 
+ * @param {string} urlOrPublicId - Image URL (Cloudinary, Unsplash, local path) or Cloudinary public ID
+ * @param {object} [options] - Optimization settings
+ * @param {number} [options.width] - Target display width in pixels (e.g. 500, 800, 1200, 1600, 2000)
+ * @param {string} [options.quality='auto'] - Cloudinary quality transformation ('auto', 'auto:good', 'auto:best')
+ * @param {string} [options.format='auto'] - Format conversion ('auto' delivers WebP or AVIF based on browser)
+ * @param {number} [options.blur] - Optional blur level for placeholders
+ * @returns {string} Optimized delivery URL
+ */
+export function getOptimizedImageUrl(urlOrPublicId, { width, quality = 'auto', format = 'auto', blur } = {}) {
+  if (!urlOrPublicId || typeof urlOrPublicId !== 'string') return urlOrPublicId
+
+  // Never alter data URIs or in-memory blobs (e.g. during local admin upload preview)
+  if (urlOrPublicId.startsWith('data:') || urlOrPublicId.startsWith('blob:')) {
+    return urlOrPublicId
+  }
 
   // Map known local asset paths to their Cloudinary CDN versions
-  let targetUrl = CLOUDINARY_MAP[url] || url
+  let targetUrl = CLOUDINARY_MAP[urlOrPublicId] || urlOrPublicId
 
   // Also handle imported bundle paths that contain scroll_0x
   if (typeof targetUrl === 'string' && targetUrl.includes('scroll_0')) {
@@ -52,21 +74,32 @@ export function getOptimizedImageUrl(url, { width = 1200, quality = 75 } = {}) {
   if (targetUrl.includes('res.cloudinary.com')) {
     if (targetUrl.includes('/upload/')) {
       const parts = targetUrl.split('/upload/')
-      const vMatch = parts[1].match(/v\d+\/.*$/)
-      const cleanPath = vMatch ? vMatch[0] : parts[1].replace(/^([^/]*?(?:f_|q_|w_|c_|g_|h_)[^/]*?\/)+/, '')
-      const transform = `f_auto,q_auto:good${width ? `,w_${width}` : ''}`
-      return `${parts[0]}/upload/${transform}/${cleanPath}`
+      const cleanPath = cleanCloudinaryPath(parts[1])
+      
+      const transformParts = [`f_${format}`, `q_${quality}`]
+      if (width) transformParts.push(`w_${width}`)
+      if (blur) transformParts.push(`e_blur:${blur}`)
+
+      return `${parts[0]}/upload/${transformParts.join(',')}/${cleanPath}`
     }
     return targetUrl
   }
 
-  // 2. Unsplash URL optimization: forces modern WebP + auto compression
+  // 2. Bare Cloudinary public ID handling (e.g. 'zanstoryteller/products/myphoto.jpg')
+  if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://') && !targetUrl.startsWith('/')) {
+    const transformParts = [`f_${format}`, `q_${quality}`]
+    if (width) transformParts.push(`w_${width}`)
+    if (blur) transformParts.push(`e_blur:${blur}`)
+    return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${transformParts.join(',')}/${targetUrl}`
+  }
+
+  // 3. Unsplash URL optimization: forces modern WebP + auto compression
   if (targetUrl.includes('images.unsplash.com')) {
     try {
       const u = new URL(targetUrl)
       u.searchParams.set('auto', 'format,compress')
       u.searchParams.set('fm', 'webp')
-      u.searchParams.set('q', String(quality))
+      u.searchParams.set('q', quality === 'auto' ? '80' : String(quality))
       if (width) {
         u.searchParams.set('w', String(width))
       }
@@ -79,13 +112,63 @@ export function getOptimizedImageUrl(url, { width = 1200, quality = 75 } = {}) {
   return targetUrl
 }
 
-export function getResponsiveUnsplash(url, defaultWidth = 1000, sizes = '100vw') {
-  const optSrc = getOptimizedImageUrl(url, { width: defaultWidth })
+/**
+ * Generates responsive srcset attribute string for Cloudinary / Unsplash images.
+ * 
+ * @param {string} url - Image URL
+ * @param {number[]} [widths=[500, 800, 1200, 1600, 2000]] - Array of target widths
+ * @returns {string} Responsive srcset string
+ */
+export function getCloudinarySrcSet(url, widths = [500, 800, 1200, 1600, 2000]) {
+  if (!url || typeof url !== 'string') return ''
+  if (url.startsWith('data:') || url.startsWith('blob:')) return ''
+
+  return widths
+    .map((w) => `${getOptimizedImageUrl(url, { width: w })} ${w}w`)
+    .join(', ')
+}
+
+/**
+ * Returns comprehensive responsive image props for <img> or picture elements.
+ * 
+ * @param {string} url - Source image URL
+ * @param {object} [options]
+ * @param {number} [options.width=1200] - Default image width
+ * @param {number[]} [options.widths=[500, 800, 1200, 1600]] - Breakpoint widths
+ * @param {string} [options.sizes='(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 1200px'] - HTML sizes attribute
+ * @param {boolean} [options.priority=false] - When true, disables lazy loading and sets high fetchPriority (e.g. for Hero / LCP)
+ */
+export function getResponsiveImageProps(url, {
+  width = 1200,
+  widths = [500, 800, 1200, 1600],
+  sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 1200px',
+  priority = false
+} = {}) {
+  const src = getOptimizedImageUrl(url, { width })
+  const srcSet = getCloudinarySrcSet(url, widths)
+
   return {
-    src: optSrc,
-    loading: 'lazy',
-    decoding: 'async'
+    src,
+    ...(srcSet ? { srcSet } : {}),
+    ...(srcSet && sizes ? { sizes } : {}),
+    loading: priority ? 'eager' : 'lazy',
+    decoding: 'async',
+    ...(priority ? { fetchPriority: 'high' } : {})
   }
+}
+
+/**
+ * Generates an ultra-lightweight blurred placeholder (~1KB) for progressive image loading.
+ */
+export function getLowQualityPlaceholder(url) {
+  return getOptimizedImageUrl(url, { width: 40, quality: 'eco', blur: 600 })
+}
+
+/**
+ * Backward compatibility alias for legacy components using getResponsiveUnsplash
+ */
+export function getResponsiveUnsplash(url, defaultWidth = 1000, sizes = '100vw') {
+  return getResponsiveImageProps(url, { width: defaultWidth, sizes })
 }
 
 export default getOptimizedImageUrl

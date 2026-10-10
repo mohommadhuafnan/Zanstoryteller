@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight, Mail } from 'lucide-react'
 import { finalCTAData as defaultFinalCTAData } from '../data/photographyData'
 import { useCMS } from '../context/CMSContext'
-import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
 const marqueeCategories = [
   "Weddings",
@@ -29,6 +29,8 @@ export default function FinalCTA() {
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <img
           src={getOptimizedImageUrl(finalCTAData.bgImage, { width: 1200 })}
+          srcSet={getCloudinarySrcSet(finalCTAData.bgImage, [600, 1000, 1400])}
+          sizes="100vw"
           alt="Atmospheric landscape"
           className="w-full h-full object-cover filter blur-[2px]"
           loading="lazy"

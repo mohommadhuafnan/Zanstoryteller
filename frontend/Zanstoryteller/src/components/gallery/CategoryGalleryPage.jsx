@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { GALLERY_CATEGORIES as defaultCategories, getCategoryBySlug } from '../../data/galleryCategoriesData'
 import { useCMS } from '../../context/CMSContext'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../../utils/imageOptimizer'
 
 export default function CategoryGalleryPage({ categorySlug, onNavigate }) {
   const { data } = useCMS()
@@ -90,7 +91,9 @@ export default function CategoryGalleryPage({ categorySlug, onNavigate }) {
               {/* Client Cover Image - natural adaptive height and width based on photo */}
               <div className="relative w-full overflow-hidden bg-[#F5F5F5]">
                 <img
-                  src={client.coverImage}
+                  src={getOptimizedImageUrl(client.coverImage, { width: 800 })}
+                  srcSet={getCloudinarySrcSet(client.coverImage, [400, 600, 800, 1000])}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                   alt={client.name}
                   loading={idx < 3 ? "eager" : "lazy"}
                   decoding="async"

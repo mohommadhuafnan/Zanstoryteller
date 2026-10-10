@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { Upload, Link2, Trash2, Eye, Check, X, RefreshCw, Image as ImageIcon, Cloud } from 'lucide-react'
 import { uploadImageToCloudinary } from '../../utils/cloudinaryUpload'
 import { isValidImageUrl } from '../../utils/imageHandler'
+import { getOptimizedImageUrl } from '../../utils/imageOptimizer'
 
 export default function ImageUploadField({
   label = "Section Image",
@@ -37,7 +38,7 @@ export default function ImageUploadField({
 
     try {
       setIsUploading(true)
-      setUploadStatus('Uploading to Cloudinary (Converting to WebP)...')
+      setUploadStatus('Uploading original photo to Cloudinary...')
 
       // 4. Upload to Cloudinary via backend service
       const res = await uploadImageToCloudinary(file, 'products')
@@ -101,7 +102,7 @@ export default function ImageUploadField({
           {displayedImage ? (
             <>
               <img
-                src={displayedImage}
+                src={getOptimizedImageUrl(displayedImage, { width: 350 })}
                 alt="Preview"
                 className="w-full h-full object-cover"
               />
@@ -251,7 +252,7 @@ export default function ImageUploadField({
         >
           <div className="relative max-w-4xl max-h-[90vh] bg-black rounded-lg overflow-hidden border border-white/20">
             <img
-              src={displayedImage}
+              src={getOptimizedImageUrl(displayedImage, { width: 1600 })}
               alt="Zoom Preview"
               className="w-full h-full object-contain"
             />

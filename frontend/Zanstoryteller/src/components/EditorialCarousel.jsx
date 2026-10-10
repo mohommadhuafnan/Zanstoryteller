@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, X, Maximize2 } from 'lucide-react'
 import { editorialCarouselImages as defaultCarouselImages } from '../data/photographyData'
 import { useCMS } from '../context/CMSContext'
-import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
 export default function EditorialCarousel() {
   const { data } = useCMS()
@@ -403,6 +403,8 @@ export default function EditorialCarousel() {
                   {/* Photo fills the card with object-cover */}
                   <img
                     src={getOptimizedImageUrl(item.image, { width: 800 })}
+                    srcSet={getCloudinarySrcSet(item.image, [400, 600, 800, 1000])}
+                    sizes="(max-width: 640px) 270px, (max-width: 1024px) 370px, 430px"
                     alt={item.alt}
                     draggable={false}
                     loading="lazy"
@@ -500,7 +502,9 @@ export default function EditorialCarousel() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={getOptimizedImageUrl(editorialCarouselImages[activeLightboxIndex]?.image, { width: 1400 })}
+                src={getOptimizedImageUrl(editorialCarouselImages[activeLightboxIndex]?.image, { width: 1600 })}
+                srcSet={getCloudinarySrcSet(editorialCarouselImages[activeLightboxIndex]?.image, [800, 1200, 1600, 2000])}
+                sizes="(max-width: 768px) 100vw, 1600px"
                 alt={editorialCarouselImages[activeLightboxIndex]?.alt}
                 loading="eager"
                 decoding="async"

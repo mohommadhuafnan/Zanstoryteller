@@ -34,13 +34,13 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
     throw new Error('Unsupported file. Please select a valid image file.')
   }
 
-  // 1. Direct Cloudinary REST API Upload with automatic WebP conversion
+  // 1. Direct Cloudinary REST API Upload preserving original high-resolution master asset
   try {
     const targetFolder = `zanstoryteller/${folder}`
     const timestamp = Math.floor(Date.now() / 1000)
 
-    // Sign request parameters in exact alphabetical order: folder, format, timestamp
-    const strToSign = `folder=${targetFolder}&format=webp&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`
+    // Sign request parameters in exact alphabetical order: folder, timestamp
+    const strToSign = `folder=${targetFolder}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`
     const signature = await computeSha1(strToSign)
 
     const formData = new FormData()
@@ -48,7 +48,6 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
     formData.append('api_key', CLOUDINARY_API_KEY)
     formData.append('timestamp', String(timestamp))
     formData.append('folder', targetFolder)
-    formData.append('format', 'webp')
     formData.append('signature', signature)
 
     const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`
@@ -60,10 +59,8 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
 
     if (response.ok) {
       const data = await response.json()
-      // Apply Cloudinary automatic WebP & quality optimization
-      const finalUrl = data.secure_url
-        ? data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')
-        : data.url
+      // Preserve original high-resolution master URL in storage
+      const finalUrl = data.secure_url || data.url
 
       // Persist in media library catalog
       recordImageInDatabase({
@@ -71,7 +68,7 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
         url: finalUrl,
         path: data.public_id,
         folder: targetFolder,
-        format: data.format || 'webp'
+        format: data.format || file.name.split('.').pop()
       }).catch(() => {})
 
       return {

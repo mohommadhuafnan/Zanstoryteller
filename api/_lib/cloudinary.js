@@ -86,7 +86,6 @@ export function uploadBufferToCloudinary(buffer, options = {}) {
       {
         folder,
         resource_type: 'image',
-        format: 'webp', // Automatically convert any uploaded image to WebP
         ...options
       },
       (error, result) => {
@@ -95,14 +94,12 @@ export function uploadBufferToCloudinary(buffer, options = {}) {
           return reject(new Error(error.message || 'Failed to upload image to Cloudinary'))
         }
 
-        const secureUrl = result.secure_url
-          ? result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')
-          : result.url
+        const secureUrl = result.secure_url || result.url
 
         resolve({
           url: secureUrl,
           publicId: result.public_id,
-          format: result.format || 'webp',
+          format: result.format,
           width: result.width,
           height: result.height,
           bytes: result.bytes

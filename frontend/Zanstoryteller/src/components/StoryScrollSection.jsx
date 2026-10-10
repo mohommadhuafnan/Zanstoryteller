@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 
 import { useCMS } from '../context/CMSContext'
-import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
 const CLOUD_SCROLL = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_1400'
 
@@ -30,6 +30,7 @@ export default function StoryScrollSection() {
     return {
       id: def.id,
       src: getOptimizedImageUrl(cmsImg || def.src, { width: 1400 }),
+      srcSet: getCloudinarySrcSet(cmsImg || def.src, [800, 1200, 1600, 2000]),
       alt: steps[idx]?.keyword || def.alt
     }
   })
@@ -115,6 +116,8 @@ export default function StoryScrollSection() {
           <motion.img
             style={{ scale: scale0 }}
             src={scrollImages[0].src}
+            srcSet={scrollImages[0].srcSet}
+            sizes="100vw"
             alt={scrollImages[0].alt}
             loading="eager"
             fetchPriority="high"
@@ -131,6 +134,8 @@ export default function StoryScrollSection() {
           <motion.img
             style={{ scale: scale1 }}
             src={scrollImages[1].src}
+            srcSet={scrollImages[1].srcSet}
+            sizes="100vw"
             alt={scrollImages[1].alt}
             loading="eager"
             decoding="async"
@@ -146,6 +151,8 @@ export default function StoryScrollSection() {
           <motion.img
             style={{ scale: scale2 }}
             src={scrollImages[2].src}
+            srcSet={scrollImages[2].srcSet}
+            sizes="100vw"
             alt={scrollImages[2].alt}
             loading="eager"
             decoding="async"
@@ -161,6 +168,8 @@ export default function StoryScrollSection() {
           <motion.img
             style={{ scale: scale3 }}
             src={scrollImages[3].src}
+            srcSet={scrollImages[3].srcSet}
+            sizes="100vw"
             alt={scrollImages[3].alt}
             loading="eager"
             decoding="async"
@@ -176,6 +185,8 @@ export default function StoryScrollSection() {
           <motion.img
             style={{ scale: scale4 }}
             src={scrollImages[4].src}
+            srcSet={scrollImages[4].srcSet}
+            sizes="100vw"
             alt={scrollImages[4].alt}
             loading="eager"
             decoding="async"

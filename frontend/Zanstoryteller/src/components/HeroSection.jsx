@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, ArrowDown, ArrowUpRight, Sparkles } from 'lu
 
 import { HERO_SLIDES } from '../data/heroSlidesData'
 import { useCMS } from '../context/CMSContext'
-import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
 // Individual Full-Bleed Slide with Dynamic Scroll-Driven Zoom
 function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
@@ -47,7 +47,9 @@ function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
       >
         {/* Inner subtle breathing ambient Ken Burns float */}
         <motion.img
-          src={getOptimizedImageUrl(slide.image, { width: 1400 })}
+          src={getOptimizedImageUrl(slide.image, { width: 1600 })}
+          srcSet={getCloudinarySrcSet(slide.image, [800, 1200, 1600, 2000])}
+          sizes="100vw"
           alt={slide.title}
           fetchPriority={index === 0 ? 'high' : 'auto'}
           loading={index === 0 ? 'eager' : 'lazy'}

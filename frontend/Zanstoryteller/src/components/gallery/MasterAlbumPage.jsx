@@ -4,6 +4,7 @@ import { ArrowLeft, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MASTER_ALBUM_IMAGES } from '../../data/masterAlbumData'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../../utils/imageOptimizer'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -278,8 +279,12 @@ export default function MasterAlbumPage({ onNavigate }) {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={selectedImage.src}
+                src={getOptimizedImageUrl(selectedImage.src, { width: 1800 })}
+                srcSet={getCloudinarySrcSet(selectedImage.src, [800, 1200, 1600, 2000])}
+                sizes="(max-width: 768px) 100vw, (max-width: 1400px) 90vw, 1800px"
                 alt={selectedImage.title}
+                loading="eager"
+                decoding="async"
                 className="max-w-full max-h-[78vh] object-contain block mx-auto"
               />
 
@@ -467,7 +472,9 @@ function MfrportsCard({
       {inView && (
         <img
           ref={imgRef}
-          src={image.src}
+          src={getOptimizedImageUrl(image.src, { width: 800 })}
+          srcSet={getCloudinarySrcSet(image.src, [400, 600, 800, 1000])}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
           alt={image.title || ''}
           data-col={colIndex}
           loading="lazy"

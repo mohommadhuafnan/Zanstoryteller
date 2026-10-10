@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { aboutData as defaultAboutData } from '../data/photographyData'
 import { useCMS } from '../context/CMSContext'
-import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
 export default function AboutSection() {
   const { data } = useCMS()
@@ -84,6 +84,8 @@ export default function AboutSection() {
               <div className="relative overflow-hidden rounded-sm bg-[#0d1b2a] shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-[#111111]/10 aspect-[4/5]">
                 <img
                   src={getOptimizedImageUrl(aboutData.image, { width: 900 })}
+                  srcSet={getCloudinarySrcSet(aboutData.image, [450, 700, 900, 1200])}
+                  sizes="(max-width: 640px) 340px, (max-width: 1024px) 430px, 450px"
                   alt={aboutData.imageAlt}
                   width="824"
                   height="1024"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ArrowRight, X, Maximize2, Calendar, MapPin } from 'lucide-react'
 import { getCategoryBySlug, getClientAlbum } from '../../data/galleryCategoriesData'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../../utils/imageOptimizer'
 
 export default function ClientAlbumPage({ categorySlug, clientSlug, onNavigate }) {
   const category = getCategoryBySlug(categorySlug)
@@ -113,7 +114,9 @@ export default function ClientAlbumPage({ categorySlug, clientSlug, onNavigate }
               className="group relative break-inside-avoid overflow-hidden rounded-md bg-[#F5F5F5] border border-[#EAEAEA] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
             >
               <img
-                src={imgUrl}
+                src={getOptimizedImageUrl(imgUrl, { width: 800 })}
+                srcSet={getCloudinarySrcSet(imgUrl, [400, 600, 800, 1000])}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                 alt={`${client.name} photo ${idx + 1}`}
                 loading={idx < 2 ? "eager" : "lazy"}
                 decoding="async"
@@ -205,7 +208,9 @@ export default function ClientAlbumPage({ categorySlug, clientSlug, onNavigate }
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={client.images[activePhotoIndex]}
+                src={getOptimizedImageUrl(client.images[activePhotoIndex], { width: 1800 })}
+                srcSet={getCloudinarySrcSet(client.images[activePhotoIndex], [800, 1200, 1600, 2000])}
+                sizes="(max-width: 768px) 100vw, 1800px"
                 alt={`${client.name} photo ${activePhotoIndex + 1}`}
                 loading="eager"
                 decoding="async"

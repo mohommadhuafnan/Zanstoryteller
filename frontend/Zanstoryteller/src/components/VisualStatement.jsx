@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { visualStatementData as defaultVisualStatementData } from '../data/photographyData'
-import { getResponsiveUnsplash, getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getResponsiveUnsplash, getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 import { useCMS } from '../context/CMSContext'
 
 export default function VisualStatement() {
@@ -15,6 +15,8 @@ export default function VisualStatement() {
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
           src={getOptimizedImageUrl(visualStatementData.image, { width: 1400 })}
+          srcSet={getCloudinarySrcSet(visualStatementData.image, [800, 1200, 1600, 2000])}
+          sizes="100vw"
           alt={visualStatementData.alt || 'Visual Statement'}
           className="w-full h-full object-cover object-center filter brightness-[0.55] contrast-[1.08]"
           loading="lazy"

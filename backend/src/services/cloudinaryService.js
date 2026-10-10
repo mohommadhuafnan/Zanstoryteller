@@ -36,8 +36,6 @@ export function uploadImageToCloudinary(buffer, options = {}) {
     const uploadOptions = {
       folder,
       resource_type: 'image',
-      format: 'webp', // Automatically converts any uploaded file format into WebP
-      quality: 'auto:best',
       ...options
     }
 

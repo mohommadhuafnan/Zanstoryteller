@@ -5,7 +5,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { servicesData as defaultServicesData } from '../data/photographyData'
 import { useCMS } from '../context/CMSContext'
-import { getOptimizedImageUrl } from '../utils/imageOptimizer'
+import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -239,8 +239,12 @@ export default function ServicesSection({ onNavigate }) {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={getOptimizedImageUrl(selectedService.image, { width: 1200 })}
+                src={getOptimizedImageUrl(selectedService.image, { width: 1400 })}
+                srcSet={getCloudinarySrcSet(selectedService.image, [600, 1000, 1400])}
+                sizes="(max-width: 768px) 100vw, 1200px"
                 alt={selectedService.title}
+                loading="eager"
+                decoding="async"
                 className="max-w-full max-h-[65vh] object-contain block mx-auto"
               />
 
@@ -381,6 +385,8 @@ function ServiceAlbumCard({
         >
           <img
             src={getOptimizedImageUrl(service.image, { width: 900 })}
+            srcSet={getCloudinarySrcSet(service.image, [400, 600, 900])}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 450px"
             alt={service.alt || service.title}
             loading="lazy"
             decoding="async"
