@@ -43,17 +43,9 @@ function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
       {/* Outer motion wrapper drives the scroll zoom animation */}
       <motion.div
         style={{ scale }}
-        className="relative w-full h-full will-change-transform transform-gpu flex items-center justify-center bg-[#020202]"
+        className="relative w-full h-full will-change-transform transform-gpu"
       >
-        {/* Atmospheric ambient fill prevents empty letterboxing */}
-        <img
-          src={getOptimizedImageUrl(slide.image, { width: 400, quality: 'eco', blur: 800 })}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center filter blur-3xl opacity-40 scale-110 pointer-events-none"
-        />
-
-        {/* 100% Full Uncropped Original Master Photograph */}
+        {/* Full-bleed edge-to-edge high resolution photograph */}
         <motion.img
           src={getOptimizedImageUrl(slide.image, { width: 2200 })}
           srcSet={getCloudinarySrcSet(slide.image, [800, 1200, 1600, 2200])}
@@ -62,9 +54,9 @@ function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
           fetchPriority={index === 0 ? 'high' : 'auto'}
           loading={index === 0 ? 'eager' : 'lazy'}
           decoding="async"
-          animate={{ scale: [1, 1.02, 1] }}
+          animate={{ scale: [1, 1.03, 1] }}
           transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className="relative z-10 max-w-full max-h-full w-full h-full object-contain object-center transform-gpu will-change-transform drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+          className="w-full h-full object-cover object-center transform-gpu will-change-transform"
         />
       </motion.div>
 
