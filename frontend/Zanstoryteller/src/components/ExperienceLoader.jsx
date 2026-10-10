@@ -48,6 +48,7 @@ let hasCompletedInitialLoad = false
 export default function ExperienceLoader() {
   const [isReady, setIsReady] = useState(hasCompletedInitialLoad)
   const [textFinished, setTextFinished] = useState(false)
+  const [isZoomingHero, setIsZoomingHero] = useState(false)
 
   // Strictly lock page scrolling while initial experience loader is active
   useEffect(() => {
@@ -85,18 +86,24 @@ export default function ExperienceLoader() {
       setTextFinished(true)
     }, 1450)
 
+    // Logo zooms to full-screen entering hero section
+    const zoomHeroTimer = setTimeout(() => {
+      setIsZoomingHero(true)
+    }, 2250)
+
     const isMobile =
       typeof window !== 'undefined' &&
       (window.innerWidth < 768 || /Mobi|Android/i.test(navigator.userAgent))
-    const MIN_LOADER_TIME = isMobile ? 2400 : 2700
+    const MIN_LOADER_TIME = isMobile ? 2600 : 2800
 
     const readyTimer = setTimeout(() => {
       hasCompletedInitialLoad = true
       setIsReady(true)
-    }, MIN_LOADER_TIME + 150)
+    }, MIN_LOADER_TIME)
 
     return () => {
       clearTimeout(textTimer)
+      clearTimeout(zoomHeroTimer)
       clearTimeout(readyTimer)
     }
   }, [])
@@ -109,53 +116,64 @@ export default function ExperienceLoader() {
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+            transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
           }}
           className="fixed inset-0 z-[99999] w-screen h-screen flex flex-col items-center justify-center bg-[#0d1b2a] text-white px-4 sm:px-8 pointer-events-auto select-none overflow-hidden"
         >
           <div className="flex flex-col items-center w-full max-w-6xl text-center relative">
             
-            {/* Logo Area: Zooms in ONLY after text typing animation finishes */}
-            <div className="h-24 sm:h-28 md:h-32 flex items-center justify-center mb-3 sm:mb-4">
+            {/* Logo Area: Zooms in when text finishes, then expands to full-screen entering hero section */}
+            <div className="h-28 sm:h-32 md:h-36 flex items-center justify-center mb-3 sm:mb-4">
               <AnimatePresence>
                 {textFinished && (
                   <motion.div
                     key="loader-logo-zoom"
-                    initial={{ scale: 0.1, opacity: 0 }}
+                    initial={{ scale: 0.15, opacity: 0 }}
                     animate={{
-                      scale: 1,
-                      opacity: 1,
+                      scale: isZoomingHero ? [1, 3.8] : 1,
+                      opacity: isZoomingHero ? [1, 0] : 1,
                     }}
                     transition={{
-                      duration: 0.65,
-                      ease: [0.16, 1, 0.3, 1],
+                      scale: isZoomingHero
+                        ? { duration: 0.65, ease: [0.22, 1, 0.36, 1] }
+                        : { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                      opacity: isZoomingHero
+                        ? { duration: 0.55, ease: 'easeOut' }
+                        : { duration: 0.3 },
                     }}
                     exit={{
-                      scale: 1.08,
+                      scale: 4,
                       opacity: 0,
-                      transition: { duration: 0.5, ease: 'easeOut' },
+                      transition: { duration: 0.6, ease: 'easeOut' },
                     }}
-                    className="flex items-center justify-center"
+                    className="flex items-center justify-center transform-gpu will-change-transform"
                   >
                     <img
-                      src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_240/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
+                      src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_400/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
                       alt="Zan Storyteller Logo"
-                      width="112"
-                      height="112"
-                      className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain drop-shadow-[0_4px_24px_rgba(216,187,123,0.45)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]"
+                      width="144"
+                      height="144"
+                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 object-contain"
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Massive Stroke Drawing SVG for ZAN STORYTELLER */}
-            <div className="w-full flex items-center justify-center my-2 sm:my-3">
+            {/* Massive Stroke Drawing SVG for ZAN STORYTELLER without drop-shadow */}
+            <motion.div
+              animate={{
+                opacity: isZoomingHero ? 0 : 1,
+                scale: isZoomingHero ? 0.96 : 1,
+              }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
+              className="w-full flex items-center justify-center my-2 sm:my-3"
+            >
               <svg
                 viewBox="0 0 960 84"
                 xmlns="http://www.w3.org/2000/svg"
                 aria-label="Zan Storyteller"
-                className="w-[92vw] max-w-[1100px] h-auto select-none drop-shadow-[0_4px_28px_rgba(216,187,123,0.35)]"
+                className="w-[92vw] max-w-[1100px] h-auto select-none"
               >
                 <defs>
                   <linearGradient id="goldGradientStroke" x1="0" y1="0" x2="0" y2="1">
@@ -165,9 +183,6 @@ export default function ExperienceLoader() {
                     <stop offset="75%" stopColor="#D8BB7B" />
                     <stop offset="100%" stopColor="#8C6520" />
                   </linearGradient>
-                  <filter id="goldGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#D8BB7B" floodOpacity="0.5" />
-                  </filter>
                 </defs>
 
                 {/* Ghost Architectural Blueprint Guidelines */}
@@ -191,7 +206,7 @@ export default function ExperienceLoader() {
                   />
                 ))}
 
-                {/* Main Stroke-Drawn Letters (Sequential reveal) */}
+                {/* Main Stroke-Drawn Letters (Sequential reveal, crisp gold with no shadow) */}
                 {ZAN_LETTER_PATHS.map((letter, index) => (
                   <motion.path
                     key={letter.id}
@@ -201,7 +216,6 @@ export default function ExperienceLoader() {
                     strokeWidth="8"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    filter="url(#goldGlowFilter)"
                     initial={{ pathLength: 0, opacity: 0 }}
                     animate={{
                       pathLength: 1,
@@ -221,7 +235,7 @@ export default function ExperienceLoader() {
                   />
                 ))}
               </svg>
-            </div>
+            </motion.div>
 
           </div>
         </motion.div>

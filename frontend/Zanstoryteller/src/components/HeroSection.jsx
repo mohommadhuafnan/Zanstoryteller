@@ -54,7 +54,7 @@ function ZoomSlide({ slide, index, smoothProgress, totalSlides }) {
           decoding="async"
           animate={{ scale: [1, 1.03, 1] }}
           transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-full h-full object-cover object-center filter brightness-[0.90] contrast-[1.05]"
+          className="w-full h-full object-cover object-center transform-gpu will-change-transform"
         />
       </motion.div>
 
@@ -85,11 +85,11 @@ export default function HeroSection() {
     offset: ['start start', 'end end'],
   })
 
-  // Smooth physics spring for fluid zoom transitions without harsh snapping
+  // Responsive physics spring that tracks scrolling instantly without drag or lag
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 85,
-    damping: 24,
-    restDelta: 0.0005,
+    stiffness: 180,
+    damping: 28,
+    restDelta: 0.001,
   })
 
   // Progress bar active pill indicator
@@ -99,15 +99,39 @@ export default function HeroSection() {
     ['0%', `${Math.max(0, (totalSlides - 1) / totalSlides) * 100}%`]
   )
 
-  // Update active slide index and end state based on scroll
+  // Track viewport width for seamless horizontal translation on every screen size
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200
+  )
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const isMobileScreen = windowWidth < 768
+  const mobileMaxTranslate = -Math.max(0, totalSlides * 178 - windowWidth + 28)
+
+  // Dynamic horizontal translation for the bottom timeline cards (animates smoothly with scroll)
+  const cardsTrackX = useTransform(
+    smoothProgress,
+    [0, 1],
+    [isMobileScreen ? 14 : 24, isMobileScreen ? mobileMaxTranslate : -24]
+  )
+
+  // Update active slide index and end state based on scroll (only re-render when index changes)
   useEffect(() => {
     return scrollYProgress.on('change', (p) => {
       const idx = Math.min(
         totalSlides - 1,
         Math.max(0, Math.round(p * (totalSlides - 1)))
       )
-      setActiveIdx(idx)
-      setIsAtEnd(p >= 0.94)
+      setActiveIdx((prev) => (prev !== idx ? idx : prev))
+      setIsAtEnd((prev) => {
+        const atEnd = p >= 0.94
+        return prev !== atEnd ? atEnd : prev
+      })
     })
   }, [scrollYProgress, totalSlides])
 
@@ -208,13 +232,6 @@ export default function HeroSection() {
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   className="space-y-4 sm:space-y-5"
                 >
-                  {/* Category & Counter Badge */}
-                  <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-[#FFF5D6] text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.22em] shadow-lg">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D8BB7B] animate-pulse" />
-                    <span>0{safeIdx + 1} / 0{totalSlides}</span>
-                    <span className="opacity-40">•</span>
-                    <span>{currentActiveSlide.category}</span>
-                  </div>
 
                   {/* Grand Editorial Headline */}
                   <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight text-white uppercase leading-[1.04] drop-shadow-[0_4px_28px_rgba(0,0,0,0.9)]">
@@ -309,90 +326,81 @@ export default function HeroSection() {
           )}
         </button>
 
-        {/* Bottom Horizontal Interactive Timeline & Project Selector */}
-        <div className="absolute bottom-0 left-0 right-0 z-30 pb-6 sm:pb-8 pt-3 px-4 sm:px-12 flex flex-col items-center">
+        {/* Bottom Horizontal Interactive Timeline & Project Selector (Scrolls horizontally across all screens) */}
+        <div className="absolute bottom-0 left-0 right-0 z-30 pb-4 sm:pb-7 pt-2 px-3 sm:px-8 md:px-12 flex flex-col items-center pointer-events-auto select-none">
           
-          {/* Desktop & Tablet: Clean Project Selectors */}
-          <div className="hidden sm:flex items-center justify-center gap-2 md:gap-4 max-w-6xl w-full py-2">
-            {currentSlides.map((slide, idx) => {
-              const isActive = idx === safeIdx
-              return (
-                <button
-                  key={slide.id || idx}
-                  onClick={() => scrollToSlide(idx)}
-                  className={`group relative px-4 py-2 rounded-md text-left transition-all duration-300 cursor-pointer focus:outline-none flex-1 max-w-[220px] ${
-                    isActive
-                      ? 'bg-white/12 backdrop-blur-md border border-white/25 shadow-[0_4px_16px_rgba(0,0,0,0.6)]'
-                      : 'hover:bg-white/5 opacity-45 hover:opacity-85 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-mono tracking-wider ${isActive ? 'text-[#D8BB7B]' : 'text-white/60'}`}>
-                      0{idx + 1}
-                    </span>
-                    <span className={`text-xs md:text-sm truncate font-normal tracking-tight ${isActive ? 'text-white font-medium' : 'text-white/80'}`}>
-                      {slide.title}
-                    </span>
-                  </div>
-                  <div className="text-[9px] font-mono uppercase tracking-widest text-white/50 truncate mt-0.5">
-                    {slide.category}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Mobile: Compact Active Pill with Dots */}
-          <div className="flex sm:hidden items-center justify-between w-full max-w-sm px-2 py-2">
-            <span className="text-xs font-mono text-[#D8BB7B]">
-              0{safeIdx + 1} / 0{totalSlides}
-            </span>
-            <span className="text-xs font-medium text-white truncate max-w-[180px]">
-              {currentActiveSlide?.title}
-            </span>
-            <div className="flex items-center gap-1.5">
-              {currentSlides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => scrollToSlide(i)}
-                  className="p-2 -m-2 flex items-center justify-center cursor-pointer"
-                  aria-label={`Slide ${i + 1}`}
-                >
-                  <span
-                    className={`h-1.5 rounded-full transition-all inline-block ${
-                      i === safeIdx ? 'w-5 bg-[#D8BB7B]' : 'w-1.5 bg-white/50'
+          {/* Responsive Horizontal Cards Track with Scroll-Driven Motion */}
+          <div className="w-full max-w-6xl overflow-hidden py-1 sm:py-2 relative [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)] sm:[mask-image:none]">
+            <motion.div
+              style={{ x: cardsTrackX }}
+              className="flex items-center justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 w-max sm:w-full mx-auto will-change-transform"
+            >
+              {currentSlides.map((slide, idx) => {
+                const isActive = idx === safeIdx
+                return (
+                  <button
+                    key={slide.id || idx}
+                    onClick={() => scrollToSlide(idx)}
+                    className={`group relative px-3 sm:px-4 py-2 sm:py-2.5 rounded-md text-left transition-all duration-300 cursor-pointer focus:outline-none flex-shrink-0 w-[170px] sm:w-auto sm:flex-1 sm:max-w-[220px] ${
+                      isActive
+                        ? 'border border-[#D8BB7B]/50 bg-white/12 backdrop-blur-md shadow-[0_4px_20px_rgba(216,187,123,0.25)] scale-[1.02]'
+                        : 'border border-white/10 bg-black/40 hover:bg-white/10 hover:border-white/20 opacity-50 hover:opacity-90'
                     }`}
-                  />
-                </button>
-              ))}
-            </div>
+                  >
+                    {/* Active sliding gold highlight pill */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeSlideHighlight"
+                        className="absolute inset-0 rounded-md border border-[#D8BB7B]/60 bg-gradient-to-r from-[#D8BB7B]/15 via-white/10 to-transparent pointer-events-none"
+                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                      />
+                    )}
+
+                    <div className="relative z-10 flex items-center gap-2">
+                      <span className={`text-[10px] font-mono tracking-wider transition-colors ${isActive ? 'text-[#D8BB7B] font-semibold' : 'text-white/60'}`}>
+                        0{idx + 1}
+                      </span>
+                      <span className={`text-xs md:text-sm truncate font-normal tracking-tight transition-colors ${isActive ? 'text-white font-medium' : 'text-white/80'}`}>
+                        {slide.title}
+                      </span>
+                    </div>
+                    <div className={`relative z-10 text-[9px] font-mono uppercase tracking-widest truncate mt-0.5 transition-colors ${isActive ? 'text-[#FFF5D6]/80' : 'text-white/45'}`}>
+                      {slide.category}
+                    </div>
+                  </button>
+                )
+              })}
+            </motion.div>
           </div>
 
-          {/* Sleek Gold Progress Track */}
-          <div className="w-full max-w-4xl mt-2 sm:mt-3 flex items-center gap-4">
-            <span className="text-[10px] font-mono text-white/60 tracking-wider">
-              0{activeIdx + 1}
+          {/* Sleek Gold Progress Track with dynamic left-to-right indicator */}
+          <div className="w-full max-w-4xl mt-1.5 sm:mt-2.5 flex items-center gap-3 sm:gap-4 px-2">
+            <span className="text-[10px] font-mono text-[#D8BB7B] tracking-wider font-medium">
+              0{safeIdx + 1}
             </span>
 
             <div className="relative flex-1 h-[2px] bg-white/20 rounded-full overflow-hidden">
               {/* Background click zones for each slide */}
-              <div className="absolute inset-0 grid grid-cols-5 gap-1.5 z-10">
-                {HERO_SLIDES.map((_, i) => (
+              <div
+                className="absolute inset-0 grid gap-1.5 z-10"
+                style={{ gridTemplateColumns: `repeat(${totalSlides}, minmax(0, 1fr))` }}
+              >
+                {currentSlides.map((_, i) => (
                   <div
                     key={i}
                     onClick={() => scrollToSlide(i)}
-                    className="h-full cursor-pointer hover:bg-white/10 transition-colors"
+                    className="h-full cursor-pointer hover:bg-white/20 transition-colors"
                   />
                 ))}
               </div>
 
-              {/* Active sliding progress pill */}
+              {/* Active sliding progress pill (animates left-to-right on scroll down, right-to-left on scroll up) */}
               <motion.div
                 style={{
                   left: indicatorLeft,
                   width: `${(1 / totalSlides) * 100}%`,
                 }}
-                className="absolute top-0 bottom-0 bg-gradient-to-r from-[#D8BB7B] via-[#FFF5D6] to-white rounded-full shadow-[0_0_8px_rgba(216,187,123,0.7)]"
+                className="absolute top-0 bottom-0 bg-gradient-to-r from-[#D8BB7B] via-[#FFF5D6] to-white rounded-full shadow-[0_0_8px_rgba(216,187,123,0.8)]"
               />
             </div>
 

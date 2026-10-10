@@ -14,12 +14,41 @@ export default function Navbar({ onNavigate, currentPath }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
+    let heroEnd = 0
+
+    const updateHeroBoundary = () => {
+      if (currentPath === '/') {
+        const hero = document.getElementById('hero')
+        if (hero) {
+          heroEnd = hero.offsetTop + hero.offsetHeight - window.innerHeight - 40
+        }
+      }
+    }
+
+    updateHeroBoundary()
+
     const handleScroll = () => {
+      if (currentPath === '/') {
+        if (heroEnd > 0) {
+          setIsScrolled(window.scrollY >= heroEnd)
+          return
+        }
+      }
       setIsScrolled(window.scrollY > 40)
     }
+
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    window.addEventListener('resize', () => {
+      updateHeroBoundary()
+      handleScroll()
+    }, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', updateHeroBoundary)
+    }
+  }, [currentPath])
 
   const [galleryDropdownOpen, setGalleryDropdownOpen] = useState(false)
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)

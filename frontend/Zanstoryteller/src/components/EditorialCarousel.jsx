@@ -83,12 +83,25 @@ export default function EditorialCarousel() {
     initScrollPosition()
     const timer = setTimeout(initScrollPosition, 200)
 
+    let isVisible = true
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry?.isIntersecting ?? true
+    }, { rootMargin: '200px 0px' })
+
+    observer.observe(container)
+
     // Smooth continuous drift speed (pixels per frame at 60fps)
     const scrollSpeed = 1.15
     let lastTime = performance.now()
     let lastCheckTime = performance.now()
 
     const animateLoop = (time) => {
+      if (!isVisible) {
+        lastTime = time
+        animFrameRef.current = requestAnimationFrame(animateLoop)
+        return
+      }
+
       const delta = Math.min(32, time - lastTime)
       lastTime = time
 
@@ -123,6 +136,7 @@ export default function EditorialCarousel() {
 
     return () => {
       clearTimeout(timer)
+      observer.disconnect()
       if (animFrameRef.current) {
         cancelAnimationFrame(animFrameRef.current)
       }
