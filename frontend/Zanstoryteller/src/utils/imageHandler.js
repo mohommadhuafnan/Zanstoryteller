@@ -17,7 +17,7 @@
  * @param {number} options.quality Default 0.85 (indistinguishable from original, 95%+ smaller)
  * @returns {Promise<{ file: File, originalSize: number, compressedSize: number }>}
  */
-export function compressImageFile(file, { maxWidth = 2200, maxHeight = 2200, quality = 0.85 } = {}) {
+export function compressImageFile(file, { maxWidth = null, maxHeight = null, quality = 0.90 } = {}) {
   return new Promise((resolve, reject) => {
     if (!file) {
       reject(new Error("No file provided"))
@@ -54,10 +54,12 @@ export function compressImageFile(file, { maxWidth = 2200, maxHeight = 2200, qua
     img.onload = () => {
       URL.revokeObjectURL(objectUrl)
 
-      let { width, height } = img
+      // Use full natural dimensions without cropping
+      let width = img.naturalWidth || img.width
+      let height = img.naturalHeight || img.height
 
-      // Scale to max bounds preserving natural aspect ratio
-      if (width > maxWidth || height > maxHeight) {
+      // Scale only if bounds are explicitly provided and image exceeds them
+      if (maxWidth && maxHeight && (width > maxWidth || height > maxHeight)) {
         if (width / height > maxWidth / maxHeight) {
           height = Math.round((height * maxWidth) / width)
           width = maxWidth

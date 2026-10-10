@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ArrowRight, Sparkles, Check } from 'lucide-react'
 import { exitIntentAdConfig } from '../data/exitIntentAdConfig'
+import { getOptimizedImageUrl } from '../utils/imageOptimizer'
 
 /**
  * Premium Animated Exit-Intent Advertisement Popup
@@ -196,7 +197,7 @@ export default function ExitIntentPopup({ onNavigate }) {
               {/* Left Column: High-End Cinematic Photography */}
               <div className="relative md:col-span-5 h-56 md:h-auto overflow-hidden bg-neutral-900">
                 <motion.img
-                  src={exitIntentAdConfig.image}
+                  src={getOptimizedImageUrl(exitIntentAdConfig.image, { width: 800 })}
                   alt={exitIntentAdConfig.imageAlt}
                   initial={{ scale: 1 }}
                   animate={{ scale: 1.06 }}

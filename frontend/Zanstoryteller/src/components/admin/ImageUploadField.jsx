@@ -41,7 +41,7 @@ export default function ImageUploadField({
       setUploadStatus('Converting image to high-fidelity WebP...')
 
       const { compressImageFile, formatBytes } = await import('../../utils/imageHandler')
-      const compressed = await compressImageFile(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+      const compressed = await compressImageFile(file, { quality: 0.90 })
       const webpFile = compressed?.file || file
 
       const sizeDisplay = compressed?.compressedSize ? ` (${formatBytes(compressed.compressedSize)})` : ''

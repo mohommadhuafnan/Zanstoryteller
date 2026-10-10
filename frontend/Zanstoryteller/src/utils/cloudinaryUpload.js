@@ -38,7 +38,7 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
   let fileToUpload = file
   try {
     const { compressImageFile } = await import('./imageHandler')
-    const compressed = await compressImageFile(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+    const compressed = await compressImageFile(file, { quality: 0.90 })
     if (compressed?.file) {
       fileToUpload = compressed.file
     }

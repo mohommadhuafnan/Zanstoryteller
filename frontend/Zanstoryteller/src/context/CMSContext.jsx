@@ -144,10 +144,35 @@ export function CMSProvider({ children }) {
                   let img = slide.image
                   if (typeof img === 'string' && (img.startsWith('/src/assets/scrolling/') || img.startsWith('/scrolling/'))) {
                     img = defaultCMSState.heroSlides[i]?.image || getOptimizedImageUrl(img, { width: 1400 })
+                  } else if (img) {
+                    img = getOptimizedImageUrl(img, { width: 1600 })
                   }
                   return { ...slide, image: img }
                 })
               : defaultCMSState.heroSlides
+
+            const mergedStoryScroll = Array.isArray(cloudData.storyScrollSteps) && cloudData.storyScrollSteps.length >= 5
+              ? cloudData.storyScrollSteps.map((step) => ({
+                  ...step,
+                  image: step.image ? getOptimizedImageUrl(step.image, { width: 1400 }) : step.image
+                }))
+              : defaultCMSState.storyScrollSteps
+
+            const mergedFinalCTA = {
+              ...defaultCMSState.finalCTAData,
+              ...(cloudData.finalCTAData || {}),
+              bgImage: cloudData.finalCTAData?.bgImage
+                ? getOptimizedImageUrl(cloudData.finalCTAData.bgImage, { width: 1200 })
+                : defaultCMSState.finalCTAData.bgImage
+            }
+
+            const mergedVisualStatement = {
+              ...defaultCMSState.visualStatementData,
+              ...(cloudData.visualStatementData || {}),
+              image: cloudData.visualStatementData?.image
+                ? getOptimizedImageUrl(cloudData.visualStatementData.image, { width: 1400 })
+                : defaultCMSState.visualStatementData.image
+            }
 
             return {
               ...prev,
@@ -155,8 +180,8 @@ export function CMSProvider({ children }) {
               heroSlides: mergedHeroSlides,
               footerData: mergedFooter,
               aboutData: { ...defaultCMSState.aboutData, ...(cloudData.aboutData || {}) },
-              visualStatementData: { ...defaultCMSState.visualStatementData, ...(cloudData.visualStatementData || {}) },
-              finalCTAData: { ...defaultCMSState.finalCTAData, ...(cloudData.finalCTAData || {}) },
+              visualStatementData: mergedVisualStatement,
+              finalCTAData: mergedFinalCTA,
               servicesData: Array.isArray(cloudData.servicesData) && cloudData.servicesData.length > 0
                 ? cloudData.servicesData
                 : defaultCMSState.servicesData,
@@ -166,9 +191,7 @@ export function CMSProvider({ children }) {
               portfolioCategories: Array.isArray(cloudData.portfolioCategories) && cloudData.portfolioCategories.length > 0
                 ? cloudData.portfolioCategories
                 : defaultCMSState.portfolioCategories,
-              storyScrollSteps: Array.isArray(cloudData.storyScrollSteps) && cloudData.storyScrollSteps.length >= 5
-                ? cloudData.storyScrollSteps
-                : defaultCMSState.storyScrollSteps,
+              storyScrollSteps: mergedStoryScroll,
               processSteps: Array.isArray(cloudData.processSteps) && cloudData.processSteps.length > 0
                 ? cloudData.processSteps
                 : defaultCMSState.processSteps,

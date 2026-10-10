@@ -109,6 +109,31 @@ export function getOptimizedImageUrl(urlOrPublicId, { width, quality = 'auto', f
     }
   }
 
+  // 4. Supabase Storage transformation: converts any Supabase-hosted image (JPG, PNG, etc.) to modern WebP
+  if (targetUrl.includes('supabase.co/storage/v1/')) {
+    try {
+      const supabaseRenderUrl = targetUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
+      const u = new URL(supabaseRenderUrl)
+      u.searchParams.set('format', 'webp')
+      u.searchParams.set('quality', quality === 'auto' ? '80' : String(quality))
+      if (width) {
+        u.searchParams.set('width', String(width))
+      }
+      return u.toString()
+    } catch {
+      return targetUrl
+    }
+  }
+
+  // 5. Local static asset paths: auto-resolve .jpg/.png to .webp
+  if (typeof targetUrl === 'string' && (targetUrl.startsWith('/about/') || targetUrl.startsWith('/editorial/') || targetUrl.startsWith('/scrolling/'))) {
+    const webpPath = targetUrl.replace(/\.(jpe?g|png)$/i, '.webp')
+    if (CLOUDINARY_MAP[webpPath]) {
+      return getOptimizedImageUrl(CLOUDINARY_MAP[webpPath], { width, quality, format, blur })
+    }
+    return webpPath
+  }
+
   return targetUrl
 }
 

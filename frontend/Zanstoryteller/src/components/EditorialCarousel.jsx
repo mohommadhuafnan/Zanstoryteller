@@ -314,7 +314,7 @@ export default function EditorialCarousel() {
         <AnimatePresence mode="sync">
           <motion.img
             key={currentBgImage}
-            src={currentBgImage}
+            src={getOptimizedImageUrl(currentBgImage, { width: 1400 })}
             alt="Photoshoot Editorial Background"
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}

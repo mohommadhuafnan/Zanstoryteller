@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useCMS } from '../context/CMSContext'
 import { getOptimizedImageUrl, getCloudinarySrcSet } from '../utils/imageOptimizer'
 
-const CLOUD_SCROLL = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_1400'
+const CLOUD_SCROLL = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_webp,q_auto:good,w_1400'
 
 const SCROLL_IMAGES = [
   { id: 'scroll-1', src: `${CLOUD_SCROLL}/v1791468136/zanstoryteller/scrolling/scroll_01.webp`, alt: 'Editorial Moment 01' },
@@ -111,8 +111,16 @@ export default function StoryScrollSection() {
         {/* Layer 0: Image 01 */}
         <motion.div
           style={{ opacity: opacity0 }}
-          className="absolute inset-0 w-full h-full z-10 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform"
+          className="absolute inset-0 w-full h-full z-10 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform flex items-center justify-center bg-[#020202]"
         >
+          {/* Ambient blurred fill prevents letterboxing */}
+          <img
+            src={scrollImages[0].src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center filter blur-3xl opacity-35 scale-110 pointer-events-none"
+          />
+          {/* 100% Full Uncropped Original Master Photograph */}
           <motion.img
             style={{ scale: scale0 }}
             src={scrollImages[0].src}
@@ -122,15 +130,21 @@ export default function StoryScrollSection() {
             loading="eager"
             fetchPriority="high"
             decoding="async"
-            className="w-full h-full object-cover object-center block p-0 m-0 border-0 select-none pointer-events-none transform-gpu will-change-transform"
+            className="relative z-10 max-w-full max-h-full w-full h-full object-contain object-center block p-0 m-0 select-none pointer-events-none transform-gpu will-change-transform drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
           />
         </motion.div>
 
         {/* Layer 1: Image 02 */}
         <motion.div
           style={{ y: y1, opacity: opacity1 }}
-          className="absolute inset-0 w-full h-full z-20 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform"
+          className="absolute inset-0 w-full h-full z-20 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform flex items-center justify-center bg-[#020202]"
         >
+          <img
+            src={scrollImages[1].src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center filter blur-3xl opacity-35 scale-110 pointer-events-none"
+          />
           <motion.img
             style={{ scale: scale1 }}
             src={scrollImages[1].src}
@@ -139,15 +153,21 @@ export default function StoryScrollSection() {
             alt={scrollImages[1].alt}
             loading="eager"
             decoding="async"
-            className="w-full h-full object-cover object-center block p-0 m-0 border-0 select-none pointer-events-none transform-gpu will-change-transform"
+            className="relative z-10 max-w-full max-h-full w-full h-full object-contain object-center block p-0 m-0 select-none pointer-events-none transform-gpu will-change-transform drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
           />
         </motion.div>
 
         {/* Layer 2: Image 03 */}
         <motion.div
           style={{ y: y2, opacity: opacity2 }}
-          className="absolute inset-0 w-full h-full z-30 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform"
+          className="absolute inset-0 w-full h-full z-30 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform flex items-center justify-center bg-[#020202]"
         >
+          <img
+            src={scrollImages[2].src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center filter blur-3xl opacity-35 scale-110 pointer-events-none"
+          />
           <motion.img
             style={{ scale: scale2 }}
             src={scrollImages[2].src}
@@ -156,15 +176,21 @@ export default function StoryScrollSection() {
             alt={scrollImages[2].alt}
             loading="eager"
             decoding="async"
-            className="w-full h-full object-cover object-center block p-0 m-0 border-0 select-none pointer-events-none transform-gpu will-change-transform"
+            className="relative z-10 max-w-full max-h-full w-full h-full object-contain object-center block p-0 m-0 select-none pointer-events-none transform-gpu will-change-transform drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
           />
         </motion.div>
 
         {/* Layer 3: Image 04 */}
         <motion.div
           style={{ y: y3, opacity: opacity3 }}
-          className="absolute inset-0 w-full h-full z-40 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform"
+          className="absolute inset-0 w-full h-full z-40 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform flex items-center justify-center bg-[#020202]"
         >
+          <img
+            src={scrollImages[3].src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center filter blur-3xl opacity-35 scale-110 pointer-events-none"
+          />
           <motion.img
             style={{ scale: scale3 }}
             src={scrollImages[3].src}
@@ -173,15 +199,21 @@ export default function StoryScrollSection() {
             alt={scrollImages[3].alt}
             loading="eager"
             decoding="async"
-            className="w-full h-full object-cover object-center block p-0 m-0 border-0 select-none pointer-events-none transform-gpu will-change-transform"
+            className="relative z-10 max-w-full max-h-full w-full h-full object-contain object-center block p-0 m-0 select-none pointer-events-none transform-gpu will-change-transform drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
           />
         </motion.div>
 
         {/* Layer 4: Image 05 (Royal Chess Lounge) */}
         <motion.div
           style={{ y: y4, opacity: opacity4 }}
-          className="absolute inset-0 w-full h-full z-50 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform"
+          className="absolute inset-0 w-full h-full z-50 p-0 m-0 border-0 overflow-hidden transform-gpu will-change-transform flex items-center justify-center bg-[#020202]"
         >
+          <img
+            src={scrollImages[4].src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center filter blur-3xl opacity-35 scale-110 pointer-events-none"
+          />
           <motion.img
             style={{ scale: scale4 }}
             src={scrollImages[4].src}
@@ -190,7 +222,7 @@ export default function StoryScrollSection() {
             alt={scrollImages[4].alt}
             loading="eager"
             decoding="async"
-            className="w-full h-full object-cover object-center block p-0 m-0 border-0 select-none pointer-events-none transform-gpu will-change-transform"
+            className="relative z-10 max-w-full max-h-full w-full h-full object-contain object-center block p-0 m-0 select-none pointer-events-none transform-gpu will-change-transform drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
           />
         </motion.div>
 

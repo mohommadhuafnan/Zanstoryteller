@@ -1,4 +1,4 @@
-const CLOUD_BASE = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_1400'
+const CLOUD_BASE = 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_webp,q_auto:good,w_1400'
 
 export const HERO_SLIDES = [
   {
