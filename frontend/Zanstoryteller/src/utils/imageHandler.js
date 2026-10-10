@@ -24,13 +24,16 @@ export function compressImageFile(file, { maxWidth = 2200, maxHeight = 2200, qua
       return
     }
 
-    if (!file.type.startsWith('image/')) {
+    const isImageFile = (file.type && file.type.startsWith('image/')) || 
+      /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|jfif)$/i.test(file.name || '')
+
+    if (!isImageFile) {
       reject(new Error("Selected file is not an image"))
       return
     }
 
-    // Skip compression for small SVG images or already tiny WebP icons
-    if (file.type === 'image/svg+xml' || (file.type === 'image/webp' && file.size < 200 * 1024)) {
+    // Skip compression only for SVG or already tiny WebP under 150KB
+    if (file.type === 'image/svg+xml' || (file.type === 'image/webp' && file.size < 150 * 1024)) {
       resolve({
         file,
         originalSize: file.size,

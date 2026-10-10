@@ -1,19 +1,13 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
-import { portfolioCategories as defaultCategories, portfolioItems as defaultItems } from '../data/photographyData'
+import { portfolioItems as defaultItems } from '../data/photographyData'
 import { getResponsiveUnsplash } from '../utils/imageOptimizer'
 import { useCMS } from '../context/CMSContext'
 
 export default function FeaturedStories({ onNavigate }) {
   const { data } = useCMS()
-  const portfolioCategories = data?.portfolioCategories || defaultCategories
   const portfolioItems = data?.portfolioItems || defaultItems
-  const [selectedCategory, setSelectedCategory] = useState("ALL")
-
-  const filteredItems = selectedCategory === "ALL"
-    ? portfolioItems
-    : portfolioItems.filter(item => item.category === selectedCategory)
 
   return (
     <section id="portfolio" className="relative w-full bg-[#FFFFFF] text-[#111111] py-28 sm:py-36 md:py-44 px-6 sm:px-12 md:px-20 border-t border-[#EAEAEA]">
@@ -41,29 +35,10 @@ export default function FeaturedStories({ onNavigate }) {
             </h2>
           </div>
 
-          <div className="mt-8 lg:mt-0 flex flex-col items-start lg:items-end gap-6">
+          <div className="mt-8 lg:mt-0 flex flex-col items-start lg:items-end">
             <p className="text-sm sm:text-base text-[#555555] font-light max-w-sm lg:text-right">
               A curated selection of authentic stories captured through our lens worldwide.
             </p>
-
-            {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              {portfolioCategories.map((cat) => {
-                const isActive = selectedCategory === cat
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`text-[11px] font-mono tracking-widest px-4 py-2 uppercase transition-all duration-300 rounded-full ${isActive
-                        ? 'bg-[#111111] text-white'
-                        : 'bg-[#F5F5F5] text-[#666666] hover:text-[#111111] hover:bg-[#EAEAEA]'
-                      }`}
-                  >
-                    {cat}
-                  </button>
-                )
-              })}
-            </div>
           </div>
         </motion.div>
 
@@ -73,7 +48,7 @@ export default function FeaturedStories({ onNavigate }) {
           className="grid grid-cols-12 gap-6 sm:gap-8 md:gap-10"
         >
           <AnimatePresence>
-            {filteredItems.map((item, index) => (
+            {portfolioItems.map((item, index) => (
               <motion.div
                 layout
                 key={item.id}
@@ -105,13 +80,6 @@ export default function FeaturedStories({ onNavigate }) {
                 {/* Elegant Gradient Scrim */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300" />
 
-                {/* Corner Category Tag */}
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="text-[10px] font-mono tracking-widest uppercase px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-white/90 border border-white/15">
-                    {item.category}
-                  </span>
-                </div>
-
                 {/* Bottom Metadata & Hover Reveal */}
                 <div className="relative z-10 p-6 sm:p-8 flex items-end justify-between text-white">
                   <div>
@@ -135,7 +103,7 @@ export default function FeaturedStories({ onNavigate }) {
 
         {/* Bottom Portfolio Count */}
         <div className="mt-16 pt-8 border-t border-[#EAEAEA] flex items-center justify-between text-[11px] font-mono text-[#888888] uppercase">
-          <span>Showing {filteredItems.length} of {portfolioItems.length} Featured Works</span>
+          <span>Showing {portfolioItems.length} Featured Works</span>
           <a href="#contact" className="hover:text-[#111111] transition-colors underline underline-offset-4">
             Request Complete Portfolio Archive →
           </a>

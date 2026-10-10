@@ -9,7 +9,7 @@ export default function ImageUploadField({
   currentImage,
   onImageChange,
   onImageDelete,
-  aspectHint = "Supported: Any image (JPG, PNG, WebP, etc.) - Automatically converted to WebP on Cloudinary",
+  aspectHint = "Supported: Any image (PNG, JPG, etc.) - Auto-converted to ultra-light WebP format",
   allowDelete = true
 }) {
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false)
@@ -25,7 +25,7 @@ export default function ImageUploadField({
     if (!file) return
 
     // 1. Validation: Must be an image
-    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|svg)$/i.test(file.name)
+    const isImage = (file.type && file.type.startsWith('image/')) || /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|jfif|svg)$/i.test(file.name || '')
     if (!isImage) {
       alert("Invalid file format! Please select an image file (PNG, JPG, WebP, etc.).")
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -38,18 +38,25 @@ export default function ImageUploadField({
 
     try {
       setIsUploading(true)
-      setUploadStatus('Uploading original photo to Cloudinary...')
+      setUploadStatus('Converting image to high-fidelity WebP...')
 
-      // 4. Upload to Cloudinary via backend service
-      const res = await uploadImageToCloudinary(file, 'products')
+      const { compressImageFile, formatBytes } = await import('../../utils/imageHandler')
+      const compressed = await compressImageFile(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+      const webpFile = compressed?.file || file
+
+      const sizeDisplay = compressed?.compressedSize ? ` (${formatBytes(compressed.compressedSize)})` : ''
+      setUploadStatus(`Uploading WebP${sizeDisplay}...`)
+
+      // 4. Upload to Cloudinary / Supabase storage
+      const res = await uploadImageToCloudinary(webpFile, 'products')
 
       if (res && res.url) {
         onImageChange(res.url)
       } else {
-        throw new Error('No Cloudinary URL returned from upload service.')
+        throw new Error('No Cloud URL returned from upload service.')
       }
     } catch (err) {
-      console.error("Cloudinary upload failed:", err)
+      console.error("Image upload failed:", err)
       alert(`Upload failed: ${err.message}`)
       setLocalPreview(null) // Revert preview on failure
     } finally {
@@ -188,9 +195,9 @@ export default function ImageUploadField({
               <span className="text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded font-sans text-[10px] font-semibold flex items-center gap-1">
                 <Cloud className="w-3 h-3 text-sky-600 inline" /> Cloud Storage
               </span>
-            ) : currentImage?.startsWith('data:image/webp') ? (
+            ) : currentImage?.startsWith('data:image/webp') || currentImage?.includes('.webp') || currentImage?.includes('format=webp') ? (
               <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-sans text-[10px] font-semibold flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-600 inline" /> WebP Format
+                <Check className="w-3 h-3 text-emerald-600 inline" /> WebP Format (Fast & Optimized)
               </span>
             ) : (
               <span className="truncate" title={currentImage}>{currentImage || 'No image attached'}</span>

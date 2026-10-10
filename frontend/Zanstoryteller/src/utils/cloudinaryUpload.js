@@ -29,9 +29,21 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
   }
 
   // Allow any image file without artificial size limits
-  const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|svg)$/i.test(file.name)
+  const isImage = (file.type && file.type.startsWith('image/')) || /\.(jpe?g|png|webp|avif|gif|bmp|tiff|heic|jfif|svg)$/i.test(file.name || '')
   if (!isImage) {
     throw new Error('Unsupported file. Please select a valid image file.')
+  }
+
+  // Enforce client-side WebP conversion for fast uploads & optimal web delivery
+  let fileToUpload = file
+  try {
+    const { compressImageFile } = await import('./imageHandler')
+    const compressed = await compressImageFile(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+    if (compressed?.file) {
+      fileToUpload = compressed.file
+    }
+  } catch (convErr) {
+    console.warn('Pre-upload WebP conversion notice:', convErr?.message)
   }
 
   // 1. Direct Cloudinary REST API Upload preserving original high-resolution master asset
@@ -44,7 +56,7 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
     const signature = await computeSha1(strToSign)
 
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', fileToUpload)
     formData.append('api_key', CLOUDINARY_API_KEY)
     formData.append('timestamp', String(timestamp))
     formData.append('folder', targetFolder)
@@ -87,7 +99,7 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
   // 2. Resilient Fallback 1: Serverless /api/upload (Cloudinary server-side WebP conversion)
   try {
     const formData = new FormData()
-    formData.append('image', file)
+    formData.append('image', fileToUpload)
     formData.append('folder', folder)
 
     const serverUploadRes = await fetch('/api/upload', {
@@ -111,7 +123,7 @@ export async function uploadImageToCloudinary(file, folder = 'products') {
 
   // 3. Resilient Fallback 2: Supabase Storage direct upload
   try {
-    const fallbackRes = await uploadImageToSupabase(file, folder)
+    const fallbackRes = await uploadImageToSupabase(fileToUpload, folder)
     if (fallbackRes && fallbackRes.url) {
       return {
         success: true,

@@ -149,7 +149,7 @@ export default function ExperienceLoader() {
                     className="flex items-center justify-center transform-gpu will-change-transform"
                   >
                     <img
-                      src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_400/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
+                      src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_webp,q_auto:good,w_400/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
                       alt="Zan Storyteller Logo"
                       width="144"
                       height="144"

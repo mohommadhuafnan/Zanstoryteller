@@ -24,7 +24,7 @@ const CLOUDINARY_MAP = {
   '/editorial/abaya_emerald_terracotta.webp': 'https://res.cloudinary.com/dtpeeydfz/image/upload/v1791468150/zanstoryteller/editorial/abaya_emerald_terracotta.webp',
   '/editorial/abaya_royal_pine.webp': 'https://res.cloudinary.com/dtpeeydfz/image/upload/v1791468151/zanstoryteller/editorial/abaya_royal_pine.webp',
   '/editorial/editorial_backdrop_reference.webp': 'https://res.cloudinary.com/dtpeeydfz/image/upload/v1791468152/zanstoryteller/editorial/editorial_backdrop_reference.webp',
-  '/logo.png': 'https://res.cloudinary.com/dtpeeydfz/image/upload/v1791466439/zanstoryteller/branding/zan_logo_gold.png'
+  '/logo.png': 'https://res.cloudinary.com/dtpeeydfz/image/upload/f_webp,q_auto:good/v1791466439/zanstoryteller/branding/zan_logo_gold.png'
 }
 
 /**
@@ -39,18 +39,18 @@ function cleanCloudinaryPath(afterUpload) {
 }
 
 /**
- * Transforms any image URL or Cloudinary public ID into an optimized WebP/AVIF delivery URL.
+ * Transforms any image URL or Cloudinary public ID into an optimized WebP delivery URL.
  * Never modifies or compresses the stored original asset in Cloudinary.
  * 
  * @param {string} urlOrPublicId - Image URL (Cloudinary, Unsplash, local path) or Cloudinary public ID
  * @param {object} [options] - Optimization settings
  * @param {number} [options.width] - Target display width in pixels (e.g. 500, 800, 1200, 1600, 2000)
  * @param {string} [options.quality='auto'] - Cloudinary quality transformation ('auto', 'auto:good', 'auto:best')
- * @param {string} [options.format='auto'] - Format conversion ('auto' delivers WebP or AVIF based on browser)
+ * @param {string} [options.format='webp'] - Format conversion (default 'webp' delivers lightning-fast WebP)
  * @param {number} [options.blur] - Optional blur level for placeholders
  * @returns {string} Optimized delivery URL
  */
-export function getOptimizedImageUrl(urlOrPublicId, { width, quality = 'auto', format = 'auto', blur } = {}) {
+export function getOptimizedImageUrl(urlOrPublicId, { width, quality = 'auto', format = 'webp', blur } = {}) {
   if (!urlOrPublicId || typeof urlOrPublicId !== 'string') return urlOrPublicId
 
   // Never alter data URIs or in-memory blobs (e.g. during local admin upload preview)

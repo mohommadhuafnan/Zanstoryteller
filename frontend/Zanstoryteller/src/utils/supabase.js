@@ -18,24 +18,37 @@ export const STORAGE_BUCKET = 'zanstoryteller-images'
 export async function uploadImageToSupabase(file, folder = 'portfolio') {
   if (!file) throw new Error('No file provided')
 
-  const fileExt = file.name ? file.name.split('.').pop() : 'jpg'
-  const cleanBaseName = file.name ? file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_") : 'image'
+  let fileToUpload = file
+  if (file instanceof File || file instanceof Blob) {
+    try {
+      const { compressImageFile } = await import('./imageHandler')
+      const compressed = await compressImageFile(file, { maxWidth: 2400, maxHeight: 2400, quality: 0.88 })
+      if (compressed?.file) {
+        fileToUpload = compressed.file
+      }
+    } catch (convErr) {
+      console.warn('Pre-upload WebP conversion notice:', convErr?.message)
+    }
+  }
+
+  const fileExt = fileToUpload.name ? fileToUpload.name.split('.').pop() : 'webp'
+  const cleanBaseName = fileToUpload.name ? fileToUpload.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "_") : 'image'
   const filePath = `${folder}/${Date.now()}_${cleanBaseName}.${fileExt}`
 
   // Try direct Supabase Storage upload
   try {
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .upload(filePath, file, {
+      .upload(filePath, fileToUpload, {
         cacheControl: '3600',
         upsert: true,
-        contentType: file.type || 'image/jpeg'
+        contentType: fileToUpload.type || 'image/webp'
       })
 
     if (error) {
       console.warn('Direct Supabase storage upload notice:', error.message)
       // Attempt backend fallback if available
-      return await uploadViaBackendFallback(file, folder)
+      return await uploadViaBackendFallback(fileToUpload, folder)
     }
 
     const { data: publicData } = supabase.storage

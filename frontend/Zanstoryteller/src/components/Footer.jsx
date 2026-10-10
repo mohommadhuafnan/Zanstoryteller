@@ -78,7 +78,7 @@ export default function Footer({ className = '' }) {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_auto,q_auto:good,w_120/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
+                  src="https://res.cloudinary.com/dtpeeydfz/image/upload/f_webp,q_auto:good,w_120/v1791466439/zanstoryteller/branding/zan_logo_gold.png"
                   alt="Zan Storyteller Logo"
                   width="32"
                   height="32"
